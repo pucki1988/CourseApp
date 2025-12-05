@@ -11,6 +11,8 @@ class CourseController extends Controller
 {
     public function store(Request $request)
     {
+        $this->authorize('create', Course::class);
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -18,9 +20,30 @@ class CourseController extends Controller
             'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
             'coach_id' => 'nullable|exists:users,id',
+
+             // Slots optional
+            'slots' => 'nullable|array',
+            'slots.*.date'        => 'required_with:slots|date',
+            'slots.*.start_time'  => 'required_with:slots|date_format:H:i',
+            'slots.*.end_time'    => 'required_with:slots|date_format:H:i|after:slots.*.start_time',
+            'slots.*.price'       => 'nullable|numeric|min:0',
+            'slots.*.capacity'    => 'nullable|integer|min:1',
         ]);
 
         $course = Course::create($data);
+
+        // Falls Slots existieren → anlegen
+        if (!empty($data['slots'])) {
+            foreach ($data['slots'] as $slot) {
+                $course->slots()->create([
+                    'date'       => $slot['date'],
+                    'start_time' => $slot['start_time'],
+                    'end_time'   => $slot['end_time'],
+                    'price'      => $slot['price'] ?? null,
+                    'capacity'   => $slot['capacity'] ?? null,
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Kurs erstellt',
@@ -90,28 +113,84 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
+        // Validierung
+
+        $this->authorize('update', $course);
         $data = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'booking_type' => ['sometimes','required', Rule::in(['all', 'per_slot'])],
-            'price' => 'nullable|numeric|min:0',
-            'capacity' => 'nullable|integer|min:1',
-            'coach_id' => 'nullable|exists:users,id',
+            'title'         => 'sometimes|required|string|max:255',
+            'description'   => 'sometimes|nullable|string',
+            'booking_type'  => ['sometimes', Rule::in(['all','per_slot'])],
+            'price'         => 'sometimes|nullable|numeric|min:0',
+            'capacity'      => 'sometimes|nullable|integer|min:1',
+            'coach_id'      => 'sometimes|nullable|exists:users,id',
+
+            // Slots optional
+            'slots' => 'nullable|array',
+            'slots.*.id'         => 'nullable|exists:slots,id',
+            'slots.*.date'       => 'required_with:slots|date',
+            'slots.*.start_time' => 'required_with:slots|date_format:H:i',
+            'slots.*.end_time'   => 'required_with:slots|date_format:H:i|after:slots.*.start_time',
+            'slots.*.price'      => 'nullable|numeric|min:0',
+            'slots.*.capacity'   => 'nullable|integer|min:1',
         ]);
 
+        // Kursdaten aktualisieren
         $course->update($data);
 
+        // Slots nur aktualisieren, wenn welche im Request enthalten sind
+        if ($request->has('slots')) {
+
+            // IDs der übermittelten Slots sammeln
+            $incomingIds = collect($data['slots'])
+                ->pluck('id')
+                ->filter() // null entfernen
+                ->toArray();
+
+            // 1. Alle Slots löschen, die nicht im Request sind
+            $course->slots()
+                ->whereNotIn('id', $incomingIds)
+                ->delete();
+
+            // 2. Jeden Slot verarbeiten
+            foreach ($data['slots'] as $slotData) {
+
+                // Slot existiert → update
+                if (!empty($slotData['id'])) {
+                    $course->slots()
+                        ->where('id', $slotData['id'])
+                        ->update([
+                            'date'       => $slotData['date'],
+                            'start_time' => $slotData['start_time'],
+                            'end_time'   => $slotData['end_time'],
+                            'price'      => $slotData['price'] ?? null,
+                            'capacity'   => $slotData['capacity'] ?? null,
+                        ]);
+
+                } else {
+                    // Neuer Slot → create
+                    $course->slots()->create([
+                        'date'       => $slotData['date'],
+                        'start_time' => $slotData['start_time'],
+                        'end_time'   => $slotData['end_time'],
+                        'price'      => $slotData['price'] ?? null,
+                        'capacity'   => $slotData['capacity'] ?? null,
+                    ]);
+                }
+            }
+        }
+
         return response()->json([
-            'message' => 'Kurs aktualisiert',
-            'course' => $course
+            'message' => 'Kurs erfolgreich aktualisiert',
+            'course' => $course->load('slots')
         ]);
-    }
+    }   
 
     /**
      * Kurs löschen (optional)
      */
     public function destroy(Course $course)
     {
+        $this->authorize('delete', $course);
         $course->delete();
 
         return response()->json([

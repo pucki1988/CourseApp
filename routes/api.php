@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Course\CourseBookingController;
 use App\Http\Controllers\Course\CourseController;
+use App\Http\Controllers\Course\CourseSlotController;
 
 Route::middleware(['auth:sanctum','role:admin'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
@@ -19,8 +20,17 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    #Route::get('/courses', [CourseController::class,'index']);
-    #Route::get('/courses/{course}', [CourseController::class,'show']);
-    Route::post('/courses/{course}/book', [CourseBookingController::class,'store']);
-    Route::apiResource('courses', CourseController::class);
+    // Kurse
+    Route::get('/courses', [CourseController::class, 'index']);
+    Route::get('/courses/{course}', [CourseController::class, 'show']);
+    Route::post('/courses', [CourseController::class, 'store']);
+    Route::put('/courses/{course}', [CourseController::class, 'update']);
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
+
+    // Slots
+    Route::get('/courses/{course}/slots', [CourseSlotController::class, 'index']);
+    Route::get('/slots/{slot}', [CourseSlotController::class, 'show']);
+    Route::post('/courses/{course}/slots', [CourseSlotController::class, 'store']);
+    Route::put('/slots/{slot}', [CourseSlotController::class, 'update']);
+    Route::delete('/slots/{slot}', [CourseSlotController::class, 'destroy']);
 });

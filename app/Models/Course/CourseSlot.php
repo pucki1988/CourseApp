@@ -15,6 +15,6 @@ class CourseSlot extends Model
 
     public function bookings()
     {
-        return $this->belongsToMany(CourseBooking::class, 'course_booking_dates');
+        return $this->belongsToMany(CourseBooking::class, 'course_booking_slots');
     }
 }

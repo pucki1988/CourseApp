@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class RoleSeeder extends Seeder
 {
@@ -24,5 +25,44 @@ class RoleSeeder extends Seeder
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role]);
         }
+
+         $permissions = [
+            // Kurse
+            'courses.create',
+            'courses.update',
+            'courses.update.own',
+            'courses.delete',
+            'courses.delete.own',
+
+            // Slots
+            'courseslots.create',
+            'courseslots.create.own',
+            'courseslots.update',
+            'courseslots.update.own',
+            'courseslots.delete',
+            'courseslots.delete.own',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        $admin = Role::where('name', 'admin')->first();
+        $manager = Role::where('name', 'manager')->first();
+        $coach = Role::where('name', 'coach')->first();
+
+        // Admin + Manager = alle Permissions
+        $admin->syncPermissions(Permission::all());
+        $manager->syncPermissions(Permission::all());
+
+        // Coach = nur eigene Kurse/Slots
+        $coach->syncPermissions([
+            'courses.create',
+            'courses.update.own',
+            'courses.delete.own',
+            'courseslots.create.own',
+            'courseslots.update.own',
+            'courseslots.delete.own',
+        ]);
     }
 }

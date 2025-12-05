@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::firstOrCreate(
+        $user=User::firstOrCreate(
             ['email' => 'schuster-andi@gmx.de'],
             [
                 'name' => 'Andreas Schuster',
@@ -25,5 +25,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(RoleSeeder::class);
+
+        $user->assignRole('admin');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 
 class Course extends Model
 {
+
     protected $fillable = ['title','description','booking_type','price','capacity','coach_id'];
 
     public function slots()
