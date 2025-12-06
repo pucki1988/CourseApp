@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourseSlot extends Model
 {
-    protected $fillable = ['course_id','date','start_time','end_time','price','capacity'];
+    protected $fillable = ['course_id','date','start_time','end_time','price','capacity','min_participants',
+    'status',
+    'rescheduled_at',];
 
     public function course()
     {

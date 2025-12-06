@@ -33,4 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/courses/{course}/slots', [CourseSlotController::class, 'store']);
     Route::put('/slots/{slot}', [CourseSlotController::class, 'update']);
     Route::delete('/slots/{slot}', [CourseSlotController::class, 'destroy']);
+    Route::put('/slots/{slot}/reschedule', [CourseSlotController::class, 'reschedule']);
+    Route::put('/slots/{slot}/cancel', [CourseSlotController::class, 'cancel']);
+
 });

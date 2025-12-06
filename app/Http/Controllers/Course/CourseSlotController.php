@@ -28,6 +28,7 @@ class CourseSlotController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
             'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
+            'min_participants' => 'required|integer|min:1',
         ]);
 
         $slot = $course->slots()->create($data);
@@ -56,6 +57,7 @@ class CourseSlotController extends Controller
             'end_time' => 'sometimes|required|date_format:H:i|after:start_time',
             'price' => 'sometimes|nullable|numeric|min:0',
             'capacity' => 'sometimes|nullable|integer|min:1',
+            'min_participants' => 'required|integer|min:1',
         ]);
 
         $slot->update($data);
@@ -74,5 +76,39 @@ class CourseSlotController extends Controller
         return response()->json([
             'message' => 'Slot erfolgreich gelöscht'
         ], 200);
+    }
+
+    public function reschedule(Request $request, CourseSlot $slot)
+    {
+        $this->authorize('update', $slot);
+
+        $validated = $request->validate([
+            'date'       => 'required|date',
+            'start_time' => 'required',
+            'end_time'   => 'required',
+            'rescheduled_at' => now(),
+        ]);
+
+        $slot->update($validated);
+
+        return response()->json([
+            'message' => 'Slot wurde verschoben.',
+            'slot' => $slot
+        ]);
+    }
+    
+    public function cancel(CourseSlot $slot)
+    {
+        $this->authorize('update', $slot);
+
+        // falls buchungen existieren → optional kontakt oder automatisches Handling
+        $slot->update([
+            'status' => 'cancelled'
+        ]);
+
+        return response()->json([
+            'message' => 'Slot wurde abgesagt.',
+            'slot' => $slot
+        ]);
     }
 }

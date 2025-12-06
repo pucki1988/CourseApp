@@ -28,6 +28,7 @@ class CourseController extends Controller
             'slots.*.end_time'    => 'required_with:slots|date_format:H:i|after:slots.*.start_time',
             'slots.*.price'       => 'nullable|numeric|min:0',
             'slots.*.capacity'    => 'nullable|integer|min:1',
+            'slots.*.min_participants'    => 'nullable|integer|min:1',
         ]);
 
         $course = Course::create($data);
@@ -41,6 +42,7 @@ class CourseController extends Controller
                     'end_time'   => $slot['end_time'],
                     'price'      => $slot['price'] ?? null,
                     'capacity'   => $slot['capacity'] ?? null,
+                    'min_participants' => $slot['min_participants'] ?? null,
                 ]);
             }
         }
@@ -101,6 +103,8 @@ class CourseController extends Controller
                     'end_time' => $slot->end_time,
                     'price' => $slot->price,
                     'capacity' => $slot->capacity,
+                    'status' => $slot->status,
+                    'rescheduled_at' => $slot->rescheduled_at,
                     'booked' => $slot->bookings()->where('status', 'confirmed')->count(),
                 ];
             }),
@@ -132,6 +136,7 @@ class CourseController extends Controller
             'slots.*.end_time'   => 'required_with:slots|date_format:H:i|after:slots.*.start_time',
             'slots.*.price'      => 'nullable|numeric|min:0',
             'slots.*.capacity'   => 'nullable|integer|min:1',
+            'slots.*.min_participants' => 'required|integer|min:1',
         ]);
 
         // Kursdaten aktualisieren
@@ -164,6 +169,7 @@ class CourseController extends Controller
                             'end_time'   => $slotData['end_time'],
                             'price'      => $slotData['price'] ?? null,
                             'capacity'   => $slotData['capacity'] ?? null,
+                            'min_participants' => $slotData['capacity'] ?? null,
                         ]);
 
                 } else {
@@ -174,6 +180,7 @@ class CourseController extends Controller
                         'end_time'   => $slotData['end_time'],
                         'price'      => $slotData['price'] ?? null,
                         'capacity'   => $slotData['capacity'] ?? null,
+                        'min_participants' => $slotData['capacity'] ?? null,
                     ]);
                 }
             }
