@@ -42,7 +42,7 @@ class CourseController extends Controller
                     'end_time'   => $slot['end_time'],
                     'price'      => $slot['price'] ?? null,
                     'capacity'   => $slot['capacity'] ?? null,
-                    'min_participants' => $slot['min_participants'] ?? null,
+                    'min_participants' => $slot['min_participants'] ?? 1,
                 ]);
             }
         }

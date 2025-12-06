@@ -99,7 +99,7 @@ class CourseSlotController extends Controller
     
     public function cancel(CourseSlot $slot)
     {
-        $this->authorize('update', $slot);
+        $this->authorize('cancel', $slot);
 
         // falls buchungen existieren → optional kontakt oder automatisches Handling
         $slot->update([

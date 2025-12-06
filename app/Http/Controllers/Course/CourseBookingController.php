@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Course;
 
-use App\Models\Course;
-use App\Models\CourseBooking;
-use App\Models\CourseSlot;
+use App\Models\Course\Course;
+use App\Models\Course\CourseBooking;
+use App\Models\Course\CourseSlot;
 use App\Http\Controllers\Controller;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ class CourseBookingController extends Controller
             return $this->bookWholeCourse($course);
         }
 
-        return $this->bookPerDate($request, $course);
+        return $this->bookPerSlot($request, $course);
     }
 
     protected function bookWholeCourse(Course $course)
@@ -42,7 +42,7 @@ class CourseBookingController extends Controller
         ]);
     }
 
-    protected function bookPerDate(Request $request, Course $course)
+    protected function bookPerSlot(Request $request, Course $course)
     {
         $request->validate([
             'slots'=>['required','array'],

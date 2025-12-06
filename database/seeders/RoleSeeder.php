@@ -41,6 +41,9 @@ class RoleSeeder extends Seeder
             'courseslots.update.own',
             'courseslots.delete',
             'courseslots.delete.own',
+            'courseslots.cancel',
+            'courseslots.cancel.own',
+
         ];
 
         foreach ($permissions as $permission) {
@@ -63,6 +66,7 @@ class RoleSeeder extends Seeder
             'courseslots.create.own',
             'courseslots.update.own',
             'courseslots.delete.own',
+            'courseslots.cancel.own',
         ]);
     }
 }
