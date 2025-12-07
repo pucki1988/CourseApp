@@ -41,7 +41,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
             $table->decimal('total_price', 8, 2);
-            $table->enum('status', ['confirmed','waitlist'])->default('confirmed');
+            $table->enum('status', ['confirmed','waitlist','canceled','partial'])->default('confirmed');
             $table->enum('payment_status', ['open','pending','paid','canceled','expired','failed'])->default('open');
             $table->string('payment_transaction_id')->nullable();
             $table->timestamps();

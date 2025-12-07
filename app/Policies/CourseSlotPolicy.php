@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\CourseSlot;
+use App\Models\Course\CourseSlot;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -24,12 +24,12 @@ class CourseSlotPolicy
         return $user->hasRole('coach') && $course->coach_id === $user->id;
     }
 
-    public function update(User $user, CourseSlot $slot)
+    public function update(User $user, CourseSlot $courseSlot)
     {
         if ($user->hasRole('manager')) {
             return true;
         }
-        return $user->hasRole('coach') && $slot->course->coach_id === $user->id;
+        return $user->hasRole('coach') && $courseSlot->course->coach_id === $user->id;
     }
 
     public function cancel(User $user, CourseSlot $slot)

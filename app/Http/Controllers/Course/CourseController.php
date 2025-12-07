@@ -105,7 +105,7 @@ class CourseController extends Controller
                     'capacity' => $slot->capacity,
                     'status' => $slot->status,
                     'rescheduled_at' => $slot->rescheduled_at,
-                    'booked' => $slot->bookings()->where('status', 'confirmed')->count(),
+                    'booked' => $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count(),
                 ];
             }),
         ]);

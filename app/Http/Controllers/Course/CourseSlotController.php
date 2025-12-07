@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Course;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Course\CourseSlot;
 
 class CourseSlotController extends Controller
 {
@@ -78,9 +79,9 @@ class CourseSlotController extends Controller
         ], 200);
     }
 
-    public function reschedule(Request $request, CourseSlot $slot)
+    public function reschedule(Request $request, CourseSlot $courseSlot)
     {
-        $this->authorize('update', $slot);
+        $this->authorize('update', $courseSlot);
 
         $validated = $request->validate([
             'date'       => 'required|date',
@@ -89,14 +90,15 @@ class CourseSlotController extends Controller
             'rescheduled_at' => now(),
         ]);
 
-        $slot->update($validated);
+        $courseSlot->update($validated);
 
         return response()->json([
             'message' => 'Slot wurde verschoben.',
-            'slot' => $slot
+            'slot' => $courseSlot
         ]);
     }
     
+    //Trainer sagt Slot ab.
     public function cancel(CourseSlot $slot)
     {
         $this->authorize('cancel', $slot);
