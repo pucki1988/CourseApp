@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Course;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Course\CourseSlot;
+use App\Models\Course\Course;
 
 class CourseSlotController extends Controller
 {
@@ -23,18 +24,22 @@ class CourseSlotController extends Controller
     {
         $this->authorize('create', [CourseSlot::class, $course]);
 
-        $data = $request->validate([
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'price' => 'nullable|numeric|min:0',
-            'capacity' => 'nullable|integer|min:1',
-            'min_participants' => 'required|integer|min:1',
+        $validated = $request->validate([
+        'slots' => 'required|array|min:1',
+        'slots.*.date' => 'required|date',
+        'slots.*.start_time' => 'required|date_format:H:i',
+        'slots.*.end_time' => 'required|date_format:H:i|after:slots.*.start_time',
+        'slots.*.price' => 'nullable|numeric|min:0',
+        'slots.*.capacity' => 'nullable|integer|min:1',
         ]);
 
-        $slot = $course->slots()->create($data);
+        $createdSlots = [];
 
-        return response()->json(['message' => 'Slot erstellt', 'slot' => $slot]);
+        foreach ($validated['slots'] as $slotData) {
+            $createdSlots[] = $course->slots()->create($slotData);
+        }
+
+        return response()->json(['message' => 'Slot erstellt', 'slots' => $createdSlots]);
     }
 
     /**
@@ -69,7 +74,7 @@ class CourseSlotController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Slot $slot)
+    public function destroy(CourseSlot $slot)
     {
         $this->authorize('delete', $slot);
         $slot->delete();
@@ -81,14 +86,14 @@ class CourseSlotController extends Controller
 
     public function reschedule(Request $request, CourseSlot $courseSlot)
     {
-        $this->authorize('update', $courseSlot);
+        $this->authorize('reschedule', $courseSlot);
 
         $validated = $request->validate([
             'date'       => 'required|date',
             'start_time' => 'required',
             'end_time'   => 'required',
-            'rescheduled_at' => now(),
         ]);
+        $validated['rescheduled_at'] = now();
 
         $courseSlot->update($validated);
 
@@ -103,7 +108,7 @@ class CourseSlotController extends Controller
     {
         $this->authorize('cancel', $slot);
 
-        // falls buchungen existieren → optional kontakt oder automatisches Handling
+        
         $slot->update([
             'status' => 'cancelled'
         ]);

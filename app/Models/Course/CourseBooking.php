@@ -5,7 +5,7 @@ use App\Models\User;
 
 class CourseBooking extends Model
 {
-    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id'];
+    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type'];
 
     public function user()
     {

@@ -30,7 +30,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
-            $table->decimal('price', 8, 2)->nullable(); // nur bei per_date
+            $table->decimal('price', 8, 2)->nullable(); 
             $table->integer('capacity')->nullable();
             $table->timestamps();
         });

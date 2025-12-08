@@ -24,11 +24,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{course}', [CourseController::class, 'show']);
     Route::post('/courses', [CourseController::class, 'store']);
-    Route::put('/courses/{course}', [CourseController::class, 'update']);
+    #Route::put('/courses/{course}', [CourseController::class, 'update']);
     Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
 
     // Slots
-    Route::get('/courses/{course}/slots', [CourseSlotController::class, 'index']);
+    #Route::get('/courses/{course}/slots', [CourseSlotController::class, 'index']);
     Route::get('/slots/{slot}', [CourseSlotController::class, 'show']);
     Route::post('/courses/{course}/slots', [CourseSlotController::class, 'store']);
     Route::put('/slots/{slot}', [CourseSlotController::class, 'update']);

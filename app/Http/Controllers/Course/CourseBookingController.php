@@ -80,7 +80,7 @@ class CourseBookingController extends Controller
         // 3️⃣ Gesamtstatus der Buchung ableiten
         if (collect($slotStatuses)->contains(fn($s) => $s['status'] === 'waitlist')) {
             $bookingStatus = 'waitlist';
-        } else {
+        }else {
             $bookingStatus = 'confirmed';
         }
 
@@ -119,7 +119,7 @@ class CourseBookingController extends Controller
     {
         $this->authorize('cancelSlot', $courseBooking);
         $booking = CourseBooking::where('id', $courseBooking->id)
-            ->where('user_id', auth()->id())
+            ->where('user_id', operator: auth()->id())
             ->firstOrFail();
 
         // Pivot-Eintrag aktualisieren

@@ -1,15 +1,16 @@
 ToDo
 
-Absagen / Änderungen von Terminen
+Kurs / SLot
 e Slot verschieben oder absagen
 + E-Mail beim absagen oder verschieben
 e Wenn schon Buchungen auf Slots dann löschen nicht mehr möglich
 e Wenn Mindestteilnehmer erreicht dann absagen auch nicht mehr möglich nur verschieben
 e Mindestteilnehmer je Slot 
-+ Bei Vollterminen Mindestteilnehmer je Slot 1
+e Bei Vollterminen Mindestteilnehmer je Slot 1
 + Info bei Absagen oder Verschiebungen an Teilnehmer
 + Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermittelt werden? 
-+ Bei "all" Buchungen ist das absagen/stornieren einzelner Slots nicht möglich.
+e Bei "all" Buchungen ist das absagen einzelner Slots nicht möglich. Nur verschieben.
+
 
 Buchungen
 + Was passiert beim absagen oder verschieben mit der Buchung?
@@ -17,6 +18,7 @@ Buchungen
 + Einzelne Termine stornieren
 + Rückbuckungen
 + Zahlungsabwicklungen
++ Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
 
 
 Preislogik

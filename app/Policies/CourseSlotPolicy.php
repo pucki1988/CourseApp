@@ -29,11 +29,26 @@ class CourseSlotPolicy
         if ($user->hasRole('manager')) {
             return true;
         }
+        
+        if($user->hasRole('coach') && $courseSlot->course->coach_id === $user->id && $courseSlot->bookings()->count() === 0){
+            return true;
+        }
+    }
+
+    public function reschedule(User $user, CourseSlot $courseSlot)
+    {
+        if ($user->hasRole('manager')) {
+            return true;
+        }
         return $user->hasRole('coach') && $courseSlot->course->coach_id === $user->id;
     }
 
     public function cancel(User $user, CourseSlot $slot)
     {
+        if ($slot->course->booking_type === 'all') {
+            return false;
+        }
+
         // Manager darf nur absagen, wenn Mindestteilnehmerzahl noch nicht erreicht
         if ($user->hasRole('manager')) {
             return $slot->bookings()->count() < $slot->min_participants;
@@ -44,6 +59,8 @@ class CourseSlotPolicy
             return $slot->course->coach_id === $user->id
                 && $slot->bookings()->count() < $slot->min_participants;
         }
+
+        
 
         // Alle anderen dürfen nicht absagen
         return false;
