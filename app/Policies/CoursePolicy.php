@@ -18,6 +18,14 @@ class CoursePolicy
         }
     }
 
+    public function viewAny(User $user)
+    {
+        if ($user->hasRole('manager')) {
+            return true;
+        }
+        return $user->hasRole('coach');
+    }
+
     public function create(User $user)
     {
         if ($user->hasRole('manager')) {

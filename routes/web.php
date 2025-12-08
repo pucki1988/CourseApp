@@ -9,8 +9,11 @@ Route::get('/', function () {
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified','role:admin'])
+    ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Volt::route('/courses', 'courses.index')
+    ->name('courses.index');   
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
