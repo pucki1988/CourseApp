@@ -10,6 +10,12 @@ class CourseSlot extends Model
     'status',
     'rescheduled_at',];
 
+    protected $casts = [
+        'date'       => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time'   => 'datetime:H:i',
+    ];
+
     public function course()
     {
         return $this->belongsTo(Course::class);

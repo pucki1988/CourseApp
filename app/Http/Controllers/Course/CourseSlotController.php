@@ -10,13 +10,7 @@ use App\Services\Course\CourseSlotService;
 
 class CourseSlotController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        
-    }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -58,6 +52,12 @@ class CourseSlotController extends Controller
         return response()->json([
             'message' => 'Slot erfolgreich gelöscht'
         ], 200);
+    }
+
+    public function index(Request $request, CourseSlotService $service)
+    {
+        $slots = $service->listSlots();
+        return response()->json($slots);
     }
 
     public function reschedule(Request $request, CourseSlot $courseSlot,CourseSlotService $service)

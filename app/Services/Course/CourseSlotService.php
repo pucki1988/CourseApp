@@ -40,7 +40,7 @@ class CourseSlotService
 
     public function listSlots(array $filters = [])
     {
-        /*CourseSlot::whereHas('course', function ($q) use ($filters) {
+        $query=CourseSlot::with('bookings')->whereHas('course', function ($q) use ($filters) {
             if (auth()->user()->hasRole('coach')) {
                 $q->where('coach_id', auth()->id());
             }
@@ -51,10 +51,10 @@ class CourseSlotService
         })
         ->where('date', '>=', now())
         ->orderBy('date')
-        ->limit($filters['limit'] ?? 3)*/
-        $query = CourseSlot::with(['course']);
+        ->limit($filters['limit'] ?? 20);
+        
 
-        $query->get();
+        return $query->get();
     }
 
 
