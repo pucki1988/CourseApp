@@ -26,10 +26,6 @@ class CourseService
             $query->where('coach_id', $filters['coach_id']);
         }
 
-        if (!empty($filters['booking_type'])) {
-            $query->where('booking_type', $filters['booking_type']);
-        }
-
         return $query->get();
     }
 

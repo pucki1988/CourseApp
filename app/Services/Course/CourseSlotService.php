@@ -38,6 +38,25 @@ class CourseSlotService
         return $created;
     }
 
+    public function listSlots(array $filters = [])
+    {
+        /*CourseSlot::whereHas('course', function ($q) use ($filters) {
+            if (auth()->user()->hasRole('coach')) {
+                $q->where('coach_id', auth()->id());
+            }
+
+            if (!empty($filters['coach_id'])) {
+                $q->where('coach_id', $filters['coach_id']);
+            }
+        })
+        ->where('date', '>=', now())
+        ->orderBy('date')
+        ->limit($filters['limit'] ?? 3)*/
+        $query = CourseSlot::with(['course']);
+
+        $query->get();
+    }
+
 
     /**
      * Update a single CourseSlot.
