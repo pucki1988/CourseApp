@@ -22,9 +22,15 @@ class CourseBookingPolicy
         }
     }
 
-    public function view(User $user, CourseBooking $booking)
+    public function viewAny(User $user)
     {
-        return $user->id === $booking->user_id;
+        // Admin & Manager sehen alles
+        if ($user->hasRole('admin') || $user->hasRole('manager')) {
+            return true;
+        }
+
+        // Normale User dürfen nur ihre eigenen Buchungen sehen (geregelt in Query)
+        return true;
     }
 
     public function update(User $user, CourseBooking $booking)

@@ -12,8 +12,8 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Volt::route('/courses', 'courses.index')
-    ->name('courses.index');   
+
+
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -32,4 +32,8 @@ Route::middleware(['auth'])->group(function () {
             ),
         )
         ->name('two-factor.show');
+    Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
+    Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');      
+    Volt::route('/courses/{course}', '.course_management.courses.show')->name('course_management.courses.show');
+    Volt::route('/bookings', 'course_management.bookings.index')->name('course_management.bookings.index');      
 });
