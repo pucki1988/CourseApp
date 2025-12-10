@@ -12,20 +12,25 @@ new class extends Component {
     public $coachId = null;
     public $perPage = 10;
 
-   public array $newCourse = [
-        'booking_type' => 'all', // Defaultwert
-        'price' => null,
-        'title' => '',
-        'description' => '',
-        'capacity' => null,
-        'min_participants' => null,
-        'coach_id' => null,
-        ];
+   public array $newCourse;
 
     public function mount(CourseService $service)
     {
         $this->authorize('viewAny', Course::class);
+        $this->initializeNewCourse();
         $this->loadCourses($service);
+    }
+
+    private function initializeNewCourse(){
+        $this->newCourse = [
+            'booking_type' => 'per_slot', // Defaultwert
+            'price' => null,
+            'title' => '',
+            'description' => '',
+            'capacity' => null,
+            'min_participants' => null,
+            'coach_id' => null,
+        ];
     }
 
     public function updated($property, CourseService $service)
@@ -45,9 +50,15 @@ new class extends Component {
         $this->courses = $service->listCourses($filters);
     }
 
-    public function createCourse()
+    public function createCourse(CourseService $service)
     {
+        $service->createCourse($this->newCourse);
         
+        // Modal schließen
+        Flux::modal('course')->close();
+        $this->initializeNewCourse();
+
+         $this->loadCourses($service);
     }
 
 };
@@ -122,7 +133,7 @@ new class extends Component {
         
     </div>
     
-    <flux:modal name="course" flyout :dismissible="false">
+    <flux:modal name="course" :dismissible="false" flyout>
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Neuen Kurs erstellen</flux:heading>
@@ -141,12 +152,12 @@ new class extends Component {
             <flux:field>
             <flux:label>Kurstyp</flux:label>
             <flux:select  :value="$newCourse['booking_type']" wire:change="$set('newCourse.booking_type', $event.target.value)" placeholder="Wähle den Kurstyp">
-                <flux:select.option value="all">Full</flux:select.option>
-                <flux:select.option value="per_slot">Je Termin</flux:select.option>
+                <flux:select.option value="all">Alle Termine ein Gesamtpreis</flux:select.option>
+                <flux:select.option value="per_slot">Jeder Termin ein Preis</flux:select.option>
             </flux:select>
             </flux:field>
 
-            @if(isset($newCourse['booking_type']) && $newCourse['booking_type'] === 'all')
+            @if($newCourse['booking_type'] === 'all')
              <flux:input wire:model="newCourse.price" label="Preis" type="number" />
             @endif
 
@@ -154,9 +165,9 @@ new class extends Component {
             <flux:input wire:model="newCourse.min_participants" label="Mindestteilnehmer" placeholder="Mindestteilnehmer je Termin" min="1"  type="number" />
             
             <flux:label>Coach</flux:label>
-            <flux:select wire:model="newCourse.coach_id" placeholder="Trainer auswählen">
+            <flux:select :value="$newCourse['coach_id']" wire:change="$set('newCourse.coach_id', $event.target.value)" placeholder="Trainer auswählen">
                 @foreach(User::role('coach')->get() as $coach)
-                    <flux:select.option :value="$coach->id">{{ $coach->name }}</flux:select.option>
+                    <flux:select.option value="{{$coach->id}}">{{ $coach->name }}</flux:select.option>
                 @endforeach
             </flux:select>
             <div class="flex">

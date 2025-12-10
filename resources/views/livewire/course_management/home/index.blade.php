@@ -48,7 +48,9 @@ new class extends Component {
         // Liste neu laden
         $this->loadSlots($service);
 
-        $this->dispatch('notify', message: 'Termin wurde abgesagt.');
+        // Optional: Toast / Notification
+        $this->calloutHeading = 'Termin wurde abgesagt';
+        $this->showCallout = true;
     }
 
     public function confirmReschedule(CourseSlot $slot)
@@ -72,7 +74,6 @@ new class extends Component {
 
         // Optional: Toast / Notification
         $this->calloutHeading = 'Termin wurde verschoben';
-        $this->calloutMessage = 'Der Termin wurde erfolgreich verschoben.';
         $this->showCallout = true;
 
         $this->loadSlots($service);
