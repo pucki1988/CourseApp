@@ -19,11 +19,7 @@
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
 
-                <flux:navlist.group heading="Kursverwaltung" expandable :expanded="false">
-                    <flux:navlist.item href="#">Profile</flux:navlist.item>
-                    <flux:navlist.item href="#">Settings</flux:navlist.item>
-                    <flux:navlist.item href="#">Billing</flux:navlist.item>
-                </flux:navlist.group>
+                
             </flux:navlist>
 
 

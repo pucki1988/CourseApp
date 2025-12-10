@@ -12,6 +12,16 @@ new class extends Component {
     public $coachId = null;
     public $perPage = 10;
 
+   public array $newCourse = [
+        'booking_type' => 'all', // Defaultwert
+        'price' => null,
+        'title' => '',
+        'description' => '',
+        'capacity' => null,
+        'min_participants' => null,
+        'coach_id' => null,
+        ];
+
     public function mount(CourseService $service)
     {
         $this->authorize('viewAny', Course::class);
@@ -35,6 +45,11 @@ new class extends Component {
         $this->courses = $service->listCourses($filters);
     }
 
+    public function createCourse()
+    {
+        
+    }
+
 };
 ?>
 
@@ -42,6 +57,18 @@ new class extends Component {
     @include('partials.courses-heading')
 
     <x-courses.layout :heading="__('Kurse')" :subheading="__('Deine Kurse')">
+    <div class="text-end">
+    <flux:dropdown>
+        <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>
+        <flux:menu>
+            <flux:modal.trigger name="course">
+                <flux:menu.item icon="plus">Neuen Kurs erstellen</flux:menu.item>
+            </flux:modal.trigger>
+        </flux:menu>
+    </flux:dropdown>
+    </div>    
+
+    
         
     <!-- FILTERS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -64,6 +91,7 @@ new class extends Component {
         
 
     </div>
+    
 
     <!-- COURSES LIST -->
     <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
@@ -92,7 +120,52 @@ new class extends Component {
     <!-- Pagination -->
     <div class="mt-4">
         
-    </div>    
+    </div>
+    
+    <flux:modal name="course" flyout :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Neuen Kurs erstellen</flux:heading>
+                <flux:text class="mt-2"></flux:text>
+            </div>
+            <form wire:submit.prevent="createCourse" class="space-y-4">
+            <flux:input label="Titel" placeholder="Name des Kurses" type="text" :value="$newCourse['title']"
+    wire:change="$set('newCourse.title', $event.target.value)" />
+            
+            <flux:textarea
+                label="Beschreibung"
+                placeholder="Beschreibung des Kurses"
+                :value="$newCourse['description']"
+    wire:change="$set('newCourse.description', $event.target.value)"
+            />
+            <flux:field>
+            <flux:label>Kurstyp</flux:label>
+            <flux:select  :value="$newCourse['booking_type']" wire:change="$set('newCourse.booking_type', $event.target.value)" placeholder="Wähle den Kurstyp">
+                <flux:select.option value="all">Full</flux:select.option>
+                <flux:select.option value="per_slot">Je Termin</flux:select.option>
+            </flux:select>
+            </flux:field>
+
+            @if(isset($newCourse['booking_type']) && $newCourse['booking_type'] === 'all')
+             <flux:input wire:model="newCourse.price" label="Preis" type="number" />
+            @endif
+
+            <flux:input wire:model="newCourse.capacity" label="Kapazität" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" />
+            <flux:input wire:model="newCourse.min_participants" label="Mindestteilnehmer" placeholder="Mindestteilnehmer je Termin" min="1"  type="number" />
+            
+            <flux:label>Coach</flux:label>
+            <flux:select wire:model="newCourse.coach_id" placeholder="Trainer auswählen">
+                @foreach(User::role('coach')->get() as $coach)
+                    <flux:select.option :value="$coach->id">{{ $coach->name }}</flux:select.option>
+                @endforeach
+            </flux:select>
+            <div class="flex">
+                <flux:spacer />
+                <flux:button type="submit" variant="primary">Kurs erstellen</flux:button>
+            </div>
+            </form>
+        </div>
+    </flux:modal>    
         
     </x-courses.layout>
 </section>

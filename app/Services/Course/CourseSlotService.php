@@ -45,13 +45,18 @@ class CourseSlotService
                 $q->where('coach_id', auth()->id());
             }
 
-            if (!empty($filters['coach_id'])) {
-                $q->where('coach_id', $filters['coach_id']);
+            
+            if (!empty($filters['status'])) {
+                $q->where('status', $filters['status']);
             }
         })
         ->where('date', '>=', now())
-        ->orderBy('date')
-        ->limit($filters['limit'] ?? 20);
+        ->orderBy('date');
+
+        if (!empty($filters['limit'])) {
+            $query->limit($filters['limit'] ?? 3);
+        }
+       
         
 
         return $query->get();
@@ -95,9 +100,10 @@ class CourseSlotService
     /**
      * Reschedule an existing slot.
      */
-    public function rescheduleSlot(CourseSlot $slot, array $input)
+    public function rescheduleSlot(array $input)
     {
         $validator = Validator::make($input, [
+            'id'         => 'required|exists:course_slots,id',
             'date'       => 'required|date',
             'start_time' => 'required',
             'end_time'   => 'required',
@@ -109,6 +115,7 @@ class CourseSlotService
 
         $data = $validator->validated();
         $data['rescheduled_at'] = now();
+        $slot = CourseSlot::findOrFail($data['id']);
 
         $slot->update($data);
 

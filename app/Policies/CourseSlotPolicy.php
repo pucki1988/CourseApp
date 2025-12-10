@@ -51,13 +51,13 @@ class CourseSlotPolicy
 
         // Manager darf nur absagen, wenn Mindestteilnehmerzahl noch nicht erreicht
         if ($user->hasRole('manager')) {
-            return $slot->bookings()->count() < $slot->min_participants;
+            return $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() < $slot->min_participants;
         }
 
         // Coach darf nur eigene Slots absagen, und nur wenn Mindestteilnehmerzahl noch nicht erreicht
         if ($user->hasRole('coach')) {
             return $slot->course->coach_id === $user->id
-                && $slot->bookings()->count() < $slot->min_participants;
+                && $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() < $slot->min_participants;
         }
 
         
