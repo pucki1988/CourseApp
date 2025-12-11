@@ -20,6 +20,7 @@ class CourseSlotService
             'slots.*.start_time' => 'required|date_format:H:i',
             'slots.*.end_time' => 'required|date_format:H:i|after:slots.*.start_time',
             'slots.*.price' => 'nullable|numeric|min:0',
+            'slots.*.min_participants' => 'required|integer|min:1',
             'slots.*.capacity' => 'nullable|integer|min:1',
         ]);
 

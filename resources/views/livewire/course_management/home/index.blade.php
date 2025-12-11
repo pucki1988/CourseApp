@@ -130,10 +130,10 @@ new class extends Component {
                 <div class="flex gap-2">
                     <flux:spacer />
                     @can('reschedule', $slot)
-                        <flux:button variant="primary" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:button>
+                        <flux:button size="sm" variant="primary" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:button>
                     @endcan
                     @can('cancel', $slot)
-                        <flux:button variant="danger" wire:click="confirmCancel({{ $slot }})">Absagen</flux:button>
+                        <flux:button size="sm" variant="danger" wire:click="confirmCancel({{ $slot }})">Absagen</flux:button>
                     @endcan
                 </div>
 
