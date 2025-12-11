@@ -28,7 +28,6 @@ new class extends Component {
             'title' => '',
             'description' => '',
             'capacity' => null,
-            'min_participants' => null,
             'coach_id' => null,
         ];
     }
@@ -146,6 +145,7 @@ new class extends Component {
             <flux:textarea
                 label="Beschreibung"
                 placeholder="Beschreibung des Kurses"
+                rows="2"
                 :value="$newCourse['description']"
     wire:change="$set('newCourse.description', $event.target.value)"
             />
@@ -158,11 +158,10 @@ new class extends Component {
             </flux:field>
 
             @if($newCourse['booking_type'] === 'all')
-             <flux:input wire:model="newCourse.price" label="Preis" type="number" />
+             <flux:input wire:model="newCourse.price" label="Preis" step="0.01" type="number" />
             @endif
 
             <flux:input wire:model="newCourse.capacity" label="Kapazität" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" />
-            <flux:input wire:model="newCourse.min_participants" label="Mindestteilnehmer" placeholder="Mindestteilnehmer je Termin" min="1"  type="number" />
             
             <flux:label>Coach</flux:label>
             <flux:select :value="$newCourse['coach_id']" wire:change="$set('newCourse.coach_id', $event.target.value)" placeholder="Trainer auswählen">

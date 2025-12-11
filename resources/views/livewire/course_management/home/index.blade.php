@@ -175,11 +175,11 @@ new class extends Component {
     <flux:modal name="reschedule" flyout>
         <form wire:submit="reschedule">
         
-        <flux:heading size="lg">Termin verschieben</flux:heading>
+        <flux:heading size="lg" class="mb-2">Termin verschieben</flux:heading>
 
-        <flux:input class="mt-2" type="date" label="Datum" wire:model="slotToReschedule.date"  />
-        <flux:input class="mt-2" type="time" label="Datum" wire:model="slotToReschedule.start_time"  />
-        <flux:input class="mt-2" type="time" label="Datum" wire:model="slotToReschedule.end_time"  />
+        <flux:input class="mb-2" type="date" label="Datum" wire:model="slotToReschedule.date"  />
+        <flux:input class="mb-2" type="time" label="Beginn" wire:model="slotToReschedule.start_time"  />
+        <flux:input class="mb-2" type="time" label="Ende" wire:model="slotToReschedule.end_time"  />
 
         <div class="mt-4 flex justify-end space-x-2">
             <flux:modal.close>
