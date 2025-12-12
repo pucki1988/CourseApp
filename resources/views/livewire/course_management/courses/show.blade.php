@@ -16,8 +16,12 @@ new class extends Component {
 
    
 
+    
+    public ?CourseSlot $slotToCancel = null;
+    public ?CourseSlot $slotToDelete = null;
 
-   public ?CourseSlot $slotToCancel = null;
+    public ?CourseSlot $showSlot=null;
+
     public array $slotToReschedule = [];
 
     public function mount(Course $course, CourseService $service)
@@ -142,10 +146,22 @@ new class extends Component {
         $this->loadCourse();
     }
 
-     public function deleteSlot(CourseSlot $deleteSlot,CourseSlotService $service)
+    public function confirmDelete(CourseSlot $slot)
     {
-        $service->deleteSlot($deleteSlot);
+        $this->slotToDelete = $slot;
+        Flux::modal('delete')->show();
+    }
+
+    public function delete(CourseSlotService $service)
+    {
+        $service->deleteSlot($this->slotToDelete);
         $this->loadCourse();
+    }
+
+
+    public function showBookings(CourseSlot $slot){
+        $this->showSlot=$slot;
+        Flux::modal('bookings')->show();
     }
 
     
@@ -265,19 +281,36 @@ new class extends Component {
                     <flux:text class="mt-2">
                     <flux:badge icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
+                    @if($course->booking_type == 'per_slot')
+                    <flux:text class="mt-2">
+                    <flux:badge icon="currency-euro">{{ $slot->price }}</flux:badge> 
+                
+                    @endif
+                    </flux:text><flux:text class="mt-2">
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">  {{ $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() }} / {{ $slot->min_participants }}</flux:badge>
+                    </flux:text>
+                    
+                    
                     </div>
                 </div>
                  <div class="flex gap-2">
                     <flux:spacer />
+                    @if(auth()->user()->can('reschedule', $slot) || auth()->user()->can('cancel', $slot) || auth()->user()->can('delete', $slot))
+                    <flux:dropdown position="top">
+                        <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
+                    <flux:menu>
                     @can('reschedule', $slot)
-                        <flux:button variant="primary" size="xs" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:button>
+                    <flux:menu.item icon="chevron-double-right" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:menu.item>
                     @endcan
                     @can('cancel', $slot)
-                        <flux:button variant="danger"  size="xs" wire:click="confirmCancel({{ $slot }})">Absagen</flux:button>
+                    <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
-                    @can('cancel', $slot)
-                        <flux:button variant="primary" size="xs" color="yellow" wire:click="deleteSlot({{ $slot }})">Löschen</flux:button>
+                    @can('delete', $slot)
+                    <flux:menu.item icon="trash" wire:click="confirmDelete({{ $slot }})">Löschen</flux:menu.item>
                     @endcan
+                    </flux:menu>
+                    </flux:dropdown>
+                    @endif
                 </div>
 
             </div>
@@ -309,7 +342,7 @@ new class extends Component {
                     </flux:select>
                     </flux:field>
                     @if($course->booking_type === 'per_slot')
-                        <flux:input wire:model="assistent.price" step="0.01" label="Preis pro Termin" type="number" />
+                        <flux:input wire:model="assistent.price" step="0.01" label="Preis pro Termin" type="number" required />
                     @endif
 
                     <flux:input class="mt-2" min="0" type="number" label="Anzahl der Wiederholungen" wire:model="assistent.repeat"  />
@@ -346,7 +379,34 @@ new class extends Component {
                 Absagen
             </flux:button>
         </div>
-    </flux:modal>
+        </flux:modal>
+
+
+        <flux:modal name="delete" >
+        <flux:heading size="lg">Termin endgültig löschen</flux:heading>
+        
+        
+        <flux:text class="mt-2">    
+            Bist du sicher, dass du diesen Termin engültig löschen möchtest? 
+        </flux:text>
+        <flux:callout variant="warning" class="my-2" icon="exclamation-circle" heading="Die Aktion kann nicht mehr rückgängig gemacht werden" />
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="danger"
+                wire:click="delete"
+            >
+                Löschen
+            </flux:button>
+        </div>
+        </flux:modal>
 
     <flux:modal name="reschedule" flyout>
         <form wire:submit="reschedule">
@@ -372,5 +432,8 @@ new class extends Component {
         </div>
     </form>
     </flux:modal>
+
+    @include('partials.booking-name-show')
+
     </x-courses.layout>
 </section>

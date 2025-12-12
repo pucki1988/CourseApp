@@ -38,9 +38,9 @@ class CourseSlotPolicy
     public function reschedule(User $user, CourseSlot $courseSlot)
     {
         if ($user->hasRole('manager')) {
-            return true;
+            return $courseSlot->status === 'active' && $courseSlot->date >= now();
         }
-        return $user->hasRole('coach') && $courseSlot->course->coach_id === $user->id;
+        return $user->hasRole('coach') && $courseSlot->course->coach_id === $user->id && $courseSlot->status === 'active' && $courseSlot->date >= now();
     }
 
     public function cancel(User $user, CourseSlot $slot)
@@ -51,12 +51,12 @@ class CourseSlotPolicy
 
         // Manager darf nur absagen, wenn Mindestteilnehmerzahl noch nicht erreicht
         if ($user->hasRole('manager')) {
-            return $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() < $slot->min_participants;
+            return $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() < $slot->min_participants && $slot->status === 'active' && $slot->date >= now();
         }
 
         // Coach darf nur eigene Slots absagen, und nur wenn Mindestteilnehmerzahl noch nicht erreicht
         if ($user->hasRole('coach')) {
-            return $slot->course->coach_id === $user->id
+            return $slot->course->coach_id === $user->id && $slot->status === 'active' && $slot->date >= now()
                 && $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() < $slot->min_participants;
         }
 
@@ -71,9 +71,5 @@ class CourseSlotPolicy
         if ($user->hasRole('manager')) {
             return $slot->bookings()->count() === 0;
         }
-
-        return $user->hasRole('coach') 
-            && $slot->course->coach_id === $user->id
-            && $slot->bookings()->count() === 0;
     }
 }

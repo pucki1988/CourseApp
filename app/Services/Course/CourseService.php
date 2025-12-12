@@ -26,6 +26,8 @@ class CourseService
             $query->where('coach_id', $filters['coach_id']);
         }
 
+       
+
         return $query->get();
     }
 
@@ -62,7 +64,9 @@ class CourseService
      */
     public function loadCourse(Course $course)
     {
-        return $course->load(['slots', 'coach']);
+        return $course->load(['slots' => function ($q) {
+        $q->orderBy('date')->orderBy('start_time');
+        }],'coach');
     }
 
 

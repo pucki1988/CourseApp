@@ -16,7 +16,7 @@ Buchungen
 + Was passiert beim absagen oder verschieben mit der Buchung?
 + Buchung vollständig stornieren
 + Einzelne Termine stornieren
-+ Rückbuckungen
++ Rückbuckungen / Teilrückbuchungen
 + Zahlungsabwicklungen
 + Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
 
@@ -24,6 +24,9 @@ Buchungen
 Preislogik
 + Mitglieder reduziert
 + Endpreis erst nach Login Sichtbar
+
+
+
 
 //API Rückmeldungen
 + Beim Löschen, abfragen oder updaten von nicht mehr existenten Objekten

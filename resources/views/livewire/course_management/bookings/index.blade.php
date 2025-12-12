@@ -8,8 +8,8 @@ use App\Models\User;
 new class extends Component {
 
     public $bookings;
-    public $search = '';
-    public $coachId = null;
+    public string $statusFilter = ''; // '' = alle
+    public array $allowedStatuses = ['confirmed', 'waitlist', 'partial', 'canceled'];
     public $perPage = 10;
 
     public function mount(CourseBookingService $service)
@@ -18,9 +18,19 @@ new class extends Component {
         $this->loadBookings($service);
     }
 
-    public function updated($property, CourseBookingService $service)
+    /*public function updated($property, CourseBookingService $service)
     {
         $this->loadCloadBookingsourses($service);
+    }*/
+
+    public function updatedStatusFilter($property, CourseBookingService $service)
+    {
+        
+            $filters = [
+                'status' => $this->statusFilter
+            ];
+             $this->bookings=$service->listBookings($filters);
+        
     }
 
     public function loadBookings(CourseBookingService $service)
@@ -40,8 +50,20 @@ new class extends Component {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
         <!-- Suche -->
-        
 
+        <flux:field class="mb-4">
+            <flux:label>Status</flux:label>
+            <flux:select wire:model.live="statusFilter" placeholder="Status wählen">
+                <flux:select.option value="">Alle</flux:select.option>
+                @foreach($allowedStatuses as $status)
+                    <flux:select.option :value="$status">
+                        {{ ucfirst($status) }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+        </flux:field>
+        
+        
        
         
 
@@ -60,18 +82,21 @@ new class extends Component {
                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-            @foreach($bookings as $booking)
+        <tbody class=" divide-gray-100">
+            @forelse($bookings as $booking)
             <tr>
                 <td class="px-4 py-2">{{ $booking->id }}</td>
                 <td class="px-4 py-2">{{ date_format($booking->created_at,'d.m.Y') }}</td>
                 <td class="px-4 py-2">{{ $booking->course->title }}</td>
-                <td class="px-4 py-2"><flux:badge color="green">{{ $booking->status }}</flux:badge></td>
+                <td class="px-4 py-2"><flux:badge color="{{ $booking->status == 'confirmed' ? 'green' : ($booking->status == 'canceled' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></td>
                 <td class="px-4 py-2 text-right">
                     
                 </td>
             </tr>
-            @endforeach
+            @empty
+                <flux:text>Keine Buchungen gefunden</flux:text>
+            @endforelse
+            
         </tbody>
     </table>
 

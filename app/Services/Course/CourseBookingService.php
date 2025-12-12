@@ -117,13 +117,17 @@ class CourseBookingService
     /**
      * Liste der Buchungen
      */
-    public function listBookings()
+    public function listBookings(array $filters = [])
     {
         $query=CourseBooking::with(['slots','course']);
 
         if (!auth()->user()->hasAnyRole('admin','manager')) {
         // Normale User sehen nur eigene
             $query->where('user_id', auth()->user()->id);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status',$filters['status']);
         }
 
 

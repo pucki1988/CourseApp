@@ -51,7 +51,11 @@ class CourseSlotService
                 $q->where('status', $filters['status']);
             }
         })
-        ->where('date', '>=', now())
+
+        
+
+
+        ->whereRaw("TIMESTAMP(date, start_time) >= ?", [now()])
         ->orderBy('date');
 
         if (!empty($filters['limit'])) {

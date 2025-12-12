@@ -18,9 +18,10 @@ class AuthController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
+        $user->assignRole('user');
 
         $token = $user->createToken('api-token')->plainTextToken;
-        $user->assignRole('user');
+        
         
         return response()->json([
             'user'  => $user,
