@@ -67,6 +67,7 @@ new class extends Component {
     @include('partials.courses-heading')
 
     <x-courses.layout :heading="__('Kurse')" :subheading="__('Deine Kurse')">
+    @can('create', \App\Models\Course\Course::class)
     <div class="text-end">
     <flux:dropdown>
         <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>
@@ -77,7 +78,7 @@ new class extends Component {
         </flux:menu>
     </flux:dropdown>
     </div>    
-
+    @endcan
     
         
     <!-- FILTERS -->
@@ -120,7 +121,9 @@ new class extends Component {
                 <td class="px-4 py-2">{{ $course->coach?->name ?? '-' }}</td>
                 <td class="px-4 py-2"><flux:badge>{{ $course->slots()->count() }}</flux:badge></td>
                 <td class="px-4 py-2 text-right">
+                    @can('update', $course)
                     <flux:button size="xs" href="{{ route('course_management.courses.show', $course) }}">Details</flux:button>
+                    @endcan
                 </td>
             </tr>
             @endforeach

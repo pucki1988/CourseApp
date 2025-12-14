@@ -2,7 +2,9 @@
     <div class="me-10 w-full pb-4 md:w-[220px]">
         <flux:navlist>
             <flux:navlist.item :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
+            @can('viewAny', \App\Models\Course\Course::class)
             <flux:navlist.item :href="route('course_management.courses.index')" :current="request()->routeIs('course_management.courses.index')" wire:navigate>{{ __('Kurse') }}</flux:navlist.item>
+            @endcan
             <flux:navlist.item :href="route('course_management.bookings.index')" :current="request()->routeIs('course_management.bookings.index')"  wire:navigate>{{ __('Buchungen') }}</flux:navlist.item>
         </flux:navlist>
     </div>

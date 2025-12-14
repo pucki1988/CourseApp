@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Services\Payments;
+
+use Mollie\Laravel\Facades\Mollie;
+use App\Contracts\PaymentService;
+use App\Data\Payments\PaymentResult;
+use App\Models\Course\CourseBooking;
+use App\Services\Bookings\BookingPaymentService;
+use App\Services\Bookings\BookingRefundService;
+
+class MolliePaymentService implements PaymentService
+{
+
+    public function __construct(
+        protected BookingPaymentService $bookingPaymentService,
+        protected BookingRefundService $bookingRefundService
+    ) {}
+
+    public function createPayment(CourseBooking $booking): PaymentResult
+    {
+
+
+            // Mollie SDK
+            // Payment erzeugen
+            $payment = Mollie::api()->payments->create([
+            "amount" => [
+                "currency" => "EUR",
+                "value" => number_format($booking->total_price, 2, '.', '') // You must send the correct number of decimals, thus we enforce the use of strings
+            ],
+            "description" => "Buchung ".$booking->id,
+            "redirectUrl" => 'http://djk-sg-schoenbrunn.de/sportkurse',
+            "webhookUrl" => route('webhooks.mollie'),
+            "metadata" => [
+                "booking_id" => $booking->id,
+            ],
+            ]);
+            return new PaymentResult(
+                provider: 'mollie',
+                transactionId: $payment->id,
+                checkoutUrl: $payment->getCheckoutUrl(),
+                status: 'open'
+            );
+    }
+
+    public function refund(CourseBooking $booking,float $amount){
+        $payment = Mollie::api()->payments->get(
+            $booking->payment_transaction_id
+        );
+
+        $refund = $payment->refunds()->create([
+            'amount' => [
+                'currency' => 'EUR',
+                'value' => number_format($amount, 2, '.', ''),
+            ],
+            'metadata' => [
+                'booking_id' => $booking->id,
+            ],
+        ]);
+
+        return new RefundResult(
+            refundId: $refund->id,
+            status: $refund->status
+        );
+    }
+
+    public function handleWebhook(string $paymentId): void
+    {
+        $payment = Mollie::api()->payments->get($paymentId);
+
+        $bookingId = $payment->metadata->booking_id ?? null;
+
+        if (!$bookingId) {
+            return;
+        }
+
+        $booking = CourseBooking::find($bookingId);
+       
+        if (!$booking) {
+            return;
+        }
+
+
+        if ($payment->hasRefunds()) {
+            foreach ($payment->refunds() as $refund) {
+                $this->handleRefund($refund, $booking);
+            }
+        }
+
+        match (true) {
+            $payment->isPaid() =>
+                $this->bookingPaymentService->markPaid($booking),
+            $payment->isFailed(),
+            $payment->isCanceled(),
+            $payment->isExpired() =>
+                $this->bookingPaymentService->markFailed($booking),
+
+            default => null,
+        };
+    }
+
+    protected function handleRefund($refund, CourseBooking $booking): void
+    {
+        $localRefund = $booking->refunds()
+            ->where('payment_refund_id', $refund->id)
+            ->first();
+
+        if (!$localRefund) {
+            return; // idempotent
+        }
+
+        match ($refund->status) {
+            'refunded' =>
+                $this->bookingRefundService->markRefunded($localRefund),
+            
+            'failed' =>
+                $this->bookingRefundService->markFailed($localRefund),
+
+            default => null,
+        };
+    }
+}
+

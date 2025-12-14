@@ -45,7 +45,6 @@ class CourseSlotService
             if (auth()->user()->hasRole('coach')) {
                 $q->where('coach_id', auth()->id());
             }
-
             
             if (!empty($filters['status'])) {
                 $q->where('status', $filters['status']);
@@ -62,7 +61,13 @@ class CourseSlotService
             $query->limit($filters['limit'] ?? 3);
         }
        
-        
+        $user=auth()->user();
+
+        if ($user->hasAnyRole(['user', 'member'])) {
+        $query->whereHas('bookings', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        });
+        }
 
         return $query->get();
     }

@@ -21,4 +21,9 @@ class CourseBooking extends Model
     {
         return $this->belongsToMany(CourseSlot::class, 'course_booking_slots')->withPivot('status');
     }
+
+    public function refunds()
+    {
+        return $this->hasMany(CourseBookingRefund::class);
+    }
 }

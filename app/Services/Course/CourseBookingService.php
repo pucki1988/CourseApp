@@ -51,12 +51,7 @@ class CourseBookingService
 
         $booking->slots()->attach($slotStatuses);
 
-        return [
-            'message'        => 'Buchung erfolgreich',
-            'booking_status' => $status,
-            'total_price'    => $course->price,
-            'slots'          => $slotStatuses,
-        ];
+        return $booking;
     }
 
 
@@ -105,12 +100,7 @@ class CourseBookingService
 
         $booking->slots()->attach($slotStatuses);
 
-        return [
-            'message'        => 'Buchung erfolgreich',
-            'booking_status' => $bookingStatus,
-            'total_price'    => $totalPrice,
-            'slots'          => $slotStatuses,
-        ];
+        return $booking;
     }
 
 

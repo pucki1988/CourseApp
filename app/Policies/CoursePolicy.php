@@ -23,7 +23,7 @@ class CoursePolicy
         if ($user->hasRole('manager')) {
             return true;
         }
-        return $user->hasRole('coach');
+        return true;
     }
 
     public function create(User $user)

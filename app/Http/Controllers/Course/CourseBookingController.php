@@ -9,17 +9,23 @@ use App\Http\Controllers\Controller;
 use App\Services\Course\CourseBookingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Contracts\PaymentService;
 
 class CourseBookingController extends Controller
 {
 
     public function __construct(
-        protected CourseBookingService $service
+        protected CourseBookingService $service,
+        protected PaymentService $paymentService
     ) {}
 
     public function store(Request $request, Course $course)
     {
-        $data = $this->service->store($request, $course);
+        $data["booking"] = $this->service->store($request, $course);
+
+        $data["payment"] = $this->paymentService->createPayment($data["booking"]);
+
+
         return response()->json($data);
     }
 
