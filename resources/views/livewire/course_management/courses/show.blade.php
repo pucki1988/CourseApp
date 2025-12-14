@@ -197,7 +197,7 @@ new class extends Component {
             </flux:select>
             </flux:field>
             
-            <flux:input label="Coach" placeholder="Name des Kurses" type="text" :value="$course->coach->name" readonly disabled/>
+            <flux:input label="Coach" placeholder="Coach" type="text" :value="$course?->coach?->name" readonly disabled/>
 
             <flux:input :value="$course->capacity" label="Anzahl Teilnehmer (maximal)" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" readonly disabled/>
             
@@ -211,7 +211,7 @@ new class extends Component {
                 </flux:select>
                 </flux:field>
                 
-                <flux:input label="Coach" placeholder="Name des Kurses" type="text" :value="$course->coach->name" readonly disabled/>
+                <flux:input label="Coach" placeholder="Coach des Kurses" type="text" :value="$course?->coach?->name" readonly disabled/>
 
                 <flux:input :value="$course->capacity" label="Anzahl Teilnehmer (maximal)" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" readonly disabled/>
                 

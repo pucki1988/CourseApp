@@ -5,6 +5,7 @@ namespace App\Services\Payments;
 use Mollie\Laravel\Facades\Mollie;
 use App\Contracts\PaymentService;
 use App\Data\Payments\PaymentResult;
+use App\Data\Payments\RefundResult;
 use App\Models\Course\CourseBooking;
 use App\Services\Bookings\BookingPaymentService;
 use App\Services\Bookings\BookingRefundService;
@@ -29,8 +30,8 @@ class MolliePaymentService implements PaymentService
                 "value" => number_format($booking->total_price, 2, '.', '') // You must send the correct number of decimals, thus we enforce the use of strings
             ],
             "description" => "Buchung ".$booking->id,
-            "redirectUrl" => 'http://djk-sg-schoenbrunn.de/sportkurse',
-            "webhookUrl" => route('webhooks.mollie'),
+            "redirectUrl" => 'https://gamboised-instinctively-eugena.ngrok-free.dev',
+            "webhookUrl" => 'https://gamboised-instinctively-eugena.ngrok-free.dev/api/webhooks/mollie',
             "metadata" => [
                 "booking_id" => $booking->id,
             ],
@@ -43,12 +44,12 @@ class MolliePaymentService implements PaymentService
             );
     }
 
-    public function refund(CourseBooking $booking,float $amount){
+    public function refund(CourseBooking $booking,float $amount): RefundResult{
         $payment = Mollie::api()->payments->get(
             $booking->payment_transaction_id
         );
-
-        $refund = $payment->refunds()->create([
+        
+        $refund = $payment->refund([
             'amount' => [
                 'currency' => 'EUR',
                 'value' => number_format($amount, 2, '.', ''),
@@ -112,7 +113,8 @@ class MolliePaymentService implements PaymentService
         match ($refund->status) {
             'refunded' =>
                 $this->bookingRefundService->markRefunded($localRefund),
-            
+            'processing' =>
+                $this->bookingRefundService->markProcessing($localRefund),
             'failed' =>
                 $this->bookingRefundService->markFailed($localRefund),
 

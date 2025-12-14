@@ -3,6 +3,8 @@
 namespace App\Services\Bookings;
 
 use App\Models\Course\CourseBooking;
+use App\Data\Payments\RefundResult;
+use App\Models\Course\CourseBookingRefund;
 
 class BookingRefundService
 {
@@ -18,24 +20,26 @@ class BookingRefundService
         ]);
     }
 
-    public function markRefunded(string $refundId): void
+    public function markRefunded(CourseBookingRefund $refund): void
     {
-        $refund = CourseBookingRefund::where(
-            'payment_refund_id',
-            $refundId
-        )->first();
+        
+        $refund->update(['status' => 'refunded','refunded_at' => now()]);
 
-        if (!$refund) {
-            return;
-        }
-
-        $refund->update(['status' => 'refunded']);
-
-        $booking = $refund->booking;
+        /*$booking = $refund->booking;
         if ($booking->refundedTotal() >= $booking->total_price) {
             $booking->update([
                 'payment_status' => 'refunded'
             ]);
-        }
+        }*/
+    }
+
+    public function markFailed(CourseBookingRefund $refund): void
+    {
+        $refund->update(['status' => 'failed']);
+    }
+
+    public function markProcessing(CourseBookingRefund $refund): void
+    {
+        $refund->update(['status' => 'processing']);
     }
 }

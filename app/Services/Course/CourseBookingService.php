@@ -38,7 +38,9 @@ class CourseBookingService
 
         $booking = CourseBooking::create([
             'user_id'     => auth()->id(),
+            'user_name' => auth()->user()->name,
             'course_id'   => $course->id,
+            'course_title' => $course->title,
             'total_price' => $course->price,
             'status'      => $status
         ]);
@@ -93,7 +95,9 @@ class CourseBookingService
 
         $booking = CourseBooking::create([
             'user_id'     => auth()->id(),
+            'user_name' => auth()->user()->name,
             'course_id'   => $course->id,
+            'course_title' => $course->title,
             'total_price' => $totalPrice,
             'status'      => $bookingStatus
         ]);

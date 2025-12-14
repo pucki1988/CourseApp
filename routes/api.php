@@ -46,7 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 });
-
+Route::get('/status', function(){
+    return "ok";
+});
 
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->name('webhooks.mollie');

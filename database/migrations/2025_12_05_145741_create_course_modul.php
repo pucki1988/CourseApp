@@ -38,12 +38,14 @@ return new class extends Migration
         // Bookings
         Schema::create('course_bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('course_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('total_price', 8, 2);
             $table->enum('status', ['confirmed','waitlist','canceled','partial'])->default('confirmed');
             $table->enum('payment_status', ['open','pending','paid','canceled','expired','failed'])->default('open');
             $table->string('payment_transaction_id')->nullable();
+            $table->string('course_title')->nullable();
+            $table->string('user_name')->nullable();
             $table->timestamps();
         });
 
@@ -51,7 +53,8 @@ return new class extends Migration
         Schema::create('course_booking_slots', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_booking_id')->constrained('course_bookings')->cascadeOnDelete();
-            $table->foreignId('course_slot_id')->constrained('course_slots')->cascadeOnDelete();
+            $table->foreignId('course_slot_id')->nullable()->constrained('course_slots')->nullOnDelete();
+            $table->string('status')->default('confirmed');
         });
     }
 

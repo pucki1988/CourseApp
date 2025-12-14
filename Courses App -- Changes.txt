@@ -26,6 +26,10 @@ Preislogik
 + Endpreis erst nach Login Sichtbar
 
 
++ Course Booking Slots Pricefeld einfügen? Und Startdatum des Slots? Wie kann der aktualsiert werden?
++ Absage eines Kurses/ Slots was passier mit der Buchung? 
++ Zahlung auf Course Booking Slot oder weiter auf Course Booking (Teilrückerstattung)
+
 
 
 //API Rückmeldungen

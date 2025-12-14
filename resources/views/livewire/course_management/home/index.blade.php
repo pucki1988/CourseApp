@@ -125,10 +125,10 @@ new class extends Component {
                     <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() }} / {{ $slot->min_participants }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
                     <flux:text class="mt-2">
-                    Coach<flux:badge>{{ $slot->course->coach->name }}</flux:badge>
+                    Coach<flux:badge>{{ $slot->course?->coach?->name }}</flux:badge>
                     </flux:text>
                     </div>
                 </div>

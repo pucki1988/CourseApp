@@ -6,6 +6,13 @@ use App\Models\Course\CourseBooking;
 
 class BookingPaymentService
 {
+    public function setTransactionId(CourseBooking $booking,string $paymentTransactionId): void
+    {
+        $booking->update([
+            'payment_transaction_id' => $paymentTransactionId
+        ]);
+    }
+
     public function markPaid(CourseBooking $booking): void
     {
         if ($booking->payment_status === 'paid') {

@@ -118,7 +118,7 @@ new class extends Component {
             @foreach($courses as $course)
             <tr>
                 <td class="px-4 py-2">{{ $course->title }}</td>
-                <td class="px-4 py-2">{{ $course->coach?->name ?? '-' }}</td>
+                <td class="px-4 py-2">{{ $course?->coach?->name ?? '-' }}</td>
                 <td class="px-4 py-2"><flux:badge>{{ $course->slots()->count() }}</flux:badge></td>
                 <td class="px-4 py-2 text-right">
                     @can('update', $course)
@@ -169,7 +169,7 @@ new class extends Component {
             <flux:label>Coach</flux:label>
             <flux:select :value="$newCourse['coach_id']" wire:change="$set('newCourse.coach_id', $event.target.value)" placeholder="Trainer auswählen">
                 @foreach(User::role('coach')->get() as $coach)
-                    <flux:select.option value="{{$coach->id}}">{{ $coach->name }}</flux:select.option>
+                    <flux:select.option value="{{$coach->id}}">{{ $coach?->name }}</flux:select.option>
                 @endforeach
             </flux:select>
             <div class="flex">
