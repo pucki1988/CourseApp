@@ -286,8 +286,9 @@ new class extends Component {
                     <flux:badge icon="currency-euro">{{ $slot->price }}</flux:badge> 
                 
                     @endif
-                    </flux:text><flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">  {{ $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() }} / {{ $slot->min_participants }}</flux:badge>
+                    </flux:text>
+                    <flux:text class="mt-2">
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot->slot }})">  {{ $slot->bookingSlots()->where('status', 'booked')->count() }} / {{ $slot->capacity }}</flux:badge>
                     </flux:text>
                     
                     

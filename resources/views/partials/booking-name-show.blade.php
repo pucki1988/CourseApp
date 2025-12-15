@@ -3,11 +3,8 @@
         <div>
             <flux:heading size="lg">Buchungen</flux:heading>
         </div>
-        @foreach (($this->showSlot->bookings) ?? [] as $index => $booking)
-        <flux:text><flux:badge>{{ ($index + 1) }}</flux:badge>{{ $booking->user->name }}
-        @foreach($booking->slots as $slot)
-            <flux:badge size="sm">{{ $slot->pivot->status }}</flux:badge>
-        @endforeach
+        @foreach (($this->showSlot->bookedSlots) ?? [] as $index => $bookedSlot)
+        <flux:text><flux:badge>{{ ($index + 1) }}</flux:badge>{{ $bookedSlot->booking->user->name }}
         </flux:text>
         @endforeach
 

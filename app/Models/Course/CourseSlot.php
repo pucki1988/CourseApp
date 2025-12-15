@@ -14,6 +14,7 @@ class CourseSlot extends Model
         'date'       => 'date',
         'start_time' => 'datetime:H:i',
         'end_time'   => 'datetime:H:i',
+        'rescheduled_at'  => 'datetime',
     ];
 
     public function course()
@@ -21,8 +22,30 @@ class CourseSlot extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function bookings()
+    public function bookingSlots()
     {
-        return $this->belongsToMany(CourseBooking::class, 'course_booking_slots');
+        return $this->hasMany(CourseBookingSlot::class);
+       
+    }
+
+
+    public function availableSlots(): int
+    {
+        $booked = $this->bookingSlots()
+        ->where('status', 'booked')
+        ->count();
+
+        return max(0, $this->capacity - $booked);
+    }
+
+    public function bookedSlots()   
+    {
+        return $this->bookingSlots()
+        ->where('status', 'booked');
+    }
+
+    public function isFull(): bool
+    {
+        return $this->availableSlots() === 0;
     }
 }

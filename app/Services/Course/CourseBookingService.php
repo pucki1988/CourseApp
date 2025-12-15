@@ -7,15 +7,20 @@ use App\Models\Course\CourseSlot;
 use App\Models\Course\CourseBooking;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class CourseBookingService
 {
+
+    public function __construct(
+        protected CourseBookingSlotService $courseBookingSlotService
+    ) {}
     /**
      * Buchung starten – entscheidet zwischen WholeCourse und PerSlot
      */
     public function store(Request $request, Course $course)
     {
-        if ($course->booking_type === 'all') {
+        if ($course->booking_type === 'per_course') {
             return $this->bookWholeCourse($course);
         }
 
@@ -28,30 +33,32 @@ class CourseBookingService
      */
     public function bookWholeCourse(Course $course)
     {
-        $confirmedCount = $course->bookings()
-            ->where('status','confirmed')
+        $bookingCount = $course->bookings()
+            ->where('payment_status', 'paid')
             ->count();
 
-        $status = ($course->capacity && $confirmedCount >= $course->capacity)
-            ? 'waitlist'
-            : 'confirmed';
+        if($bookingCount >= $course->capacity)
+        {
+            return;
+        }
+
+        $user=auth()->user();
 
         $booking = CourseBooking::create([
             'user_id'     => auth()->id(),
-            'user_name' => auth()->user()->name,
+            'user_name' => $user->name,
             'course_id'   => $course->id,
             'course_title' => $course->title,
             'total_price' => $course->price,
-            'status'      => $status
+            'booking_type' => $course->booking_type
         ]);
 
-        // Alle Slots anhängen
-        $slotStatuses = [];
         foreach ($course->slots as $slot) {
-            $slotStatuses[$slot->id] = ['status' => $status];
+            $booking->bookingSlots()->create([
+                'course_slot_id' => $slot->id,
+                'price'          => 0
+            ]);
         }
-
-        $booking->slots()->attach($slotStatuses);
 
         return $booking;
     }
@@ -60,51 +67,48 @@ class CourseBookingService
     /**
      * Slot-basierte Buchung
      */
-    public function bookPerSlot(Request $request, Course $course)
+    public function bookPerSlot(Request $request, Course $course): mixed
     {
-        $request->validate([
-            'slots' => ['required', 'array'],
-            'slots.*' => [
-                Rule::exists('course_slots', 'id')->where('course_id', $course->id)
-            ]
-        ]);
 
-        $selectedSlots = CourseSlot::whereIn('id', $request->slots)->get();
+        return DB::transaction(function () use ($request, $course): CourseBooking {
+            $selectedSlots = CourseSlot::whereIn('id', $request->slots)
+            ->lockForUpdate()
+            ->get();
 
-        $slotStatuses = [];
-        $totalPrice   = 0;
+            $createBookingSlots = [];
+            $totalPrice   = 0;
 
-        foreach ($selectedSlots as $slot) {
-            $confirmedCount = $slot->bookings()
-                ->where('course_booking_slots.status', 'confirmed')
-                ->count();
+            foreach ($selectedSlots as $slot) {
+                $bookedSlotsCount = $slot->bookingSlots()
+                    ->where('status', 'booked')
+                    ->count();
 
-            $slotStatus = ($slot->capacity && $confirmedCount >= $slot->capacity)
-                ? 'waitlist'
-                : 'confirmed';
+                if ($bookedSlotsCount >= $slot->capacity) {
+                    throw new \Exception("Slot {$slot->id} ist ausgebucht");
+                }
 
-            $slotStatuses[$slot->id] = ['status' => $slotStatus];
-            $totalPrice += $slot->price;
-        }
+                $createBookingSlots[] = $slot;
+                $totalPrice += $slot->price;  
+            }
 
-        // Gesamtstatus ableiten
-        $bookingStatus = collect($slotStatuses)
-            ->contains(fn($s) => $s['status'] === 'waitlist')
-            ? 'waitlist'
-            : 'confirmed';
+            $booking = CourseBooking::create([
+                'user_id'     => auth()->id(),
+                'user_name' => auth()->user()->name,
+                'course_id'   => $course->id,
+                'course_title' => $course->title,
+                'total_price' => $totalPrice,
+                'booking_type' => $course->booking_type
+            ]);
 
-        $booking = CourseBooking::create([
-            'user_id'     => auth()->id(),
-            'user_name' => auth()->user()->name,
-            'course_id'   => $course->id,
-            'course_title' => $course->title,
-            'total_price' => $totalPrice,
-            'status'      => $bookingStatus
-        ]);
+            foreach ($createBookingSlots as $slot) {
+                $booking->bookingSlots()->create([
+                    'course_slot_id' => $slot->id,
+                    'price'          => $slot->price,
+                ]);
+            }
+            return $booking;
+        });
 
-        $booking->slots()->attach($slotStatuses);
-
-        return $booking;
     }
 
 
@@ -113,7 +117,7 @@ class CourseBookingService
      */
     public function listBookings(array $filters = [])
     {
-        $query=CourseBooking::with(['slots','course']);
+        $query=CourseBooking::with(['bookingSlots','course']);
 
         if (!auth()->user()->hasAnyRole('admin','manager')) {
         // Normale User sehen nur eigene
@@ -128,53 +132,31 @@ class CourseBookingService
         return $query->get();
     }
 
-
-    /**
-     * Slot-Stornierung
-     */
-    public function cancelSlot(CourseBooking $courseBooking, CourseSlot $courseSlot)
-    {
-        $booking = CourseBooking::where('id', $courseBooking->id)
-            ->where('user_id', auth()->id())
-            ->firstOrFail();
-
-        $booking->slots()->updateExistingPivot($courseSlot->id, [
-            'status' => 'canceled'
-        ]);
-
-        $this->refreshBookingStatus($booking);
-
-        return [
-            'message'        => 'Slot wurde storniert',
-            'booking_status' => $booking->status
-        ];
-    }
-
-
     /**
      * Automatische Status-Neuberechnung
      */
     public function refreshBookingStatus(CourseBooking $booking)
     {
-        $slots = $booking->slots;
-
-        $activeSlots = $slots->filter(fn($slot) =>
-            $slot->pivot->status !== 'canceled'
-        );
-
-        if ($activeSlots->isEmpty()) {
-            return $booking->update(['status' => 'canceled']);
+        if ($booking->payment_status !== 'paid') {
+            $booking->update(['status' => 'pending']);
+            return;
         }
 
-        $confirmed = $activeSlots->filter(fn($s) => $s->pivot->status === 'confirmed')->count();
-        $waitlist  = $activeSlots->filter(fn($s) => $s->pivot->status === 'waitlist')->count();
+        $totalSlots = $booking->bookingSlots()->count();
+        $refundedSlots = $booking->bookingSlots()
+            ->where('status', 'refunded')
+            ->count();
 
-        if ($waitlist > 0) {
-            $booking->update(['status' => 'waitlist']);
-        } elseif ($confirmed === $activeSlots->count()) {
-            $booking->update(['status' => 'confirmed']);
-        } else {
-            $booking->update(['status' => 'partial']);
+        if ($refundedSlots === 0) {
+            $booking->update(['status' => 'paid']);
+            return;
         }
-    }
+
+        if ($refundedSlots < $totalSlots) {
+            $booking->update(['status' => 'partially_refunded']);
+            return;
+        }
+
+            $booking->update(['status' => 'refunded']);
+        }
 }

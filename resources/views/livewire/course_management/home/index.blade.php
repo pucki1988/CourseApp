@@ -1,9 +1,13 @@
 
 <?php
 
+use App\Models\Course\Course;
 use Livewire\Volt\Component;
+use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseSlotService;
+use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
+
 use App\Models\User;
 
 new class extends Component {
@@ -22,10 +26,10 @@ new class extends Component {
     public ?CourseSlot $showSlot=null;
     
 
-    public function mount(CourseSlotService $service)
+    public function mount(CourseBookingSlotService $courseBookingSlotService,CourseSlotService $courseSlotService)
     {
         #$this->authorize('viewAny', CourseSlot::class);
-        $this->loadSlots($service);
+        $this->loadSlots($courseBookingSlotService);
     }
 
     
@@ -35,19 +39,18 @@ new class extends Component {
         Flux::modal('confirm')->show();
     }
 
-    
-    public function cancel(CourseSlotService $service)
+    public function cancel(CourseSlotService $courseSlotService,CourseBookingSlotService $courseBookingSlotService)
     {
         if (!$this->slotToCancel) return;
 
-        $service->cancelSlot($this->slotToCancel);
+        $courseSlotService->cancelSlot($this->slotToCancel);
         
         // Modal schließen
         Flux::modal('confirm')->close();
         $this->slotToCancel = null;
 
         // Liste neu laden
-        $this->loadSlots($service);
+        $this->loadSlots($courseBookingSlotService);
 
         // Optional: Toast / Notification
         $this->calloutHeading = 'Termin wurde abgesagt';
@@ -65,10 +68,10 @@ new class extends Component {
         Flux::modal('reschedule')->show();
     }
 
-    public function reschedule(CourseSlotService $service)
+    public function reschedule(CourseSlotService $courseSlotService,CourseBookingSlotService $courseBookingSlotService)
     {
         
-        $service->rescheduleSlot($this->slotToReschedule);
+        $courseSlotService->rescheduleSlot($this->slotToReschedule);
 
         // Modal schließen (Doku-konform)
         Flux::modal('reschedule')->close();
@@ -77,19 +80,19 @@ new class extends Component {
         $this->calloutHeading = 'Termin wurde verschoben';
         $this->showCallout = true;
 
-        $this->loadSlots($service);
+        $this->loadSlots($courseBookingSlotService);
         
     }
 
 
-    public function loadSlots(CourseSlotService $service)
+    public function loadSlots(CourseBookingSlotService $service)
     {
         $filters = [
             'limit' => 6,
             'status' => 'active'
         ];
 
-        $this->slots = $service->listSlots($filters);
+        $this->slots = $service->listBookedSlots($filters);
     }
 
     public function hideCallout()
@@ -118,28 +121,48 @@ new class extends Component {
 
                 <div class="flex">
                     <div class="flex-1">
-                    <flux:heading size="lg">{{ $slot->course->title }}</flux:heading>
+                    <flux:heading size="lg">{{ $slot->booking->course->title }} 
+                    </flux:heading>
+
+                    <div class="mb-2">
+                    <flux:tooltip content="Status der Buchung">
+                    <flux:badge size="sm">{{ $slot->booking->status }} </flux:badge>
+                    </flux:tooltip>
+                    @if($slot->slot->rescheduled_at !==null)
+                    <flux:tooltip content="Wurde am {{ $slot->slot->rescheduled_at->format('d.m.Y') }} auf diesen Termin verschoben">
+                    <flux:badge size="sm">verschoben</flux:badge>
+                    </flux:tooltip>
+                    @endif
+                    </div>
                     
                     <flux:text class="mt-2">
-                    <flux:badge icon="calendar">{{ $slot->date->format('d.m.Y') }}</flux:badge> 
-                    <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
+                    <flux:badge icon="calendar">{{ $slot->slot->date->format('d.m.Y') }}</flux:badge> 
+                    <flux:badge class="ms-1" icon="clock">{{ $slot->slot->start_time->format('H:i') }} – {{ $slot->slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->bookings()->where('course_booking_slots.status', 'confirmed')->count() }} / {{ $slot->course->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->booking->course->capacity-$slot->slot->availableSlots()  }} / {{ $slot->booking->course->capacity }}</flux:badge>
                     </flux:text>
+                    
                     <flux:text class="mt-2">
-                    Coach<flux:badge>{{ $slot->course?->coach?->name }}</flux:badge>
+                    Coach<flux:badge>
+                    @if($slot->course?->coach === null)
+                    nicht festgelegt
+                    @else
+                    {{ $slot->course?->coach?->name }}
+                    @endif
+                    </flux:badge>
                     </flux:text>
+                    
                     </div>
                 </div>
 
                 <div class="flex gap-2">
                     <flux:spacer />
-                    @can('reschedule', $slot)
-                        <flux:button size="sm" variant="primary" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:button>
+                    @can('reschedule', $slot->slot)
+                        <flux:button size="sm" variant="primary" wire:click="confirmReschedule({{ $slot->slot }})">Verschieben</flux:button>
                     @endcan
-                    @can('cancel', $slot)
-                        <flux:button size="sm" variant="danger" wire:click="confirmCancel({{ $slot }})">Absagen</flux:button>
+                    @can('cancel', $slot->slot)
+                        <flux:button size="sm" variant="danger" wire:click="confirmCancel({{ $slot->slot }})">Absagen</flux:button>
                     @endcan
                 </div>
 

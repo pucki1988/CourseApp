@@ -21,13 +21,24 @@ class CourseBooking extends Model
         ]);
     }
 
-    public function slots()
+    public function bookingSlots()
     {
-        return $this->belongsToMany(CourseSlot::class, 'course_booking_slots')->withPivot('status');
+        return $this->hasMany(CourseBookingSlot::class);
     }
 
     public function refunds()
     {
         return $this->hasMany(CourseBookingRefund::class);
+    }
+
+    /* =========================
+     * Aggregierte Statuslogik
+     * ========================= */
+
+    public function hasPartialRefund(): bool
+    {
+        return $this->bookingSlots()
+            ->where('status', 'refunded')
+            ->exists();
     }
 }

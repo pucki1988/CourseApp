@@ -64,7 +64,7 @@ class CourseSlotController extends Controller
     {
         $this->authorize('reschedule', $courseSlot);
         $courseSlot=$service->rescheduleSlot($courseSlot,$request->all());
-
+        
         return response()->json([
             'message' => 'Slot wurde verschoben.',
             'slot' => $courseSlot

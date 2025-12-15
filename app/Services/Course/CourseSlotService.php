@@ -9,6 +9,10 @@ use Illuminate\Validation\ValidationException;
 
 class CourseSlotService
 {
+
+    public function __construct(
+        protected CourseBookingSlotService $courseBookingSlotService
+    ) {}
     /**
      * Create multiple CourseSlots for a course.
      */
@@ -136,10 +140,17 @@ class CourseSlotService
     /**
      * Cancel a slot (by trainer).
      */
-    public function cancelSlot(CourseSlot $slot)
+    public function cancelSlot(CourseSlot $slot,CancelBookingSlotAction $action)
     {
+
+        if($slot->bookedSlots()->count() > 0){
+            foreach($slot->bookedSlots() as $bookedSlot){
+                $slot = $action->execute($bookedSlot->booking, $bookedSlot);
+            }
+        }
+
         $slot->update([
-            'status' => 'cancelled'
+            'status' => 'canceled'
         ]);
 
         return $slot;

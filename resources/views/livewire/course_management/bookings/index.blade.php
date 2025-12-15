@@ -9,7 +9,7 @@ new class extends Component {
 
     public $bookings;
     public string $statusFilter = ''; // '' = alle
-    public array $allowedStatuses = ['confirmed', 'waitlist', 'partial', 'canceled'];
+    public array $allowedStatuses = ['pending','paid','partially_refunded','refunded'];
     public $perPage = 10;
 
     public function mount(CourseBookingService $service)

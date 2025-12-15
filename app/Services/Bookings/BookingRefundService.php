@@ -40,6 +40,6 @@ class BookingRefundService
 
     public function markProcessing(CourseBookingRefund $refund): void
     {
-        $refund->update(['status' => 'processing']);
+        $refund->update(['status' => 'pending']);
     }
 }
