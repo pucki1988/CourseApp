@@ -14,6 +14,7 @@ use App\Contracts\PaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
 use App\Actions\CourseBooking\CancelBookingSlotAction;
+use App\Actions\CourseBooking\CreateBookingAction;
 
 class CourseBookingController extends Controller
 {
@@ -26,14 +27,9 @@ class CourseBookingController extends Controller
         protected BookingPaymentService $bookingPaymentService,
     ) {}
 
-    public function store(Request $request, Course $course)
+    public function store(Request $request, Course $course,CreateBookingAction $action)
     {
-        $data["booking"] = $this->courseBookingService->store($request, $course);
-
-        $data["payment"] = $this->paymentService->createPayment($data["booking"]);
-
-        $this->bookingPaymentService->setTransactionId($data["booking"],$data["payment"]->transactionId);
-
+        $data = $action->execute($request,$course);
         return response()->json($data);
     }
 

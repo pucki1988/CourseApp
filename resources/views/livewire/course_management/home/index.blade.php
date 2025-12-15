@@ -7,6 +7,7 @@ use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseSlotService;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
+use App\Actions\Course\CancelCourseSlotAction;
 
 use App\Models\User;
 
@@ -26,7 +27,7 @@ new class extends Component {
     public ?CourseSlot $showSlot=null;
     
 
-    public function mount(CourseBookingSlotService $courseBookingSlotService,CourseSlotService $courseSlotService)
+    public function mount(CourseBookingSlotService $courseBookingSlotService,CourseSlotService $courseSlotService,CancelCourseSlotAction $courseSlotAction)
     {
         #$this->authorize('viewAny', CourseSlot::class);
         $this->loadSlots($courseBookingSlotService);
@@ -39,11 +40,11 @@ new class extends Component {
         Flux::modal('confirm')->show();
     }
 
-    public function cancel(CourseSlotService $courseSlotService,CourseBookingSlotService $courseBookingSlotService)
+    public function cancel(CourseBookingSlotService $courseBookingSlotService,CancelCourseSlotAction $courseSlotAction)
     {
         if (!$this->slotToCancel) return;
-
-        $courseSlotService->cancelSlot($this->slotToCancel);
+        
+        $courseSlotAction->execute($this->slotToCancel);
         
         // Modal schließen
         Flux::modal('confirm')->close();
@@ -126,7 +127,7 @@ new class extends Component {
 
                     <div class="mb-2">
                     <flux:tooltip content="Status der Buchung">
-                    <flux:badge size="sm">{{ $slot->booking->status }} </flux:badge>
+                    <flux:badge size="sm">{{ $slot->status }} </flux:badge>
                     </flux:tooltip>
                     @if($slot->slot->rescheduled_at !==null)
                     <flux:tooltip content="Wurde am {{ $slot->slot->rescheduled_at->format('d.m.Y') }} auf diesen Termin verschoben">
@@ -140,7 +141,7 @@ new class extends Component {
                     <flux:badge class="ms-1" icon="clock">{{ $slot->slot->start_time->format('H:i') }} – {{ $slot->slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->booking->course->capacity-$slot->slot->availableSlots()  }} / {{ $slot->booking->course->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot->slot }})">{{ $slot->booking->course->capacity-$slot->slot->availableSlots()  }} / {{ $slot->booking->course->capacity }}</flux:badge>
                     </flux:text>
                     
                     <flux:text class="mt-2">

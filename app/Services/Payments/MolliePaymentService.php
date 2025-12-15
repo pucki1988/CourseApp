@@ -9,13 +9,15 @@ use App\Data\Payments\RefundResult;
 use App\Models\Course\CourseBooking;
 use App\Services\Bookings\BookingPaymentService;
 use App\Services\Bookings\BookingRefundService;
+use App\Services\Course\CourseBookingService;
 
 class MolliePaymentService implements PaymentService
 {
 
     public function __construct(
         protected BookingPaymentService $bookingPaymentService,
-        protected BookingRefundService $bookingRefundService
+        protected BookingRefundService $bookingRefundService,
+        protected CourseBookingService $courseBookingService
     ) {}
 
     public function createPayment(CourseBooking $booking): PaymentResult
@@ -90,14 +92,25 @@ class MolliePaymentService implements PaymentService
 
         match (true) {
             $payment->isPaid() =>
-                $this->bookingPaymentService->markPaid($booking),
+                $this->handlePaid($booking),
             $payment->isFailed(),
             $payment->isCanceled(),
             $payment->isExpired() =>
-                $this->bookingPaymentService->markFailed($booking),
-
+                $this->handleFailed($booking),
             default => null,
         };
+    }
+
+    private function handlePaid(CourseBooking $booking): void
+    {
+        $this->bookingPaymentService->markPaid($booking);
+        $this->courseBookingService->refreshBookingStatus($booking);
+    }
+
+    private function handleFailed(CourseBooking $booking): void
+    {
+        $this->bookingPaymentService->markFailed($booking);
+        $this->courseBookingService->refreshBookingStatus($booking);
     }
 
     protected function handleRefund($refund, CourseBooking $booking): void

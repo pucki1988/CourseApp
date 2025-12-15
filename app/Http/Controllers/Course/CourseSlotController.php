@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course\CourseSlot;
 use App\Models\Course\Course;
 use App\Services\Course\CourseSlotService;
+use App\Actions\Course\CancelCourseSlotAction;
 
 class CourseSlotController extends Controller
 {
@@ -72,15 +73,14 @@ class CourseSlotController extends Controller
     }
     
     //Trainer sagt Slot ab.
-    public function cancel(CourseSlot $slot,CourseSlotService $service)
-    {
+    public function cancel(
+    CourseSlot $slot,
+    CancelCourseSlotAction $action
+    ) {
         $this->authorize('cancel', $slot);
 
-        $slot=$service->cancelSlot($slot);
-
-        return response()->json([
-            'message' => 'Slot wurde abgesagt.',
-            'slot' => $slot
-        ]);
+        return response()->json(
+            $action->execute($slot)
+        );
     }
 }

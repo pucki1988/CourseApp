@@ -137,24 +137,6 @@ class CourseSlotService
     }
 
 
-    /**
-     * Cancel a slot (by trainer).
-     */
-    public function cancelSlot(CourseSlot $slot,CancelBookingSlotAction $action)
-    {
-
-        if($slot->bookedSlots()->count() > 0){
-            foreach($slot->bookedSlots() as $bookedSlot){
-                $slot = $action->execute($bookedSlot->booking, $bookedSlot);
-            }
-        }
-
-        $slot->update([
-            'status' => 'canceled'
-        ]);
-
-        return $slot;
-    }
-
+    
     
 }

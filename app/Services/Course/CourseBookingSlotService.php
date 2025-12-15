@@ -29,10 +29,11 @@ class CourseBookingSlotService
                         $q2->whereDate('date', '>', now())
                         ->orWhere(function ($q3) {
                             $q3->whereDate('date', now())
-                                ->whereTime('start_time', '>=', now()->format('H:i:s'));
+                                ->whereTime('start_time', '>=', now()->format('H:i'));
                         });
                     });
                 })
+                ->where('status','booked')
                 ->orderBy(
                     CourseSlot::select('date')
                         ->whereColumn('course_slots.id', 'course_booking_slots.course_slot_id')

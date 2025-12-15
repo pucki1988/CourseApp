@@ -71,9 +71,13 @@ class CourseBookingService
     {
 
         return DB::transaction(function () use ($request, $course): CourseBooking {
-            $selectedSlots = CourseSlot::whereIn('id', $request->slots)
+            $selectedSlots = CourseSlot::whereIn('id', $request->slots)->where('status','active')
             ->lockForUpdate()
             ->get();
+
+            if($selectedSlots->count() === 0){
+                throw new \Exception("Kein Slot ausgewählt");
+            }
 
             $createBookingSlots = [];
             $totalPrice   = 0;

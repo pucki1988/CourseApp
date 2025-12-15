@@ -23,7 +23,7 @@ class BookingRefundService
     public function markRefunded(CourseBookingRefund $refund): void
     {
         
-        $refund->update(['status' => 'refunded','refunded_at' => now()]);
+        $refund->update(['status' => 'completed','refunded_at' => now()]);
 
         /*$booking = $refund->booking;
         if ($booking->refundedTotal() >= $booking->total_price) {
@@ -40,6 +40,6 @@ class BookingRefundService
 
     public function markProcessing(CourseBookingRefund $refund): void
     {
-        $refund->update(['status' => 'pending']);
+        $refund->update(['status' => 'processing']);
     }
 }

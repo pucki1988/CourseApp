@@ -24,8 +24,19 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $user1=User::firstOrCreate(
+            ['email' => 'user@test.de'],
+            [
+                'name' => 'User Test',
+                'password' => '12345678',
+                'email_verified_at' => now(),
+            ]
+        );
+
         $this->call(RoleSeeder::class);
 
         $user->assignRole('admin');
+
+        $user1->assignRole('user');
     }
 }

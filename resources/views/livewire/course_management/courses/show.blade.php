@@ -7,6 +7,7 @@ use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Actions\Course\CancelCourseSlotAction;
 
 new class extends Component {
 
@@ -24,7 +25,7 @@ new class extends Component {
 
     public array $slotToReschedule = [];
 
-    public function mount(Course $course, CourseService $service)
+    public function mount(Course $course, CourseService $service,CancelCourseSlotAction $courseSlotAction)
     {   
         $this->authorize('update', $course);
 
@@ -113,11 +114,11 @@ new class extends Component {
     }
 
     
-    public function cancel(CourseSlotService $service)
+    public function cancel(CourseSlotService $service,CancelCourseSlotAction $courseSlotAction)
     {
         if (!$this->slotToCancel) return;
 
-        $service->cancelSlot($this->slotToCancel);
+        $courseSlotAction->execute($this->slotToCancel);
         
         // Modal schließen
         Flux::modal('confirm')->close();
@@ -288,7 +289,7 @@ new class extends Component {
                     @endif
                     </flux:text>
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot->slot }})">  {{ $slot->bookingSlots()->where('status', 'booked')->count() }} / {{ $slot->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">  {{ $slot->bookingSlots()->where('status', 'booked')->count() }} / {{ $slot->capacity }}</flux:badge>
                     </flux:text>
                     
                     
