@@ -88,7 +88,7 @@ new class extends Component {
                 <td class="px-4 py-2">{{ $booking->id }}</td>
                 <td class="px-4 py-2">{{ date_format($booking->created_at,'d.m.Y') }}</td>
                 <td class="px-4 py-2">{{ $booking->course->title }}</td>
-                <td class="px-4 py-2"><flux:badge color="{{ $booking->status == 'confirmed' ? 'green' : ($booking->status == 'canceled' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></td>
+                <td class="px-4 py-2"><flux:badge color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></td>
                 <td class="px-4 py-2 text-right">
                     
                 <flux:button size="xs" href="{{ route('course_management.bookings.show', $booking) }}">Details</flux:button>

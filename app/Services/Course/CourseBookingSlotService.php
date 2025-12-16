@@ -34,6 +34,9 @@ class CourseBookingSlotService
                     });
                 })
                 ->where('status','booked')
+                ->whereHas('booking', function ($p0) {
+                    $p0->whereIn('status',['paid','partially_refunded']);
+                })
                 ->orderBy(
                     CourseSlot::select('date')
                         ->whereColumn('course_slots.id', 'course_booking_slots.course_slot_id')

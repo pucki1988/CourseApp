@@ -4,9 +4,10 @@
             <flux:heading size="lg">Buchungen</flux:heading>
         </div>
         @foreach (($this->showSlot->bookedSlots) ?? [] as $index => $bookedSlot)
-        <flux:text><flux:badge>{{ ($index + 1) }}</flux:badge>{{ $bookedSlot->booking->user->name }}
-        </flux:text>
+        <flux:tooltip content="Zur Buchung ({{ $bookedSlot->booking->id }})"><flux:button variant="ghost"  icon:trailing="information-circle" href="{{ route('course_management.bookings.show', $bookedSlot->booking) }}">{{ $bookedSlot->booking->user->name }}</flux:button>
+        </flux:tooltip>
         @endforeach
 
     </div>
 </flux:modal>
+

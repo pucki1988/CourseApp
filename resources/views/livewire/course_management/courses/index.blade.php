@@ -67,7 +67,7 @@ new class extends Component {
     @include('partials.courses-heading')
 
     <x-courses.layout :heading="__('Kurse')" :subheading="__('Deine Kurse')">
-    @can('create', \App\Models\Course\Course::class)
+    @can('create', Course::class)
     <div class="text-end">
     <flux:dropdown>
         <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>

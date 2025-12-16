@@ -6,6 +6,7 @@ use App\Actions\CourseBooking\CancelBookingSlotAction;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
 use Illuminate\Support\Facades\DB;
+use App\Events\CourseSlotCanceled;
 
 class CancelCourseSlotAction
 {
@@ -33,8 +34,9 @@ class CancelCourseSlotAction
                 'status' => 'canceled'
             ]);
 
-            // 3️⃣ Domain Event (optional, aber perfekt hier)
-            #event(new CourseSlotCancelled($slot));
+            DB::afterCommit(function () use ($slot) {
+                event(new CourseSlotCanceled($slot));
+            });
 
             return $slot->refresh();
         });

@@ -126,7 +126,7 @@ new class extends Component {
                     </flux:heading>
 
                     <div class="mb-2">
-                    <flux:tooltip content="Status der Buchung">
+                    <flux:tooltip content="Status des Termins">
                     <flux:badge size="sm">{{ $slot->status }} </flux:badge>
                     </flux:tooltip>
                     @if($slot->slot->rescheduled_at !==null)

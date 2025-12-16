@@ -132,6 +132,8 @@ class CourseBookingService
             $query->where('status',$filters['status']);
         }
 
+        $query->orderByDesc('created_at');
+
 
         return $query->get();
     }
