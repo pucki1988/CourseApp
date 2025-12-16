@@ -32,8 +32,8 @@ class MolliePaymentService implements PaymentService
                 "value" => number_format($booking->total_price, 2, '.', '') // You must send the correct number of decimals, thus we enforce the use of strings
             ],
             "description" => "Buchung ".$booking->id,
-            "redirectUrl" => 'https://gamboised-instinctively-eugena.ngrok-free.dev',
-            "webhookUrl" => 'https://gamboised-instinctively-eugena.ngrok-free.dev/api/webhooks/mollie',
+            "redirectUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse',
+            "webhookUrl" => route('webhooks.mollie'),
             "metadata" => [
                 "booking_id" => $booking->id,
             ],
