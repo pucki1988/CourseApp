@@ -43,7 +43,7 @@ class CourseBookingPolicy
         return $user->id === $booking->user_id;
     }
 
-    public function cancelSlot(User $user, CourseBooking $booking)
+    public function cancelBookingSlot(User $user, CourseBooking $booking)
     {
         return $user->id === $booking->user_id;
     }

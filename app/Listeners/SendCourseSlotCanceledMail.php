@@ -25,7 +25,7 @@ class SendCourseSlotCanceledMail implements ShouldQueue
     {
         // Alle gebuchten BookingSlots laden
         $event->slot->bookingSlots()
-            ->with('booking.user')
+            ->with('booking.user','booking.course')
             ->whereIn('status', ['refunded'])
             ->get()
             ->each(function ($bookingSlot) use ($event) {

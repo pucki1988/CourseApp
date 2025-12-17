@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class CourseService
 {
@@ -15,12 +16,19 @@ class CourseService
      */
     public function listCourses(array $filters = [])
     {
-        $query = Course::with(['slots', 'coach']);
+        $query = Course::with(['slots' => function($q) {
+            $q->with(['bookedSlots'])->where('status', 'active')
+            ->whereRaw("STR_TO_DATE(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s') > ?", [Carbon::now()]);
+        }, 'coach']);
+
+        
 
         // Manager → alles
         if (auth()->user()->hasRole('coach')) {
             $query->where('coach_id', auth()->id());
         }
+
+
 
         if (!empty($filters['coach_id'])) {
             $query->where('coach_id', $filters['coach_id']);

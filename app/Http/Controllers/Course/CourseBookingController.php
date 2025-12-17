@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 use App\Contracts\PaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
-use App\Actions\CourseBooking\CancelBookingSlotAction;
+use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 use App\Actions\CourseBooking\CreateBookingAction;
 
 class CourseBookingController extends Controller
@@ -40,9 +40,10 @@ class CourseBookingController extends Controller
         );
     }
     //Der Buchende sagt den gebuchten Slot ab.
-    public function cancelSlot(CourseBooking $courseBooking, CourseBookingSlot $courseBookingSlot,CancelBookingSlotAction $action)
+    public function cancelBookingSlot(CourseBooking $courseBooking, CourseBookingSlot $courseBookingSlot,UserCancelBookingSlotAction $action)
     {
-        $this->authorize('cancelSlot', $courseBooking);
+        $this->authorize('cancelBookingSlot', $courseBooking);
+
         $slot = $action->execute($courseBooking, $courseBookingSlot);
         return response()->json($slot);
     }

@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use App\Events\CourseSlotCanceled;
 use App\Listeners\SendCourseSlotCanceledMail;
+use App\Listeners\SendCourseBookingSlotCanceledByUserMail;
+use App\Events\CourseBookingSlotCanceledByUser;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -12,6 +14,9 @@ class EventServiceProvider extends ServiceProvider
         // Event => [ Listener(s) ]
         CourseSlotCanceled::class => [
             SendCourseSlotCanceledMail::class,
+        ],
+        CourseBookingSlotCanceledByUser::class => [
+            SendCourseBookingSlotCanceledByUserMail::class
         ],
     ];
 

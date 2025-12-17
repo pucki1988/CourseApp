@@ -27,7 +27,7 @@ new class extends Component {
     public ?CourseSlot $showSlot=null;
     
 
-    public function mount(CourseBookingSlotService $courseBookingSlotService,CourseSlotService $courseSlotService,CancelCourseSlotAction $courseSlotAction)
+    public function mount(CourseBookingSlotService $courseBookingSlotService)
     {
         #$this->authorize('viewAny', CourseSlot::class);
         $this->loadSlots($courseBookingSlotService);
@@ -43,7 +43,7 @@ new class extends Component {
     public function cancel(CourseBookingSlotService $courseBookingSlotService,CancelCourseSlotAction $courseSlotAction)
     {
         if (!$this->slotToCancel) return;
-        
+        $this->authorize('cancel', $this->slotToCancel);
         $courseSlotAction->execute($this->slotToCancel);
         
         // Modal schließen

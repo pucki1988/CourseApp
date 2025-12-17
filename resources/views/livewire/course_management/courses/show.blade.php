@@ -25,7 +25,7 @@ new class extends Component {
 
     public array $slotToReschedule = [];
 
-    public function mount(Course $course, CourseService $service,CancelCourseSlotAction $courseSlotAction)
+    public function mount(Course $course, CourseService $service)
     {   
         $this->authorize('update', $course);
 
@@ -117,7 +117,7 @@ new class extends Component {
     public function cancel(CourseSlotService $service,CancelCourseSlotAction $courseSlotAction)
     {
         if (!$this->slotToCancel) return;
-
+        $this->authorize('cancel', $this->slotToCancel);
         $courseSlotAction->execute($this->slotToCancel);
         
         // Modal schließen

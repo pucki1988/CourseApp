@@ -35,7 +35,7 @@ class CancelBookingSlotAction
                     ->createRefund($booking, $bookingSlot->price, $refund);
             }
 
-            // 2️⃣ Slot stornieren
+            // 2️⃣ Booking Slot stornieren
             $this->bookingSlotService->cancel($bookingSlot);
 
             // 3️⃣ Booking-Status aktualisieren

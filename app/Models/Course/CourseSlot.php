@@ -2,7 +2,7 @@
 
 namespace App\Models\Course;
 use Illuminate\Database\Eloquent\Model;
-
+use Carbon\Carbon;
 
 class CourseSlot extends Model
 {
@@ -47,5 +47,24 @@ class CourseSlot extends Model
     public function isFull(): bool
     {
         return $this->availableSlots() === 0;
+    }
+
+    public function startDateTime(): Carbon
+    {
+        return Carbon::createFromFormat(
+            'Y-m-d H:i',
+            $this->date->format('Y-m-d') . ' ' . $this->start_time->format('H:i')
+        );
+    }
+
+    public function isCancelable(): bool
+    {
+        return $this->status === 'active'
+            && $this->startDateTime()->isFuture();
+    }
+
+    public function isInFuture(): bool
+    {
+        return  $this->startDateTime()->isFuture();
     }
 }
