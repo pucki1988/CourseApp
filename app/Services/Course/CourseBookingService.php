@@ -128,9 +128,13 @@ class CourseBookingService
             $query->where('user_id', auth()->user()->id);
         }
 
+         $query->whereIn('payment_status',['pending','open','paid']);
+
         if (!empty($filters['status'])) {
             $query->where('status',$filters['status']);
         }
+
+
 
         $query->orderByDesc('created_at');
 
