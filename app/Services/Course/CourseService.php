@@ -131,7 +131,7 @@ class CourseService
         $validator = Validator::make($input, [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'booking_type' => ['required', Rule::in(['all', 'per_slot'])],
+            'booking_type' => ['required', Rule::in(['per_course', 'per_slot'])],
             'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
             'coach_id' => 'nullable|exists:users,id',
@@ -157,7 +157,7 @@ class CourseService
         $validator = Validator::make($input, [
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'booking_type' => ['sometimes', Rule::in(['all', 'per_slot'])],
+            'booking_type' => ['sometimes', Rule::in(['per_course', 'per_slot'])],
             'price' => 'sometimes|nullable|numeric|min:0',
             'capacity' => 'sometimes|nullable|integer|min:1',
             'coach_id' => 'sometimes|nullable|exists:users,id',

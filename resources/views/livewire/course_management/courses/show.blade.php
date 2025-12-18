@@ -189,12 +189,12 @@ new class extends Component {
 
             <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
 
-            @if($course->booking_type === 'all')
+            @if($course->booking_type === 'per_course')
             <div class="grid auto-rows-min gap-4 xl:grid-cols-4">
             <flux:field>
             <flux:label>Kurstyp</flux:label>
             <flux:select  :value="$course->booking_type" disabled>
-            <flux:select.option selected value="all">Alle Termine ein Gesamtpreis</flux:select.option>
+            <flux:select.option selected value="per_course">Alle Termine ein Gesamtpreis</flux:select.option>
             </flux:select>
             </flux:field>
             
