@@ -155,12 +155,12 @@ new class extends Component {
             <flux:field>
             <flux:label>Kurstyp</flux:label>
             <flux:select  :value="$newCourse['booking_type']" wire:change="$set('newCourse.booking_type', $event.target.value)" placeholder="Wähle den Kurstyp">
-                <flux:select.option value="all">Alle Termine ein Gesamtpreis</flux:select.option>
+                <flux:select.option value="per_course">Alle Termine ein Gesamtpreis</flux:select.option>
                 <flux:select.option value="per_slot">Jeder Termin ein Preis</flux:select.option>
             </flux:select>
             </flux:field>
 
-            @if($newCourse['booking_type'] === 'all')
+            @if($newCourse['booking_type'] === 'per_course')
              <flux:input wire:model="newCourse.price" label="Preis" step="0.01" type="number" />
             @endif
 
