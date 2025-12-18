@@ -121,7 +121,7 @@ class CourseBookingService
      */
     public function listBookings(array $filters = [])
     {
-        $query=CourseBooking::with(['bookingSlots','course']);
+        $query=CourseBooking::with(['course','bookingSlots.slot']);
 
         if (!auth()->user()->hasAnyRole('admin','manager')) {
         // Normale User sehen nur eigene
