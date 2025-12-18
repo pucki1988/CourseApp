@@ -42,7 +42,7 @@ class CancelBookingSlotAction
             $this->courseBookingService
                 ->refreshBookingStatus($booking);
 
-            return $bookingSlot->refresh();
+            return $bookingSlot;
         });
     }
 }
