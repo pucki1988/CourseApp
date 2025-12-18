@@ -1,7 +1,7 @@
 <h2>Termin des Kurs storniert</h2>
 
 <p>
-    Du hast den Termin  <strong>{{ $bookingSlot->slot->date->format('d.m.Y') }}</strong> | <strong>{{ $bookingSlot->slot->start_time }}</strong>
+    Du hast den Termin  <strong>{{ $bookingSlot->slot->date->format('d.m.Y') }}</strong> | <strong>{{ $bookingSlot->slot->start_time->format('H:i') }}</strong>
     deines Kurses <strong>{{ $bookingSlot->booking->course->title }}</strong> abgesagt.
 </p>
 <p>
