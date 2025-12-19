@@ -7,6 +7,8 @@ use App\Models\Course\CourseSlot;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+use App\Events\CourseSlotRescheduled;
+
 class CourseSlotService
 {
 
@@ -131,7 +133,13 @@ class CourseSlotService
         $data['rescheduled_at'] = now();
         $slot = CourseSlot::findOrFail($data['id']);
 
+        $oldData=["date" => $slot->date,"start_time" =>$slot->start_time];
+
         $slot->update($data);
+
+        $slot->refresh();
+        
+        event(new CourseSlotRescheduled($slot,$oldData));
 
         return $slot;
     }
