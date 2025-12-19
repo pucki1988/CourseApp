@@ -12,16 +12,17 @@
 </head>
 <body>
 <p>Hallo {{ $booking->user->name ?? 'Teilnehmer' }},</p>
-<p>Vielen Dank für deine Buchung!</p>
-<h4>Details</h4>
+<p>vielen Dank für deine Buchung.</p>
+<h4>Details:</h4>
 <p>
 Kurs: <strong>{{ $booking->course->title }}</strong><br/>
 Buchung: <strong>#{{ $booking->id }}</strong>
 </p>
 <h4>Gebuchte Termine</h4>
 <div>
-@foreach($booking->bookingSlots as $bs)
+@foreach($booking->bookingSlots as $index =>$bs)
 <div class="slot">
+{{ $index }} || 
 {{ \Carbon\Carbon::parse($bs->slot->date)->format('d.m.Y') }} | 
 {{ $bs->slot->start_time->format('H:i') }} Uhr
 </div>
@@ -29,8 +30,8 @@ Buchung: <strong>#{{ $booking->id }}</strong>
 </div>
 <p class="price">Gesamtpreis: € {{ number_format($booking->total_price, 2, ',', '.') }}</p>
 <p><strong>Hinweis:</strong> Die Buchung gilt erst nach Abschluss des Zahlungsvorgangs als vollständig.</p>
-<p>Wir freuen uns auf deine Teilnahme!</p>
+<p>Wir freuen uns auf deine Teilnahme.</p>
 <p>Viele Grüße</p>
-    </div>
+</div>
 </body>
 </html>

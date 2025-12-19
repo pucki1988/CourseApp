@@ -8,21 +8,18 @@ use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Services\User\UserService;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request)
-    {
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-        $user->assignRole('user');
+    public function register(
+        RegisterRequest $request,
+        UserService $userService
+    ) {
+        $user = $userService->register($request->validated());
 
         $token = $user->createToken('api-token')->plainTextToken;
-        
-        
+
         return response()->json([
             'user'  => $user,
             'token' => $token
