@@ -10,6 +10,7 @@ use App\Services\Course\CourseBookingService;
 use App\Services\Bookings\BookingPaymentService;
 use App\Contracts\PaymentService;
 use Illuminate\Http\Request;
+use App\Events\CourseBookingCreate;
 
 class CreateBookingAction
 {
@@ -31,6 +32,12 @@ class CreateBookingAction
 
             $data["booking"]=$newBooking->refresh();
         
+            DB::afterCommit(fn () =>
+                event(new CourseBookingCreate(
+                    $newBooking
+                ))
+            );
+
             return $data;
         });
     }

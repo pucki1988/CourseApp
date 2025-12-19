@@ -34,6 +34,7 @@ class MolliePaymentService implements PaymentService
             "description" => "Buchung ".$booking->id,
             "redirectUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id,
             "webhookUrl" => route('webhooks.mollie'),
+            #"webhookUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse',
             "metadata" => [
                 "booking_id" => $booking->id,
             ],
