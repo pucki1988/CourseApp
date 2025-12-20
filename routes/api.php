@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Course\CourseBookingController;
 use App\Http\Controllers\Course\CourseController;
 use App\Http\Controllers\Course\CourseSlotController;
+use App\Http\Controllers\Course\CourseBookingSlotController;
 use App\Http\Controllers\Webhook\MollieWebhookController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -42,7 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/booking/{course}', [CourseBookingController::class, 'store']);
     Route::get('/bookings', [CourseBookingController::class, 'index']);
     Route::post('/booking/{courseBooking}/slots/{courseBookingSlot}/cancel', [CourseBookingController::class, 'cancelBookingSlot']);
-
+    Route::get('/booking_slots', [CourseBookingSlotController::class, 'index']);
 
 
 });
