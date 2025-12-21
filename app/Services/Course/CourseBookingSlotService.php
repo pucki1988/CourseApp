@@ -23,7 +23,7 @@ class CourseBookingSlotService
 
     public function listBookedSlots(array $filters = [])
     {
-        $query = CourseBookingSlot::with(['slot', 'booking'])
+        $query = CourseBookingSlot::with(['slot.course', 'booking'])
                 ->whereHas('slot', function ($q) {
                     $q->where(function ($q2) {
                         $q2->whereDate('date', '>', now())
