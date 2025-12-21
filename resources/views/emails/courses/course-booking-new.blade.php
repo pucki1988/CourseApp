@@ -16,7 +16,8 @@
 <h4>Details:</h4>
 <p>
 Kurs: <strong>{{ $booking->course->title }}</strong><br/>
-Buchung: <strong>#{{ $booking->id }}</strong>
+Buchung: <strong>#{{ $booking->id }}</strong><br/>
+Ort: <strong>{{ $booking->course->location }}</strong>
 </p>
 <h4>Gebuchte Termine</h4>
 <div>
