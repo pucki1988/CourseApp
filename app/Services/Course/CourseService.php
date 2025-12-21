@@ -21,14 +21,7 @@ class CourseService
             ->whereRaw("STR_TO_DATE(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s') > ?", [Carbon::now()]);
         }, 'coach']);
 
-        
-
-        // Manager → alles
-        if (auth()->user()->hasRole('coach')) {
-            $query->where('coach_id', auth()->id());
-        }
-
-
+    
 
         if (!empty($filters['coach_id'])) {
             $query->where('coach_id', $filters['coach_id']);

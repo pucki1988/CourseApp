@@ -26,7 +26,7 @@ class CourseController extends Controller
      */
     public function index(Request $request, CourseService $service)
     {
-        $this->authorize('viewAny', Course::class);
+        #$this->authorize('viewAny', Course::class);
         $courses = $service->listCourses($request->only(['coach_id', 'booking_type']));
         return response()->json($courses);
     }
