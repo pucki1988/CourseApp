@@ -48,9 +48,7 @@ class CourseSlotService
     public function listSlots(array $filters = [])
     {
         $query=CourseSlot::with('bookings')->whereHas('course', function ($q) use ($filters) {
-            if (auth()->user()->hasRole('coach')) {
-                $q->where('coach_id', auth()->id());
-            }
+            
             
             if (!empty($filters['status'])) {
                 $q->where('status', $filters['status']);

@@ -21,8 +21,8 @@ class CourseSlotPolicy
         if ($user->hasRole('manager')) {
             return true;
         }
-        // Coach darf Slot nur für eigene Kurse anlegen
-        return $user->hasRole('coach') && $course->coach_id === $user->id;
+        
+        return false;
     }
 
     public function update(User $user, CourseSlot $courseSlot)
@@ -30,10 +30,7 @@ class CourseSlotPolicy
         if ($user->hasRole('manager')) {
             return true;
         }
-        
-        if($user->hasRole('coach') && $courseSlot->course->coach_id === $user->id && $courseSlot->bookedSlots()->count() === 0){
-            #return true;
-        }
+
     }
 
     public function reschedule(User $user, CourseSlot $courseSlot)
@@ -41,7 +38,6 @@ class CourseSlotPolicy
         if ($user->hasRole('manager')) {
             return $courseSlot->isCancelable();
         }
-        return $user->hasRole('coach') && $courseSlot->course->coach_id === $user->id && $courseSlot->isCancelable();
     }
 
     public function cancel(User $user, CourseSlot $slot)
@@ -59,12 +55,6 @@ class CourseSlotPolicy
             //  Manager
             if ($user->hasRole('manager')) {
                 return $this->minParticipantsNotReached($slot);
-            }
-
-            //  Coach
-            if ($user->hasRole('coach')) {
-                return $slot->course->coach_id === $user->id
-                    && $this->minParticipantsNotReached($slot);
             }
 
             return false;

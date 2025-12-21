@@ -17,7 +17,6 @@ class RoleSeeder extends Seeder
         $roles = [
             'admin',
             'manager',
-            'coach',
             'member',
             'user',
         ];
@@ -52,21 +51,12 @@ class RoleSeeder extends Seeder
 
         $admin = Role::where('name', 'admin')->first();
         $manager = Role::where('name', 'manager')->first();
-        $coach = Role::where('name', 'coach')->first();
-
+        
         // Admin + Manager = alle Permissions
         $admin->syncPermissions(Permission::all());
         $manager->syncPermissions(Permission::all());
 
-        // Coach = nur eigene Kurse/Slots
-        $coach->syncPermissions([
-            'courses.create',
-            'courses.update.own',
-            'courses.delete.own',
-            'courseslots.create.own',
-            'courseslots.update.own',
-            'courseslots.delete.own',
-            'courseslots.cancel.own',
-        ]);
+        
+        
     }
 }

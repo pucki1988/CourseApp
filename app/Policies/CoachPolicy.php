@@ -2,11 +2,12 @@
 
 namespace App\Policies;
 
-use App\Models\Course\Course;
+use App\Models\Course\Coach;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class CoursePolicy
+
+class CoachPolicy
 {
     /**
      * Vorab-Check für Admin/Manager
@@ -34,7 +35,7 @@ class CoursePolicy
         return false;
     }
 
-    public function update(User $user, Course $course)
+    public function update(User $user)
     {
         if ($user->hasRole('manager')) {
             return true;
@@ -42,16 +43,9 @@ class CoursePolicy
         return false;
     }
 
-    public function delete(User $user, Course $course)
+    public function delete(User $user)
     {
         if ($user->hasRole('manager')) {
-            // Prüfen: gibt es Buchungen auf Slots?
-            foreach ($course->slots as $slot) {
-                if ($slot->bookings()->count() > 0) {
-                    return false; // Kurs darf nicht gelöscht werden
-                }
-            }
-
             return true;
         }
         

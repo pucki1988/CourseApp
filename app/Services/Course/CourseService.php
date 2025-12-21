@@ -127,7 +127,8 @@ class CourseService
             'booking_type' => ['required', Rule::in(['per_course', 'per_slot'])],
             'price' => 'nullable|numeric|min:0',
             'capacity' => 'nullable|integer|min:1',
-            'coach_id' => 'nullable|exists:users,id',
+            'coach_id' => 'nullable|exists:coaches,id',
+            'location' => 'required|string|max:255',
 
             // Slots optional
             'slots' => 'nullable|array',
@@ -153,7 +154,8 @@ class CourseService
             'booking_type' => ['sometimes', Rule::in(['per_course', 'per_slot'])],
             'price' => 'sometimes|nullable|numeric|min:0',
             'capacity' => 'sometimes|nullable|integer|min:1',
-            'coach_id' => 'sometimes|nullable|exists:users,id',
+            'coach_id' => 'sometimes|nullable|exists:coaches,id',
+            'location' => 'sometimes|required|string|max:255',
 
             'slots' => 'nullable|array',
             'slots.*.id' => 'nullable|exists:slots,id',

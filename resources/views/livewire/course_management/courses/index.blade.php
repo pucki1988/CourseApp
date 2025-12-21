@@ -2,23 +2,26 @@
 
 use Livewire\Volt\Component;
 use App\Services\Course\CourseService;
+use App\Services\Course\CoachService;
 use App\Models\Course\Course;
 use App\Models\User;
 
 new class extends Component {
 
     public $courses;
+    public $coaches;
     public $search = '';
     public $coachId = null;
     public $perPage = 10;
 
    public array $newCourse;
 
-    public function mount(CourseService $service)
+    public function mount(CourseService $service,CoachService $coachService)
     {
         $this->authorize('viewAny', Course::class);
         $this->initializeNewCourse();
         $this->loadCourses($service);
+        $this->loadCoaches($coachService);
     }
 
     private function initializeNewCourse(){
@@ -29,6 +32,7 @@ new class extends Component {
             'description' => '',
             'capacity' => null,
             'coach_id' => null,
+            'location' => ''
         ];
     }
 
@@ -48,6 +52,12 @@ new class extends Component {
         ];
         $this->courses = $service->listCourses($filters);
     }
+
+    public function loadCoaches(CoachService $service)
+    {
+        $this->coaches = $service->listCoaches(array("active" => true));
+    }
+
 
     public function createCourse(CourseService $service)
     {
@@ -94,7 +104,7 @@ new class extends Component {
         <!-- Coach Filter -->
         <flux:select wire:model="coachId" placeholder="Trainer auswählen">
             <flux:select.option value="">Alle Trainer</flux:select.option>
-            @foreach(User::role('coach')->get() as $coach)
+            @foreach($coaches as $coach)
                 <flux:select.option :value="$coach->id">{{ $coach->name }}</flux:select.option>
             @endforeach
         </flux:select>
@@ -164,11 +174,14 @@ new class extends Component {
              <flux:input wire:model="newCourse.price" label="Preis" step="0.01" type="number" />
             @endif
 
+            <flux:input label="Ort" placeholder="Ort des Kurses" type="text" :value="$newCourse['location']"
+    wire:change="$set('newCourse.location', $event.target.value)" />
+
             <flux:input wire:model="newCourse.capacity" label="Kapazität" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" />
             
             <flux:label>Coach</flux:label>
             <flux:select :value="$newCourse['coach_id']" wire:change="$set('newCourse.coach_id', $event.target.value)" placeholder="Trainer auswählen">
-                @foreach(User::role('coach')->get() as $coach)
+                @foreach($coaches as $coach)
                     <flux:select.option value="{{$coach->id}}">{{ $coach?->name }}</flux:select.option>
                 @endforeach
             </flux:select>
