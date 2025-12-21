@@ -23,7 +23,7 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     // Kurse
-    Route::get('/courses', [CourseController::class, 'index']);
+    
     Route::get('/courses/{course}', [CourseController::class, 'show']);
     Route::post('/courses', [CourseController::class, 'store']);
     #Route::put('/courses/{course}', [CourseController::class, 'update']);
@@ -53,3 +53,4 @@ Route::get('/status', function(){
 
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->name('webhooks.mollie');
+Route::get('/courses', [CourseController::class, 'index']);
