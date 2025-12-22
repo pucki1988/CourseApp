@@ -7,6 +7,9 @@ class CourseBooking extends Model
 {
     protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type'];
 
+    protected $casts = [
+        'total_price' => 'decimal:2',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class)->withDefault([
