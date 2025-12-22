@@ -83,7 +83,7 @@ class CourseSlotController extends Controller
 
         try{
             $action->execute($slot);
-            return response()->json(['message' => 'Slot storniert']);
+            return response()->json(['message' => 'Termin storniert']);
         }catch (PaymentFailedException $e) {
             return response()->json([
                 'message' => $e->getMessage()

@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 use App\Contracts\PaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
-use App\Actions\CourseBooking\UserCancelBookingSlotAction;
+use App\Actions\CourseBooking\CancelCourseBookingAction;
 use App\Actions\CourseBooking\CreateBookingAction;
 use App\Exceptions\PaymentFailedException;
 
@@ -55,6 +55,21 @@ class CourseBookingController extends Controller
         }
         
     }
+
+    public function cancelCourseBooking(CourseBooking $courseBooking,CancelCourseBookingAction $action){
+        
+        $this->authorize('cancelBooking', $courseBooking);
+        try{
+            $booking = $action->execute($courseBooking);
+            return response()->json($booking);
+        }catch (PaymentFailedException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], status: 422);
+        }
+    }
+        
+    
 
     
 }
