@@ -15,6 +15,7 @@ use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
 use App\Actions\CourseBooking\CancelCourseBookingAction;
 use App\Actions\CourseBooking\CreateBookingAction;
+use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 use App\Exceptions\PaymentFailedException;
 
 class CourseBookingController extends Controller
