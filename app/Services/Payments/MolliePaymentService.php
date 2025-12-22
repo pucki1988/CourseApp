@@ -11,6 +11,8 @@ use App\Services\Bookings\BookingPaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingService;
 
+use App\Exceptions\PaymentFailedException;
+
 class MolliePaymentService implements PaymentService
 {
 
@@ -48,10 +50,13 @@ class MolliePaymentService implements PaymentService
     }
 
     public function refund(CourseBooking $booking,float $amount): RefundResult{
+        
+        
+        try {
         $payment = Mollie::api()->payments->get(
             $booking->payment_transaction_id
         );
-        
+
         $refund = $payment->refund([
             'amount' => [
                 'currency' => 'EUR',
@@ -66,6 +71,13 @@ class MolliePaymentService implements PaymentService
             refundId: $refund->id,
             status: $refund->status
         );
+
+        } catch (\Throwable $e) {
+
+            throw new PaymentFailedException(
+                'Die Rückerstattung konnte nicht durchgeführt werden.'
+            );
+        }
     }
 
     public function handleWebhook(string $paymentId): void

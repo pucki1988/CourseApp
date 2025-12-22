@@ -8,6 +8,8 @@ use App\Models\Course\CourseSlot;
 use App\Models\Course\Course;
 use App\Services\Course\CourseSlotService;
 use App\Actions\Course\CancelCourseSlotAction;
+use App\Exceptions\PaymentFailedException;
+
 
 class CourseSlotController extends Controller
 {
@@ -79,8 +81,14 @@ class CourseSlotController extends Controller
     ) {
         $this->authorize('cancel', $slot);
 
-        return response()->json(
-            $action->execute($slot)
-        );
+        try{
+            $action->execute($slot);
+            return response()->json(['message' => 'Slot storniert']);
+        }catch (PaymentFailedException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], status: 422);
+        }
+
     }
 }
