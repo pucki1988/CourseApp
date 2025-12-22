@@ -59,7 +59,7 @@ class CourseBookingPolicy
         }
 
         // Slots laden (falls lazy)
-        $booking->loadMissing('bookingSlots');
+        $booking->loadMissing('bookingSlots.slot');
 
         // 2️⃣ Alle Slots müssen Status "booked" haben
         $allBooked = $booking->bookingSlots->every(function ($bookingSlot) {
@@ -79,6 +79,7 @@ class CourseBookingPolicy
             if(!$bookingSlot->slot->isInFuture()){
                 return false;
             }
+            return true; 
         });
         
     }
