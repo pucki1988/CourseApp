@@ -28,6 +28,11 @@ class CourseSlot extends Model
        
     }
 
+    public function reminders()
+    {
+        return $this->hasMany(CourseSlotReminder::class);
+    }
+
 
     public function availableSlots(): int
     {
@@ -67,4 +72,6 @@ class CourseSlot extends Model
     {
         return  $this->startDateTime()->isFuture();
     }
+
+    
 }
