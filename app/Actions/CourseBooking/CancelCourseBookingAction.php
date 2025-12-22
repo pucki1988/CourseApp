@@ -38,11 +38,11 @@ class CancelCourseBookingAction
             }
 
             // 2️⃣ Booking Slot stornieren
-            foreach($booking->bookingSlots() as $bookingSlot){
-                if($bookingSlot->status ==='booked'){
-                    $this->bookingSlotService->cancel($bookingSlot);
-                }
-            }
+            $booking->bookingSlots()
+                ->where('status', 'booked')
+                ->each(fn ($bookingSlot) =>
+                    $this->bookingSlotService->cancel($bookingSlot)
+            );
             
             // 3️⃣ Booking-Status aktualisieren
             $this->courseBookingService

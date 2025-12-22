@@ -5,7 +5,7 @@
     <title>Neue Kursbuchung</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
-        .slot { padding: 10px 0; border-bottom: 1px solid #dee2e6; }
+        .slot { padding: 10px 0; }
         .slot:last-child { border-bottom: none; }
         .price { font-weight: bold; font-size: 1.1rem; }
     </style>
@@ -22,13 +22,13 @@ Buchung: <strong>#{{ $booking->id }}</strong><br/>
 <div>
 @foreach($booking->bookingSlots as $index =>$bs)
 <div class="slot">
-{{ $index }} || 
+<strong>{{ ($index + 1) }}</strong> || 
 {{ \Carbon\Carbon::parse($bs->slot->date)->format('d.m.Y') }} | 
 {{ $bs->slot->start_time->format('H:i') }} Uhr
 </div>
 @endforeach
 </div>
-<p class="price">Gesamtpreis: € {{ number_format($booking->total_price, 2, ',', '.') }}</p>
+<p class="price">Gesamtbetrag der Rückzahlung € {{ number_format($booking->total_price, 2, ',', '.') }}</p>
 <p><strong>Hinweis:</strong> Die Rückerstattung auf das verwendete Zahlungsmittel wurde angestoßen. Die Rückzahlung kann jedoch einige Tage dauern.</p>
 <p>Viele Grüße</p>
 </div>
