@@ -24,7 +24,7 @@ class CancelCourseBookingAction
     public function execute(
         CourseBooking $booking,
         
-    ): CourseBookingSlot {
+    ): CourseBooking {
 
         return DB::transaction(function () use ($booking) {
 
