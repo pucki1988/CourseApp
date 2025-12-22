@@ -54,6 +54,11 @@ class CourseBookingService
         ]);
 
         foreach ($course->slots as $slot) {
+
+            if ($slot->status !== 'active') {
+                continue; // überspringe inaktive Slots
+            }
+
             $booking->bookingSlots()->create([
                 'course_slot_id' => $slot->id,
                 'price'          => 0
@@ -105,6 +110,10 @@ class CourseBookingService
             ]);
 
             foreach ($createBookingSlots as $slot) {
+
+                if ($slot->status !== 'active') {
+                    continue; // überspringe inaktive Slots
+                }
                 $booking->bookingSlots()->create([
                     'course_slot_id' => $slot->id,
                     'price'          => $slot->price,
