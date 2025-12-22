@@ -15,6 +15,7 @@ use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
 use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 use App\Actions\CourseBooking\CreateBookingAction;
+use App\Exceptions\PaymentFailedException;
 
 class CourseBookingController extends Controller
 {
@@ -44,8 +45,15 @@ class CourseBookingController extends Controller
     {
         $this->authorize('cancelBookingSlot', $courseBooking);
 
-        $slot = $action->execute($courseBooking, $courseBookingSlot);
-        return response()->json($slot);
+        try{
+            $slot = $action->execute($courseBooking, $courseBookingSlot);
+            return response()->json($slot);
+        }catch (PaymentFailedException $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], status: 422);
+        }
+        
     }
 
     
