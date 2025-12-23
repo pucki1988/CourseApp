@@ -14,9 +14,10 @@ class CancelCourseSlotAction
         private CancelBookingSlotAction $cancelBookingSlotAction
     ) {}
 
-    public function execute(CourseSlot $slot): CourseSlot
+    public function execute(CourseSlot $slot,?string $reason = null): CourseSlot
     {
-        return DB::transaction(function () use ($slot) {
+        //Absage des Slot durch Verantwortlichen
+        return DB::transaction(function () use ($reason, $slot) {
 
             // 1️⃣ Alle gebuchten Slots stornieren
             $slot->bookingSlots()
@@ -29,13 +30,15 @@ class CancelCourseSlotAction
                     );
                 });
 
-            // 2️⃣ Slot selbst absagen
+            // 2️⃣ Course Slot selbst absagen
             $slot->update([
                 'status' => 'canceled'
             ]);
 
-            DB::afterCommit(function () use ($slot) {
-                event(new CourseSlotCanceled($slot));
+            $message_reason = $reason ?? 'Der Verantwortliche hat den Termin des Kurs abgesagt.';
+
+            DB::afterCommit(function () use ($message_reason, $slot) {
+                event(new CourseSlotCanceled($slot,$message_reason));
             });
 
             return $slot->refresh();

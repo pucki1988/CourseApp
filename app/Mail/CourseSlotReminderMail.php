@@ -8,22 +8,20 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-
 use App\Models\Course\CourseSlot;
-use App\Models\Course\CourseBooking;
 
-class CourseSlotCanceledMail extends Mailable
+
+class CourseSlotReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(
-        public CourseSlot $slot,
-        public CourseBooking $booking,
-        public string $reason
-    ) {}
+    public function __construct(public CourseSlot $slot)
+    {
+        //
+    }
 
     /**
      * Get the message envelope.
@@ -31,7 +29,7 @@ class CourseSlotCanceledMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Termin deines Kurses wurde abgesagt',
+            subject: 'Reminder: Der Termin deines Kurs startet bald',
         );
     }
 
@@ -41,7 +39,7 @@ class CourseSlotCanceledMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.courses.course-slot-canceled',
+            view: 'emails.courses.course-slot-reminder',
         );
     }
 

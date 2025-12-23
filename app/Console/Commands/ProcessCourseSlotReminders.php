@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Models\Course\CourseSlotReminder;
 use App\Models\Course\CourseSlot;
 use Carbon\Carbon;
+use App\Jobs\SendCourseSlotReminder;
+use App\Jobs\CheckMinParticipants;
 
 class ProcessCourseSlotReminders extends Command
 {
@@ -14,7 +16,7 @@ class ProcessCourseSlotReminders extends Command
      *
      * @var string
      */
-    protected $signature = 'app:process-course-slot-reminders';
+    protected $signature = 'course_slots:process-reminders';
 
     /**
      * The console command description.
@@ -29,9 +31,13 @@ class ProcessCourseSlotReminders extends Command
     public function handle()
     {
         $now = now();
-
+        
         CourseSlot::query()
             ->where('status', 'active')
+            ->whereRaw(
+                "TIMESTAMP(date, start_time) > ?",
+                [$now]
+            )
             ->with(['reminders', 'bookedSlots'])
             ->chunk(50, function ($slots) use ($now) {
                 foreach ($slots as $slot) {
@@ -50,7 +56,7 @@ class ProcessCourseSlotReminders extends Command
                 continue;
             }
 
-            $triggerTime = $slot->startDateTime
+            $triggerTime = $slot->startDateTime()
                 ->copy()
                 ->subMinutes($reminder->minutes_before);
 
@@ -67,7 +73,7 @@ class ProcessCourseSlotReminders extends Command
         CourseSlotReminder $reminder
     ) {
         match ($reminder->type) {
-            'info' => SendCourseSlotReminderMail::dispatch($slot, $reminder),
+            'info' => SendCourseSlotReminder::dispatch($slot, $reminder),
             'min_participants_check' => CheckMinParticipants::dispatch($slot),
         };
 

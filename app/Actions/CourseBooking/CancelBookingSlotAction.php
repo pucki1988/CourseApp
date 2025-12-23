@@ -9,6 +9,7 @@ use App\Services\Bookings\BookingRefundService;
 use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseBookingSlot;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\RefundBookingSlot;
 
 class CancelBookingSlotAction
 {
@@ -24,25 +25,26 @@ class CancelBookingSlotAction
         CourseBookingSlot $bookingSlot
     ): CourseBookingSlot {
 
-        return DB::transaction(function () use ($booking, $bookingSlot) {
+        $bookingSlot = DB::transaction(function () use ($booking, $bookingSlot) {
 
-            // 1️⃣ Refund (nur wenn Preis > 0)
-            if ($bookingSlot->price > 0) {
-                $refund = $this->paymentService
-                    ->refund($booking, $bookingSlot->price);
-
-                $this->bookingRefundService
-                    ->createRefund($booking, $bookingSlot->price, $refund);
-            }
-
-            // 2️⃣ Booking Slot stornieren
+            // 1️⃣ Booking Slot stornieren // canceled
             $this->bookingSlotService->cancel($bookingSlot);
 
-            // 3️⃣ Booking-Status aktualisieren
+            // 2️⃣ Booking-Status aktualisieren
             $this->courseBookingService
                 ->refreshBookingStatus($booking);
 
             return $bookingSlot;
         });
+
+        // 3️⃣ Refund asynchron auslösen (außerhalb der Transaction!)
+        if ($bookingSlot->price > 0) {
+            RefundBookingSlot::dispatch(
+                $booking->id,
+                $bookingSlot->id
+            )->onQueue('refunds');
+        }
+
+        return $bookingSlot;
     }
 }

@@ -10,3 +10,4 @@
 <p>
     Deine Buchung #{{ $booking->id }} wird entsprechend angepasst.
 </p>
+<p>Viele Grüße</p>

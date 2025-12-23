@@ -18,7 +18,7 @@ class CourseSlotCanceled
     /**
      * Create a new event instance.
      */
-    public function __construct(public CourseSlot $slot)
+    public function __construct(public CourseSlot $slot,public string $reason)
     {
         
     }

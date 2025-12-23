@@ -23,10 +23,12 @@ class SendCourseSlotCanceledMail implements ShouldQueue
      */
     public function handle(CourseSlotCanceled $event): void
     {
+
+       
         // Alle gebuchten BookingSlots laden
         $event->slot->bookingSlots()
             ->with('booking.user','booking.course')
-            ->whereIn('status', ['refunded'])
+            ->whereIn('status', ['refunded','canceled'])
             ->get()
             ->each(function ($bookingSlot) use ($event) {
 
@@ -36,10 +38,13 @@ class SendCourseSlotCanceledMail implements ShouldQueue
                     return;
                 }
 
+                $reason = $event->reason;
+
                 Mail::to($user->email)->send(
                     new CourseSlotCanceledMail(
                         $event->slot,
-                        $bookingSlot->booking
+                        $bookingSlot->booking,
+                        $reason
                     )
                 );
             });

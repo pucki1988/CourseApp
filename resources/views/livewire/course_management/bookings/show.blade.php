@@ -7,7 +7,7 @@ use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseSlot;
 use Carbon\Carbon;
 use App\Models\User;
-use App\Actions\Course\CancelCourseSlotAction;
+
 
 new class extends Component {
 

@@ -46,7 +46,7 @@ class CourseSlot extends Model
     public function bookedSlots()   
     {
         return $this->bookingSlots()
-        ->where('status', 'booked');
+        ->where('course_booking_slots.status', 'booked');
     }
 
     public function isFull(): bool

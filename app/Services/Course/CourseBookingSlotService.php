@@ -14,12 +14,19 @@ class CourseBookingSlotService
     
     public function cancel(CourseBookingSlot $courseBookingSlot)
     {
-        $courseBookingSlot->update(['status' => 'refunded']);
+        $courseBookingSlot->update(['status' => 'canceled']);
         return [
-            'message'        => 'Booking Slot wurde storniert'
+            'message'        => 'Booking Slot wurde abgesagt'
         ];
     }
 
+    public function refund(CourseBookingSlot $courseBookingSlot)
+    {
+        $courseBookingSlot->update(['status' => 'refunded']);
+        return [
+            'message'        => 'Booking Slot wurde zurückerstattet'
+        ];
+    }
 
     public function listBookedSlots(array $filters = [])
     {
