@@ -67,7 +67,7 @@ class RefundBooking implements ShouldQueue
 
 
             $booking->bookingSlots()
-                ->where('status', 'booked')
+                ->where('status', 'canceled')
                 ->each(fn ($bookingSlot) =>
                     $bookingSlotService->refund($bookingSlot)
             );

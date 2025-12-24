@@ -165,6 +165,13 @@ new class extends Component {
         Flux::modal('bookings')->show();
     }
 
+
+    public function showReminders(CourseSlot $slot){
+        $this->showSlot=$slot;
+        Flux::modal('reminders')->show();
+    }
+    
+
     
 };
 ?>
@@ -291,7 +298,9 @@ new class extends Component {
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">  {{ $slot->bookingSlots()->where('status', 'booked')->count() }} / {{ $slot->capacity }}</flux:badge>
                     </flux:text>
-                    
+                    <flux:text class="mt-2">
+                    Reminder <flux:badge icon="clock" wire:click="showReminders({{ $slot }})">{{ $slot->reminders()->count()}}</flux:badge>
+                    </flux:text>
                     
                     </div>
                 </div>
@@ -436,6 +445,6 @@ new class extends Component {
     </flux:modal>
 
     @include('partials.booking-name-show')
-
+    @include('partials.reminders-show')
     </x-courses.layout>
 </section>

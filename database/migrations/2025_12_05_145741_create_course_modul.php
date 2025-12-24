@@ -81,7 +81,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
             $table->decimal('price', 10, 2)->default(0);
-            $table->enum('status',['booked','canceled','refunded'])->default('booked');
+            $table->enum('status',['booked','canceled','refunded','refund_failed'])->default('booked');
             // booked | cancelled | refunded
             $table->timestamps();
             /** Ein Slot darf pro Booking nur einmal vorkommen */

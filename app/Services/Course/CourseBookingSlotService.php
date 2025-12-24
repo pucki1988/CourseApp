@@ -28,6 +28,14 @@ class CourseBookingSlotService
         ];
     }
 
+    public function refund_failed(CourseBookingSlot $courseBookingSlot)
+    {
+        $courseBookingSlot->update(['status' => 'refund_failed']);
+        return [
+            'message'        => 'Rückerstattung fehlgeschlagen'
+        ];
+    }
+
     public function listBookedSlots(array $filters = [])
     {
         $query = CourseBookingSlot::with(['slot.course', 'booking'])

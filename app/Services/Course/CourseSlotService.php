@@ -4,6 +4,7 @@ namespace App\Services\Course;
 
 use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
+use App\Models\Course\CourseSlotReminder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -41,6 +42,8 @@ class CourseSlotService
         foreach ($validated['slots'] as $slot) {
             $created[] = $course->slots()->create($slot);
         }
+
+        $this->createRemindersForSlots($created);
 
         return $created;
     }
@@ -142,7 +145,44 @@ class CourseSlotService
         return $slot;
     }
 
+    private function createRemindersForSlots(array|Collection $slots): void
+    {
+        foreach ($slots as $courseSlot) {
+            $this->createRemindersForSingleSlot($courseSlot);
+        }
+    }
 
+    private function createRemindersForSingleSlot(CourseSlot $courseSlot): void
+    {
+        $definitions = [
+        [
+            'type' => 'info',
+            'minutes_before' => 120, // 2 Stunden
+        ],
+        [
+            'type' => 'min_participants_check',
+            'minutes_before' => 1440, // 1 Tag
+        ],
+        ];
+
+    foreach ($definitions as $definition) {
+
+        $sentAt = $courseSlot->startDateTime()
+            ->copy()
+            ->subMinutes($definition['minutes_before']);
+
+        // Reminder nur anlegen, wenn Zeitpunkt noch in der Zukunft liegt
+        if ($sentAt->isPast()) {
+            continue;
+        }
+
+        CourseSlotReminder::create([
+            'course_slot_id' => $courseSlot->id,
+            'type' => $definition['type'],
+            'minutes_before' => $definition['minutes_before'],
+        ]);
+    }
+    }
     
     
 }
