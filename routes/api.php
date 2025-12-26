@@ -13,6 +13,8 @@ use App\Http\Controllers\Webhook\MollieWebhookController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
+    Route::get('/me/qr-code', [UserController::class, 'qr_code']);
+    Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])->name('qr.checkin');
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
