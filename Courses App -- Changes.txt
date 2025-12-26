@@ -7,18 +7,20 @@ e Wenn schon Buchungen auf Slots dann löschen nicht mehr möglich
 e Wenn Mindestteilnehmer erreicht dann absagen auch nicht mehr möglich nur verschieben
 e Mindestteilnehmer je Slot 
 e Bei Vollterminen Mindestteilnehmer je Slot 1
-+ Info bei Absagen oder Verschiebungen an Teilnehmer
-+ Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermittelt werden? 
+e Info bei Absagen oder Verschiebungen an Teilnehmer
+e Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermittelt werden? 
 e Bei "all" Buchungen ist das absagen einzelner Slots nicht möglich. Nur verschieben.
 
 
+
+
 Buchungen
-+ Was passiert beim absagen oder verschieben mit der Buchung?
-+ Buchung vollständig stornieren
-+ Einzelne Termine stornieren
-+ Rückbuckungen / Teilrückbuchungen
-+ Zahlungsabwicklungen
-+ Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
+e Was passiert beim absagen oder verschieben mit der Buchung?
+e Buchung vollständig stornieren
+e Einzelne Termine stornieren
+e Rückbuckungen / Teilrückbuchungen
+e Zahlungsabwicklungen
+e Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
 
 
 Preislogik
@@ -26,9 +28,9 @@ Preislogik
 + Endpreis erst nach Login Sichtbar
 
 
-+ Course Booking Slots Pricefeld einfügen? Und Startdatum des Slots? Wie kann der aktualsiert werden?
-+ Absage eines Kurses/ Slots was passier mit der Buchung? 
-+ Zahlung auf Course Booking Slot oder weiter auf Course Booking (Teilrückerstattung)
+e Course Booking Slots Pricefeld einfügen? Und Startdatum des Slots? Wie kann der aktualsiert werden?
+e Absage eines Kurses/ Slots was passier mit der Buchung? 
+e Zahlung auf Course Booking Slot oder weiter auf Course Booking (Teilrückerstattung)
 
 
 
