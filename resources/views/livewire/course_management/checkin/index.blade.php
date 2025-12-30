@@ -98,7 +98,7 @@ new class extends Component {
             if (!$bookingSlot) {
                 throw new \Exception('Keine gültige Buchung für diesen Termin');
             }
-            
+
             $bookingSlot->update([
                 'checked_in_at' => now(),
             ]);
@@ -245,7 +245,7 @@ function stopScanner() {
 
 function restartScanner() {
     stopScanner();
-    setTimeout(startScanner, 1200);
+    setTimeout(startScanner, 2500);
 }
 
 /* Livewire Events */
