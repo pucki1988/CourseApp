@@ -39,8 +39,10 @@ new class extends Component {
         $this->dispatch('startScanner');
     }
 
-    public function qrScanned(string $value)
+    public function qrScanned($payload)
     {
+
+        $this->scanValue = $payload['value'];
         $this->reset(['message', 'state']);
 
         try {
@@ -48,15 +50,16 @@ new class extends Component {
                 throw new Exception('Kein Slot aktiv');
             }
 
-            if (!URL::hasValidSignature(request()->create($value))) {
-                throw new Exception('QR-Code ungültig');
+            $request = request()->create($this->scanValue);
+
+            if (!URL::hasValidSignature($request)) {
+                throw new \Exception('QR-Code ungültig');
             }
 
-            parse_str(parse_url($value, PHP_URL_QUERY), $query);
-            $userId = $query['user'] ?? null;
+            $userId = $request->route('user');
 
             if (!$userId) {
-                throw new Exception('User nicht erkannt');
+                throw new \Exception('User nicht erkannt');
             }
 
             $bookingSlot = $this->activeSlot
@@ -71,10 +74,10 @@ new class extends Component {
                 throw new Exception('Keine gültige Buchung');
             }
 
-            $bookingSlot->update([
+            /*$bookingSlot->update([
                 'status' => 'checked_in',
                 'checked_in_at' => now(),
-            ]);
+            ]);*/
 
             $this->state = 'success';
             $this->message = 'Check-in erfolgreich';
@@ -83,12 +86,17 @@ new class extends Component {
             $this->state = 'error';
             $this->message = $e->getMessage();
         }
+        finally {
+            // Scanner IMMER neu starten
+            $this->dispatch('restartScanner');
+        }
     }
 
     public function closeCheckin()
     {
         $this->dispatch('stopScanner');
         Flux::modal('checkin')->close();
+        $this->reset(['activeSlot', 'message', 'state']);
     }
 };
 ?>
@@ -117,7 +125,8 @@ new class extends Component {
                         </flux:text>
                     </div>
 
-                    <flux:button
+                    <flux:button class="mt-2"
+                        variant="ghost"
                         size="sm"
                         wire:click="openCheckin({{ $slot->slot->id }})">
                         Check-In
@@ -132,7 +141,7 @@ new class extends Component {
         </div>
 
         {{-- MODAL --}}
-        <flux:modal name="checkin" :dismissible="false">
+        <flux:modal name="checkin" :dismissible="false" @close="closeCheckin">
             @if($activeSlot)
                 <div class="space-y-4">
 
@@ -171,3 +180,56 @@ new class extends Component {
 
     </x-courses.layout>
 </section>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let qrScanner = null;
+let scannerActive = false;
+
+function startScanner() {
+    if (qrScanner) return; // 🚫 schon aktiv
+
+    qrScanner = new Html5Qrcode("qr-reader");
+
+        qrScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            decodedText => {
+                Livewire.dispatch('qrScanned', {
+                    value: decodedText
+                });
+            }
+        ).catch(err => {
+            console.error('Scanner start error', err);
+        });
+}
+
+function stopScanner() {
+    if (!qrScanner) return;
+
+    qrScanner.stop()
+            .then(() => {
+                qrScanner.clear();
+                qrScanner = null;
+            })
+            .catch(() => {
+                qrScanner = null;
+            });
+}
+
+function restartScanner() {
+    stopScanner();
+    setTimeout(startScanner, 300);
+}
+
+/* Livewire Events */
+window.addEventListener('startScanner', startScanner);
+window.addEventListener('stopScanner', stopScanner);
+window.addEventListener('restartScanner', restartScanner);
+
+/* Modal Cleanup */
+window.addEventListener('flux:modal-closed', () => {
+    stopScanner();
+});
+</script>
