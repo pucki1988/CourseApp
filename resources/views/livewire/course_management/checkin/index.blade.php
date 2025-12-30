@@ -5,6 +5,9 @@ use Livewire\Attributes\On;
 use App\Services\Course\CourseBookingSlotService;
 use App\Models\Course\CourseSlot;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Route;
+
 
 new class extends Component {
 
@@ -60,13 +63,13 @@ new class extends Component {
                 throw new \Exception('Kein Slot aktiv');
             }
 
-            $request = request()->create($this->scanValue);
+            $request = Request::create($this->scanValue);
 
             if (!URL::hasValidSignature($request)) {
                 throw new \Exception('QR-Code ungültig');
             }
-
-            $userId = $request->route('user');
+            
+            $userId = Route::getRoutes()->match($tempRequest)->parameter('user');
             if (!$userId) {
                 throw new \Exception('User nicht erkannt');
             }
@@ -81,10 +84,10 @@ new class extends Component {
                 throw new \Exception('Keine gültige Buchung');
             }
 
-            $bookingSlot->update([
+            /*$bookingSlot->update([
                 'status' => 'checked_in',
                 'checked_in_at' => now(),
-            ]);
+            ]);*/
 
             $this->state = 'success';
             $this->message = 'Check-in erfolgreich';
