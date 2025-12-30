@@ -42,10 +42,10 @@ new class extends Component {
         $this->dispatch('startScanner');
     }
     #[On('qrScanned')]
-    public function qrScanned($payload)
+    public function qrScanned($value)
     {
 
-        $this->scanValue = $payload['value'] ?? null;
+        $this->scanValue = $value ?? null;
         // scanValue muss vorher vom JS gesetzt werden
         if (!$this->scanValue) {
             $this->state = 'error';
