@@ -129,8 +129,8 @@ new class extends Component {
                     <flux:tooltip content="Status des Termins">
                     <flux:badge size="sm">{{ $slot->status }} </flux:badge>
                     </flux:tooltip>
-                    @if($slot->rescheduled_at !==null)
-                    <flux:tooltip content="Wurde am {{ $slot->slot->rescheduled_at->format('d.m.Y') }} auf diesen Termin verschoben">
+                    @if($slot->rescheduled_at !== null)
+                    <flux:tooltip content="Wurde am {{ $slot->rescheduled_at->format('d.m.Y') }} auf diesen Termin verschoben">
                     <flux:badge size="sm">verschoben</flux:badge>
                     </flux:tooltip>
                     @endif
