@@ -69,7 +69,7 @@ new class extends Component {
                 throw new \Exception('QR-Code ungültig');
             }
             
-            $userId = Route::getRoutes()->match($tempRequest)->parameter('user');
+            $userId = Route::getRoutes()->match($request)->parameter('user');
             if (!$userId) {
                 throw new \Exception('User nicht erkannt');
             }
