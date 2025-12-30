@@ -14,7 +14,7 @@ new class extends Component {
     public ?string $message = null;
     public string $state = 'idle';
 
-    public string $scanValue='';
+    public bool $isProcessing = false;
 
     protected $listeners = [
     'qrScanned' => 'handleQrScanned',
@@ -45,67 +45,74 @@ new class extends Component {
 
     public function handleQrScanned($payload)
     {
-        
+        // 🔒 Mehrfach-Scan verhindern
+    if ($this->isProcessing) {
+        return;
+    }
+
+    $this->isProcessing = true;
+    $this->reset(['message', 'state']);
+
+    try {
         $url = $payload['value'] ?? null;
 
         if (!$url) {
-            $this->state = 'error';
-            $this->message = 'Kein QR-Code erkannt';
-            return;
+            throw new \Exception('Kein QR-Code erkannt');
         }
-        
-        $this->reset(['message', 'state']);
 
-        try {
-            if (!$this->activeSlot) {
-                throw new Exception('Kein Slot aktiv');
-            }
-            $this->scanValue = $payload['value'];
-
-            if (!$this->scanValue) {
-                throw new \Exception('QR-Code leer');
-            }
-
-            $request = request()->create($this->scanValue);
-
-            if (!URL::hasValidSignature($request)) {
-                throw new \Exception('QR-Code ungültig');
-            }
-
-            $userId = $request->route('user');
-
-            if (!$userId) {
-                throw new \Exception('User nicht erkannt');
-            }
-
-            $bookingSlot = $this->activeSlot
-                ->bookingSlots()
-                ->whereHas('booking', fn ($q) =>
-                    $q->where('user_id', $userId)
-                )
-                ->where('status', 'booked')
-                ->first();
-
-            if (!$bookingSlot) {
-                throw new Exception('Keine gültige Buchung');
-            }
-
-            /*$bookingSlot->update([
-                'status' => 'checked_in',
-                'checked_in_at' => now(),
-            ]);*/
-
-            $this->state = 'success';
-            $this->message = 'Check-in erfolgreich';
-
-        } catch (Throwable $e) {
-            $this->state = 'error';
-            $this->message = $e->getMessage();
+        if (!$this->activeSlot) {
+            throw new \Exception('Kein Slot aktiv');
         }
-        finally {
-            // Scanner IMMER neu starten
-            $this->dispatch('restartScanner');
+
+        // ✅ URL korrekt bauen
+        $request = Request::create(
+            Str::startsWith($url, 'http') ? $url : url($url)
+        );
+
+        // ✅ Signatur prüfen
+        if (!URL::hasValidSignature($request)) {
+            throw new \Exception('QR-Code ungültig oder abgelaufen');
         }
+
+        // ✅ User-ID aus Query
+        $userId = $request->query('user');
+
+        if (!$userId) {
+            throw new \Exception('User nicht erkannt');
+        }
+
+        // ✅ Buchung prüfen
+        $bookingSlot = $this->activeSlot
+            ->bookingSlots()
+            ->whereHas('booking', fn ($q) =>
+                $q->where('user_id', $userId)
+            )
+            ->where('status', 'booked')
+            ->first();
+
+        if (!$bookingSlot) {
+            throw new \Exception('Keine gültige Buchung für diesen Slot');
+        }
+
+        // ✅ Check-in durchführen
+        $bookingSlot->update([
+            'status' => 'checked_in',
+            'checked_in_at' => now(),
+        ]);
+
+        $this->state = 'success';
+        $this->message = 'Check-in erfolgreich';
+
+    } catch (Throwable $e) {
+        $this->state = 'error';
+        $this->message = $e->getMessage();
+    } finally {
+        // 🔄 Scanner sauber neu starten
+        $this->dispatch('restartScanner');
+
+        // 🔓 Lock nach kurzer Pause lösen
+        #$this->dispatch('unlockScanner')->delay(500);
+    }
     }
 
     public function closeCheckin()
