@@ -10,11 +10,13 @@ class CourseBookingSlot extends Model
         'course_booking_id',
         'course_slot_id',
         'price',
-        'status'
+        'status',
+        'checked_in_at'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'checked_in_at' => 'datetime'
     ];
 
     /* =========================
