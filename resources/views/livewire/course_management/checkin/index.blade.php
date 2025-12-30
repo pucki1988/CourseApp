@@ -202,10 +202,11 @@ function startScanner() {
             { facingMode: "environment" },
             { fps: 10, qrbox: 250 },
             decodedText => {
-               // Setze Livewire Property
-               @this.set('scanValue', decodedText);
-              // Rufe Methode auf
-              @this.call('qrScanned');
+                alert(decodedText);
+                Livewire.dispatch('qrScanned', {
+
+                    value: decodedText
+                });
             }
         ).catch(err => {
             console.error('Scanner start error', err);
