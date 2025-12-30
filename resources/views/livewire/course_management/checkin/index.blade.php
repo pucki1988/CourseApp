@@ -15,7 +15,7 @@ new class extends Component {
 
     public ?CourseSlot $activeSlot = null;
 
-    public bool $isProcessing = false;
+    public bool $scanLocked = false;
 
     public string $scanValue = '';
     public ?string $message = null;
@@ -37,6 +37,7 @@ new class extends Component {
 
     public function openCheckin(int $slotId)
     {
+        
         $this->reset(['message', 'state']);
 
         $this->activeSlot = CourseSlot::findOrFail($slotId);
@@ -76,18 +77,24 @@ new class extends Component {
 
             $bookingSlot = $this->activeSlot
                 ->bookingSlots()
-                ->whereHas('booking', fn ($q) => $q->where('user_id', $userId))
+                ->whereHas('booking', function ($q) use ($userId) {
+                    $q->where('user_id', $userId)
+                    ->whereIn('status', [
+                    'paid',
+                    'partially_refunded',
+                 ]);
+                })
                 ->where('status', 'booked')
+                ->whereNull('checked_in_at')
                 ->first();
 
             if (!$bookingSlot) {
-                throw new \Exception('Keine gültige Buchung');
+                throw new \Exception('Keine gültige Buchung oder schon eingecheckt');
             }
 
-            /*$bookingSlot->update([
-                'status' => 'checked_in',
+            $bookingSlot->update([
                 'checked_in_at' => now(),
-            ]);*/
+            ]);
 
             $this->state = 'success';
             $this->message = 'Check-in erfolgreich';
@@ -231,7 +238,7 @@ function stopScanner() {
 
 function restartScanner() {
     stopScanner();
-    setTimeout(startScanner, 300);
+    setTimeout(startScanner, 1200);
 }
 
 /* Livewire Events */
