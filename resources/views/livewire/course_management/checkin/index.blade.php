@@ -14,6 +14,8 @@ new class extends Component {
     public ?string $message = null;
     public string $state = 'idle';
 
+    public string $scanValue='';
+
     protected $listeners = ['qrScanned'];
 
     public function mount(CourseBookingSlotService $service)
@@ -41,13 +43,19 @@ new class extends Component {
 
     public function qrScanned($payload)
     {
+        
 
-        $this->scanValue = $payload['value'];
+        
         $this->reset(['message', 'state']);
 
         try {
             if (!$this->activeSlot) {
                 throw new Exception('Kein Slot aktiv');
+            }
+            $this->scanValue = $payload['value'];
+
+            if (!$this->scanValue) {
+                throw new \Exception('QR-Code leer');
             }
 
             $request = request()->create($this->scanValue);
