@@ -122,14 +122,14 @@ new class extends Component {
 
                 <div class="flex">
                     <div class="flex-1">
-                    <flux:heading size="lg">{{ $slot->booking->course->title }} 
+                    <flux:heading size="lg">{{ $slot->course->title }} 
                     </flux:heading>
 
                     <div class="mb-2">
                     <flux:tooltip content="Status des Termins">
                     <flux:badge size="sm">{{ $slot->status }} </flux:badge>
                     </flux:tooltip>
-                    @if($slot->slot->rescheduled_at !==null)
+                    @if($slot->rescheduled_at !==null)
                     <flux:tooltip content="Wurde am {{ $slot->slot->rescheduled_at->format('d.m.Y') }} auf diesen Termin verschoben">
                     <flux:badge size="sm">verschoben</flux:badge>
                     </flux:tooltip>
@@ -137,11 +137,11 @@ new class extends Component {
                     </div>
                     
                     <flux:text class="mt-2">
-                    <flux:badge icon="calendar">{{ $slot->slot->date->format('d.m.Y') }}</flux:badge> 
-                    <flux:badge class="ms-1" icon="clock">{{ $slot->slot->start_time->format('H:i') }} – {{ $slot->slot->end_time->format('H:i') }}</flux:badge> 
+                    <flux:badge icon="calendar">{{ $slot->date->format('d.m.Y') }}</flux:badge> 
+                    <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot->slot }})">{{ $slot->booking->course->capacity-$slot->slot->availableSlots()  }} / {{ $slot->booking->course->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
                     
                     <flux:text class="mt-2">
