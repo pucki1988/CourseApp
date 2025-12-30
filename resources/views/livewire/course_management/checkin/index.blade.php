@@ -18,7 +18,6 @@ new class extends Component {
     public ?string $message = null;
     public string $state = 'idle'; // idle, success, error
 
-    protected $listeners = ['qrScanned'];
 
     public function mount(CourseBookingSlotService $service)
     {
@@ -205,7 +204,6 @@ function startScanner() {
             { facingMode: "environment" },
             { fps: 10, qrbox: 250 },
             decodedText => {
-                
                 Livewire.dispatch('qrScanned', {
                     value: decodedText
                 });
