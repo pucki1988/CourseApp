@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
@@ -30,17 +28,16 @@ class UserController extends Controller
         );
 
         // 🔹 QR Renderer (SVG)
-        $renderer = new ImageRenderer(
+        /*$renderer = new ImageRenderer(
             new RendererStyle(300),
-            new ImagickImageBackEnd()
+            new GdImageBackEnd()
         );
 
         $writer = new Writer($renderer);
-        $qrPng = $writer->writeString($signedUrl);
+        $qrPng = 'data:image/png;base64,' . base64_encode($writer->writeString($signedUrl));*/
 
         return response()->json([
-            'qr_url' => $signedUrl,
-            'qr_png' => $qrPng,
+            'qr_url' => $signedUrl
         ]);
     }
 }
