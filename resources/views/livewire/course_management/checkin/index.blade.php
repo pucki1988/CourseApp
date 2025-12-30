@@ -75,23 +75,30 @@ new class extends Component {
                 throw new \Exception('User nicht erkannt');
             }
 
-            $bookingSlot = $this->activeSlot
-                ->bookingSlots()
-                ->whereHas('booking', function ($q) use ($userId) {
-                    $q->where('user_id', $userId)
-                    ->whereIn('status', [
-                    'paid',
-                    'partially_refunded',
-                 ]);
-                })
+            $baseQuery = $this->activeSlot
+            ->bookingSlots()
+            ->whereHas('booking', function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                ->whereIn('status', ['paid', 'partially_refunded']);
+            });
+
+            $alreadyCheckedIn = (clone $baseQuery)
+                ->whereNotNull('checked_in_at')
+                ->exists();
+
+            if ($alreadyCheckedIn) {
+                throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+            }
+
+            $bookingSlot = (clone $baseQuery)
                 ->where('status', 'booked')
                 ->whereNull('checked_in_at')
                 ->first();
 
             if (!$bookingSlot) {
-                throw new \Exception('Keine gültige Buchung oder schon eingecheckt');
+                throw new \Exception('Keine gültige Buchung für diesen Termin');
             }
-
+            
             $bookingSlot->update([
                 'checked_in_at' => now(),
             ]);
