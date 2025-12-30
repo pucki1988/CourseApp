@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\On;
 use App\Services\Course\CourseBookingSlotService;
 use App\Models\Course\CourseSlot;
 use Illuminate\Support\Facades\URL;
@@ -41,9 +42,11 @@ new class extends Component {
         Flux::modal('checkin')->show();
         $this->dispatch('startScanner');
     }
-
-    public function qrScanned()
+    #[On('qrScanned')]
+    public function qrScanned($payload)
     {
+
+        $this->scanValue = $payload['value'] ?? null;
         // scanValue muss vorher vom JS gesetzt werden
         if (!$this->scanValue) {
             $this->state = 'error';
@@ -202,9 +205,8 @@ function startScanner() {
             { facingMode: "environment" },
             { fps: 10, qrbox: 250 },
             decodedText => {
-                alert(decodedText);
+                
                 Livewire.dispatch('qrScanned', {
-
                     value: decodedText
                 });
             }
