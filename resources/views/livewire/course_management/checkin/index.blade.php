@@ -16,7 +16,9 @@ new class extends Component {
 
     public string $scanValue='';
 
-    protected $listeners = ['qrScanned'];
+    protected $listeners = [
+    'qrScanned' => 'handleQrScanned',
+    ];
 
     public function mount(CourseBookingSlotService $service)
     {
@@ -41,10 +43,16 @@ new class extends Component {
         $this->dispatch('startScanner');
     }
 
-    public function qrScanned($payload)
+    public function handleQrScanned($payload)
     {
         
+        $url = $payload['value'] ?? null;
 
+        if (!$url) {
+            $this->state = 'error';
+            $this->message = 'Kein QR-Code erkannt';
+            return;
+        }
         
         $this->reset(['message', 'state']);
 
