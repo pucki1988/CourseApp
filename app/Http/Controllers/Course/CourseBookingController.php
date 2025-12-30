@@ -44,7 +44,7 @@ class CourseBookingController extends Controller
     //Der Buchende sagt den gebuchten Slot ab.
     public function cancelBookingSlot(CourseBooking $courseBooking, CourseBookingSlot $courseBookingSlot,UserCancelBookingSlotAction $action)
     {
-        $this->authorize('cancelBookingSlot', $courseBooking);
+        $this->authorize('cancelBookingSlot', $courseBooking,$courseBookingSlot);
 
         try{
             $slot = $action->execute($courseBooking, $courseBookingSlot);

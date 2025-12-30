@@ -43,11 +43,20 @@ class CourseBookingPolicy
         return $user->id === $booking->user_id;
     }
 
-    public function cancelBookingSlot(User $user, CourseBooking $booking)
+    public function cancelBookingSlot(User $user, CourseBooking $booking,CourseBookingSlot $courseBookingSlot)
     {
         if($booking->booking_type==="per_course"){
             return false;
         }
+
+        if (! $courseBookingSlot->slot) {
+                return false; // Slot gelöscht → Sicherheit
+        }
+
+        if(!$courseBookingSlot->slot->isInFuture()){
+                return false;
+        }
+
         return $user->id === $booking->user_id;
     }
 
