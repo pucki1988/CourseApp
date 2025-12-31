@@ -80,6 +80,51 @@ class CourseSlotService
     }
 
 
+    public function listAllBookedSlots(array $filters = [])
+    {
+        $query = CourseSlot::query()
+        ->with(['course.coach', 'bookingSlots.booking'])
+
+        // 🔹 Nur zukünftige / laufende Slots
+        ->where(function ($q) {
+            $q->whereDate('date', '>', now())
+            ->orWhere(function ($q2) {
+                $q2->whereDate('date', now())
+                    ->whereTime('start_time', '>=', now()->format('H:i'));
+            });
+        })
+
+        // 🔹 Slot muss mind. eine gültige Buchung haben
+        ->whereHas('bookingSlots.booking', function ($q) {
+            $q->whereIn('status', ['paid', 'partially_refunded']);
+        })
+
+        // 🔹 Mind. ein Slot ist noch nicht eingecheckt
+        ->whereHas('bookingSlots', function ($q) {
+            $q->where('status', 'booked')
+            ->whereNull('checked_in_at');
+        })
+
+        
+
+
+        ->orderBy('date')
+        ->orderBy('start_time');
+
+        $user=auth()->user();
+        $coachId = $user->coach?->id;
+
+        if ($coachId) {
+            $query->whereHas('course', function ($q) use ($coachId) {
+                $q->where('coach_id', $coachId);
+            });
+        }
+
+    
+        return $query->get();
+    }
+
+
     /**
      * Update a single CourseSlot.
      */

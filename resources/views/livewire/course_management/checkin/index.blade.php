@@ -2,7 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\On;
-use App\Services\Course\CourseBookingSlotService;
+use App\Services\Course\CourseSlotService;
 use App\Models\Course\CourseSlot;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Request;
@@ -22,14 +22,14 @@ new class extends Component {
     public string $state = 'idle'; // idle, success, error
 
 
-    public function mount(CourseBookingSlotService $service)
+    public function mount(CourseSlotService $service)
     {
         $this->loadSlots($service);
     }
 
-    public function loadSlots(CourseBookingSlotService $service)
+    public function loadSlots(CourseSlotService $service)
     {
-        $this->slots = $service->listBookedSlots([
+        $this->slots = $service->listAllBookedSlots([
             'limit' => 6,
             'status' => 'active',
         ]);
@@ -127,7 +127,8 @@ new class extends Component {
 ?>
 
 <section class="w-full">
-    <x-courses.layout heading="Mögliche Check-Ins">
+    @include('partials.courses-heading')
+    <x-courses.layout heading="Check In">
 
         <div class="grid gap-4 xl:grid-cols-3">
             @forelse($slots as $slot)
@@ -135,25 +136,25 @@ new class extends Component {
 
                     <div>
                         <flux:heading size="lg">
-                            {{ $slot->booking->course->title }}
+                            {{ $slot->course->title }}
                         </flux:heading>
 
                         <flux:text class="mt-2">
                             <flux:badge icon="calendar">
-                                {{ $slot->slot->date->format('d.m.Y') }}
+                                {{ $slot->date->format('d.m.Y') }}
                             </flux:badge>
                             <flux:badge icon="clock" class="ms-1">
-                                {{ $slot->slot->start_time->format('H:i') }}
+                                {{ $slot->start_time->format('H:i') }}
                                 –
-                                {{ $slot->slot->end_time->format('H:i') }}
+                                {{ $slot->end_time->format('H:i') }}
                             </flux:badge>
                         </flux:text>
                     </div>
 
                     <flux:button class="mt-2"
-                        variant="ghost"
+                        variant="primary"
                         size="sm"
-                        wire:click="openCheckin({{ $slot->slot->id }})">
+                        wire:click="openCheckin({{ $slot->id }})">
                         Check-In
                     </flux:button>
 

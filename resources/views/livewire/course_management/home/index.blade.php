@@ -27,10 +27,10 @@ new class extends Component {
     public ?CourseSlot $showSlot=null;
     
 
-    public function mount(CourseBookingSlotService $courseBookingSlotService)
+    public function mount(CourseSlotService $courseSlotService)
     {
         #$this->authorize('viewAny', CourseSlot::class);
-        $this->loadSlots($courseBookingSlotService);
+        $this->loadSlots($courseSlotService);
     }
 
     
@@ -40,7 +40,7 @@ new class extends Component {
         Flux::modal('confirm')->show();
     }
 
-    public function cancel(CourseBookingSlotService $courseBookingSlotService,CancelCourseSlotAction $courseSlotAction)
+    public function cancel(CourseSlotService $courseSlotService,CancelCourseSlotAction $courseSlotAction)
     {
         if (!$this->slotToCancel) return;
         $this->authorize('cancel', $this->slotToCancel);
@@ -51,7 +51,7 @@ new class extends Component {
         $this->slotToCancel = null;
 
         // Liste neu laden
-        $this->loadSlots($courseBookingSlotService);
+        $this->loadSlots($courseSlotService);
 
         // Optional: Toast / Notification
         $this->calloutHeading = 'Termin wurde abgesagt';
@@ -69,7 +69,7 @@ new class extends Component {
         Flux::modal('reschedule')->show();
     }
 
-    public function reschedule(CourseSlotService $courseSlotService,CourseBookingSlotService $courseBookingSlotService)
+    public function reschedule(CourseSlotService $courseSlotService)
     {
         
         $courseSlotService->rescheduleSlot($this->slotToReschedule);
@@ -81,19 +81,19 @@ new class extends Component {
         $this->calloutHeading = 'Termin wurde verschoben';
         $this->showCallout = true;
 
-        $this->loadSlots($courseBookingSlotService);
+        $this->loadSlots($courseSlotService);
         
     }
 
 
-    public function loadSlots(CourseBookingSlotService $service)
+    public function loadSlots(CourseSlotService $service)
     {
         $filters = [
             'limit' => 6,
             'status' => 'active'
         ];
 
-        $this->slots = $service->listBookedSlots($filters);
+        $this->slots = $service->listAllBookedSlots($filters);
     }
 
     public function hideCallout()
@@ -157,16 +157,17 @@ new class extends Component {
                     </div>
                 </div>
 
+                @role(['admin', 'manager'])
                 <div class="flex gap-2">
                     <flux:spacer />
-                    @can('reschedule', $slot->slot)
+                    @can('reschedule', $slot)
                         <flux:button size="sm" variant="primary" wire:click="confirmReschedule({{ $slot->slot }})">Verschieben</flux:button>
                     @endcan
-                    @can('cancel', $slot->slot)
+                    @can('cancel', $slot)
                         <flux:button size="sm" variant="danger" wire:click="confirmCancel({{ $slot->slot }})">Absagen</flux:button>
                     @endcan
                 </div>
-
+                @endrole
             </div>
         @empty
             <div class="col-span-3 text-neutral-500">

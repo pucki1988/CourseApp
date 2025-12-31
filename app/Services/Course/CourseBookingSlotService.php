@@ -38,39 +38,36 @@ class CourseBookingSlotService
 
     public function listBookedSlots(array $filters = [])
     {
-        $query = CourseSlot::query()
-    ->with(['course', 'bookingSlots.booking'])
-
-    // 🔹 Nur zukünftige / laufende Slots
-    ->where(function ($q) {
-        $q->whereDate('date', '>', now())
-          ->orWhere(function ($q2) {
-              $q2->whereDate('date', now())
-                 ->whereTime('start_time', '>=', now()->format('H:i'));
-          });
-    })
-
-    // 🔹 Slot muss mind. eine gültige Buchung haben
-    ->whereHas('bookingSlots.booking', function ($q) {
-        $q->whereIn('status', ['paid', 'partially_refunded']);
-    })
-
-    // 🔹 Mind. ein Slot ist noch nicht eingecheckt
-    ->whereHas('bookingSlots', function ($q) {
-        $q->where('status', 'booked')
-          ->whereNull('checked_in_at');
-    })
-
-    ->orderBy('date')
-    ->orderBy('start_time');
+        //Die gebuchten Slots des jeweiligen User
+        $query = CourseBookingSlot::with(['slot.course', 'booking'])
+                ->whereHas('slot', function ($q) {
+                    $q->where(function ($q2) {
+                        $q2->whereDate('date', '>', now())
+                        ->orWhere(function ($q3) {
+                            $q3->whereDate('date', now())
+                                ->whereTime('start_time', '>=', now()->format('H:i'));
+                        });
+                    });
+                })
+                ->where('status','booked')
+                ->whereHas('booking', function ($p0) {
+                    $p0->whereIn('status',['paid','partially_refunded']);
+                })
+                ->orderBy(
+                    CourseSlot::select('date')
+                        ->whereColumn('course_slots.id', 'course_booking_slots.course_slot_id')
+                )
+                ->orderBy(
+                    CourseSlot::select('start_time')
+                        ->whereColumn('course_slots.id', 'course_booking_slots.course_slot_id')
+                );
        
         $user=auth()->user();
 
-        if ($user->hasAnyRole(['user', 'member'])) {
-            $query->whereHas('booking', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
-        }
+        $query->whereHas('booking', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        });
+        
 
         return $query->get();
     }

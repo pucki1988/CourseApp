@@ -74,4 +74,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Coach::class);
     }
+
+    public function isCoach(): bool
+    {
+        return $this->coach()->exists();
+    }
+
+    public function canCheckIn(): bool
+    {
+        return $this->hasRole(['admin', 'manager']) || $this->isCoach();
+    }
 }

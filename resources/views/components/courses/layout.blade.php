@@ -1,15 +1,21 @@
 <div class="flex items-start max-md:flex-col">
     <div class="me-10 w-full pb-4 md:w-[220px]">
         <flux:navlist>
+            @if(auth()->user()->canCheckIn())
             <flux:navlist.item :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
-            @can('viewAny', \App\Models\Course\Course::class)
+            @endif
+            @role(['admin', 'manager'])
+            
+            
             <flux:navlist.item :href="route('course_management.courses.index')" :current="request()->routeIs('course_management.courses.index')" wire:navigate>{{ __('Kurse') }}</flux:navlist.item>
-            @endcan
+            
             <flux:navlist.item :href="route('course_management.bookings.index')" :current="request()->routeIs('course_management.bookings.index')"  wire:navigate>{{ __('Buchungen') }}</flux:navlist.item>
 
             <flux:navlist.item :href="route('course_management.coaches.index')" :current="request()->routeIs('course_management.coaches.index')"  wire:navigate>{{ __('Trainer') }}</flux:navlist.item>
+            @endrole
+            @if(auth()->user()->canCheckIn())
             <flux:navlist.item :href="route('course_management.checkin.index')" :current="request()->routeIs('course_management.checkin.index')"  wire:navigate>{{ __('Check In') }}</flux:navlist.item>
-            
+            @endif
         
             </flux:navlist>
     </div>

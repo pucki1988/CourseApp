@@ -16,10 +16,25 @@ class CourseService
      */
     public function listCourses(array $filters = [])
     {
-        $query = Course::with(['slots' => function($q) {
-            $q->with(['bookedSlots','reminders'])->where('status', 'active')
-            ->whereRaw("STR_TO_DATE(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s') > ?", [Carbon::now()]);
-        }, 'coach']);
+        $query = Course::query()
+        ->whereHas('slots', function ($q) {
+            $q->where('status', 'active')
+            ->whereRaw(
+                "STR_TO_DATE(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s') > ?",
+                [Carbon::now()]
+            );
+        })
+        ->with([
+            'slots' => function ($q) {
+                $q->where('status', 'active')
+                ->whereRaw(
+                    "STR_TO_DATE(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s') > ?",
+                    [Carbon::now()]
+                )
+                ->with(['bookedSlots', 'reminders']);
+            },
+            'coach'
+        ]);
 
     
 
