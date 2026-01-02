@@ -16,7 +16,7 @@ class CourseService
      */
     public function listCourses(array $filters = [])
     {
-        $query = Course::query()
+        $courses = Course::query()
         ->whereHas('slots', function ($q) {
             $q->where('status', 'active')
             ->whereRaw(
@@ -34,7 +34,7 @@ class CourseService
                 ->with(['bookedSlots', 'reminders']);
             },
             'coach'
-        ]);
+        ])->get();
 
     
 
@@ -42,9 +42,25 @@ class CourseService
             $query->where('coach_id', $filters['coach_id']);
         }
 
-       
 
-        return $query->get();
+
+        $user = auth()->user();
+        $isMember = $user && $user->hasRole('member');
+
+        $courses->each(function ($course) use ($isMember) {
+            $course->slots->each(function ($slot) use ($isMember) {
+
+                $slot->display_price = $isMember
+                    ? max(0, $slot->price - 1)
+                    : $slot->price;
+
+            });
+        });
+
+
+        return $courses;
+
+        
     }
 
 
