@@ -15,6 +15,7 @@ class CourseSlot extends Model
         'start_time' => 'datetime:H:i',
         'end_time'   => 'datetime:H:i',
         'rescheduled_at'  => 'datetime',
+        'price' => 'decimal:2'
     ];
 
     public function course()

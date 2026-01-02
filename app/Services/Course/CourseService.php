@@ -43,11 +43,12 @@ class CourseService
         }
 
 
-
-        $user = auth()->user();
+       
+        $user=auth('sanctum')->user();
+        
         $isMember = $user && $user->hasRole('member');
 
-        $courses->each(function ($course) use ($isMember) {
+       $courses->each(function ($course) use ($isMember) {
             $course->slots->each(function ($slot) use ($isMember) {
 
                 $slot->display_price = $isMember
