@@ -10,6 +10,7 @@ use App\Events\CourseBookingSlotCanceledByUser;
 use App\Listeners\SendCourseBookingCreateMail;
 use App\Events\CourseBookingCreate;
 use App\Listeners\SendWelcomeMail;
+use App\Listeners\SendManagerNewUserMail;
 use App\Events\UserRegistered;
 use App\Listeners\SendCourseSlotRescheduleMail;
 use App\Events\CourseSlotRescheduled;
@@ -33,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         UserRegistered::class => [
             SendWelcomeMail::class,
+            SendManagerNewUserMail::class,
         ],
     ];
 

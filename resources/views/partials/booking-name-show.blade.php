@@ -10,14 +10,14 @@
                     <div class="flex-1">
                     <flux:heading size="sm">{{ $bookedSlot->booking->user->name }} 
                     </flux:heading>
-                <flux:badge size="sm">Buchung {{ $bookedSlot->booking->id }}</flux:badge>
-                @if($bookedSlot->checked_in_at !== null)
-                    <flux:badge icon="check" size="sm">{{ $bookedSlot->checked_in_at->format('d.m.Y | H:i')}}</flux:badge>
-                @else
-                    <flux:button size="xs" wire:click="checkInCourseBookingSlot({{ $bookedSlot }})">Check In</flux:button>
-                @endif
+                    <flux:badge size="sm">Buchung {{ $bookedSlot->booking->id }}</flux:badge>
+                    @if($bookedSlot->checked_in_at !== null)
+                        <flux:badge icon="check" size="sm">{{ $bookedSlot->checked_in_at->format('d.m.Y | H:i')}}</flux:badge>
+                    @else
+                        <flux:button size="xs" wire:click="checkInCourseBookingSlot({{ $bookedSlot }})">Check In</flux:button>
+                    @endif
+                    </div>
                 </div>
-        </div>
         </div>
 
 
