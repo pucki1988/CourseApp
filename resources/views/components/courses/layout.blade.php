@@ -13,9 +13,8 @@
 
             <flux:navlist.item :href="route('course_management.coaches.index')" :current="request()->routeIs('course_management.coaches.index')"  wire:navigate>{{ __('Trainer') }}</flux:navlist.item>
             @endrole
-            @if(auth()->user()->canCheckIn())
-            <flux:navlist.item :href="route('course_management.checkin.index')" :current="request()->routeIs('course_management.checkin.index')"  wire:navigate>{{ __('Check In') }}</flux:navlist.item>
-            @endif
+            
+            
         
             </flux:navlist>
     </div>

@@ -4,8 +4,22 @@
             <flux:heading size="lg">Buchungen</flux:heading>
         </div>
         @foreach (($this->showSlot->bookedSlots) ?? [] as $index => $bookedSlot)
-        <flux:tooltip content="Zur Buchung ({{ $bookedSlot->booking->id }})"><flux:button variant="ghost"  icon:trailing="information-circle" href="{{ route('course_management.bookings.show', $bookedSlot->booking) }}">{{ $bookedSlot->booking->user->name }}</flux:button>
-        </flux:tooltip>
+        <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
+
+                <div class="flex">
+                    <div class="flex-1">
+                    <flux:heading size="sm">{{ $bookedSlot->booking->user->name }} 
+                    </flux:heading>
+                <flux:badge size="sm">Buchung {{ $bookedSlot->booking->id }}</flux:badge>
+                @if($bookedSlot->checked_in_at !== null)
+                    <flux:badge icon="check" size="sm">{{ $bookedSlot->checked_in_at->format('d.m.Y | H:i')}}</flux:badge>
+                @else
+                    <flux:button size="xs" wire:click="checkInCourseBookingSlot({{ $bookedSlot }})">Check In</flux:button>
+                @endif
+                </div>
+        </div>
+
+
         @endforeach
 
     </div>

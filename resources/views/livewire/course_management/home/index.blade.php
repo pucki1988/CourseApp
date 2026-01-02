@@ -21,6 +21,14 @@ new class extends Component {
     public string $calloutMessage = '';
     public string $calloutHeading = 'Erfolg';
 
+    public ?CourseSlot $activeSlot = null;
+
+    public bool $scanLocked = false;
+
+    public string $scanValue = '';
+    public ?string $message = null;
+    public string $state = 'idle'; // idle, success, error
+
     
     public ?CourseSlot $slotToCancel = null;
     public array $slotToReschedule = [];
@@ -105,6 +113,101 @@ new class extends Component {
         $this->showSlot=$slot;
         Flux::modal('bookings')->show();
     }
+
+    public function checkInCourseBookingSlot(CourseBookingSlot $courseBookingSlot){
+            $courseBookingSlot->update([
+                'checked_in_at' => now(),
+            ]);
+    }
+
+    public function openCheckin(int $slotId)
+    {
+        
+        $this->reset(['message', 'state']);
+
+        $this->activeSlot = CourseSlot::findOrFail($slotId);
+
+        Flux::modal('checkin')->show();
+        $this->dispatch('startScanner');
+    }
+    #[On('qrScanned')]
+    public function qrScanned($value)
+    {
+
+        $this->scanValue = $value ?? null;
+        // scanValue muss vorher vom JS gesetzt werden
+        if (!$this->scanValue) {
+            $this->state = 'error';
+            $this->message = 'Kein QR-Code erkannt';
+            return;
+        }
+
+        $this->reset(['message', 'state']);
+
+        try {
+            if (!$this->activeSlot) {
+                throw new \Exception('Kein Slot aktiv');
+            }
+
+            $request = Request::create($this->scanValue);
+
+            if (!URL::hasValidSignature($request)) {
+                throw new \Exception('QR-Code ungültig');
+            }
+            
+            $userId = Route::getRoutes()->match($request)->parameter('user');
+            if (!$userId) {
+                throw new \Exception('User nicht erkannt');
+            }
+
+            $baseQuery = $this->activeSlot
+            ->bookingSlots()
+            ->whereHas('booking', function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                ->whereIn('status', ['paid', 'partially_refunded']);
+            });
+
+            $alreadyCheckedIn = (clone $baseQuery)
+                ->whereNotNull('checked_in_at')
+                ->exists();
+
+            if ($alreadyCheckedIn) {
+                throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+            }
+
+            $bookingSlot = (clone $baseQuery)
+                ->where('status', 'booked')
+                ->whereNull('checked_in_at')
+                ->first();
+
+            if (!$bookingSlot) {
+                throw new \Exception('Keine gültige Buchung für diesen Termin');
+            }
+
+            $bookingSlot->update([
+                'checked_in_at' => now(),
+            ]);
+
+            $this->state = 'success';
+            $this->message = 'Check-in erfolgreich';
+
+        } catch (\Throwable $e) {
+            $this->state = 'error';
+            $this->message = $e->getMessage();
+        } finally {
+            $this->dispatch('restartScanner');
+        }
+
+        // Reset für nächsten Scan
+        $this->scanValue = '';
+    }
+
+    public function closeCheckin()
+    {
+        $this->dispatch('stopScanner');
+        Flux::modal('checkin')->close();
+        $this->reset(['activeSlot', 'message', 'state']);
+    }
 };
 ?>
 
@@ -157,17 +260,26 @@ new class extends Component {
                     </div>
                 </div>
 
-                @role(['admin', 'manager'])
+                
                 <div class="flex gap-2">
                     <flux:spacer />
+                    <flux:dropdown position="top">
+                        <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
+                    <flux:menu>
                     @can('reschedule', $slot)
-                        <flux:button size="sm" variant="primary" wire:click="confirmReschedule({{ $slot->slot }})">Verschieben</flux:button>
+                    <flux:menu.item icon="chevron-double-right" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:menu.item>
                     @endcan
                     @can('cancel', $slot)
-                        <flux:button size="sm" variant="danger" wire:click="confirmCancel({{ $slot->slot }})">Absagen</flux:button>
+                    <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
+                    @if(auth()->user()->canCheckIn())
+                    <flux:menu.item icon="check-circle" wire:click="openCheckin({{ $slot->id }})">Check In</flux:menu.item>
+                    @endif
+                    </flux:menu>
+                    </flux:dropdown>
                 </div>
-                @endrole
+                
+                
             </div>
         @empty
             <div class="col-span-3 text-neutral-500">
@@ -227,10 +339,99 @@ new class extends Component {
         </div>
     </form>
     </flux:modal>
+    {{-- MODAL --}}
+        <flux:modal name="checkin" :dismissible="false" @close="closeCheckin">
+            @if($activeSlot)
+                <div class="space-y-4">
 
+                    <flux:heading size="lg">
+                        {{ $activeSlot->course->title }}
+                    </flux:heading>
+
+                    <flux:text>
+                        {{ $activeSlot->date->format('d.m.Y') }}
+                        |
+                        {{ $activeSlot->start_time->format('H:i') }}
+                        –
+                        {{ $activeSlot->end_time->format('H:i') }}
+                    </flux:text>
+
+                    {{-- QR Scanner --}}
+                    <div id="qr-reader" class="w-full"></div>
+
+                    {{-- Feedback --}}
+                    @if($message)
+                        <flux:callout
+                            variant="{{ $state === 'success' ? 'success' : 'danger' }}">
+                            {{ $message }}
+                        </flux:callout>
+                    @endif
+
+                    <div class="flex justify-end">
+                        <flux:button variant="ghost" wire:click="closeCheckin">
+                            Schließen
+                        </flux:button>
+                    </div>
+
+                </div>
+            @endif
+        </flux:modal>
     
 
     @include('partials.booking-name-show')
         
     </x-courses.layout>
 </section>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let qrScanner = null;
+
+
+function startScanner() {
+    if (qrScanner) return; // 🚫 schon aktiv
+
+    qrScanner = new Html5Qrcode("qr-reader");
+
+        qrScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            decodedText => {
+                Livewire.dispatch('qrScanned', {
+                    value: decodedText
+                });
+            }
+        ).catch(err => {
+            console.error('Scanner start error', err);
+        });
+}
+
+function stopScanner() {
+    if (!qrScanner) return;
+
+    qrScanner.stop()
+            .then(() => {
+                qrScanner.clear();
+                qrScanner = null;
+            })
+            .catch(() => {
+                qrScanner = null;
+            });
+}
+
+function restartScanner() {
+    stopScanner();
+    setTimeout(startScanner, 2500);
+}
+
+/* Livewire Events */
+window.addEventListener('startScanner', startScanner);
+window.addEventListener('stopScanner', stopScanner);
+window.addEventListener('restartScanner', restartScanner);
+
+/* Modal Cleanup */
+window.addEventListener('flux:modal-closed', () => {
+    stopScanner();
+});
+</script>

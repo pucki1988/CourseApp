@@ -10,8 +10,8 @@ e Bei Vollterminen Mindestteilnehmer je Slot 1
 e Info bei Absagen oder Verschiebungen an Teilnehmer
 e Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermittelt werden? 
 e Bei "all" Buchungen ist das absagen einzelner Slots nicht möglich. Nur verschieben.
-
-
+e Check In in Home Ansicht integrieren.
+o Mitglieder exklusiv Kurse 
 
 
 Buchungen
@@ -21,6 +21,9 @@ e Einzelne Termine stornieren
 e Rückbuckungen / Teilrückbuchungen
 e Zahlungsabwicklungen
 e Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
+
+Adminbereich
++ Useransicht. Rollen ändern
 
 
 Preislogik
@@ -38,3 +41,5 @@ e Zahlung auf Course Booking Slot oder weiter auf Course Booking (Teilrückersta
 + Beim Löschen, abfragen oder updaten von nicht mehr existenten Objekten
 + Coach Daten sollen im Response nur teilweise sichtbar sein
 
+Future
+o Raumplan 

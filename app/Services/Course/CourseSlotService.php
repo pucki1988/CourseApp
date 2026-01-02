@@ -50,6 +50,7 @@ class CourseSlotService
 
     public function listSlots(array $filters = [])
     {
+        //Alle Slots
         $query=CourseSlot::with('bookings')->whereHas('course', function ($q) use ($filters) {
             
             
@@ -82,9 +83,10 @@ class CourseSlotService
 
     public function listAllBookedSlots(array $filters = [])
     {
+        //Nur Slots wo mindestens 1 Buchung vorhanden ist und mindestens 1 BookingSlot noch nicht eingecheckt
         $query = CourseSlot::query()
         ->with(['course.coach', 'bookingSlots.booking'])
-
+        ->where('status', 'active')
         // 🔹 Nur zukünftige / laufende Slots
         ->where(function ($q) {
             $q->whereDate('date', '>', now())
@@ -95,15 +97,17 @@ class CourseSlotService
         })
 
         // 🔹 Slot muss mind. eine gültige Buchung haben
+        /*
         ->whereHas('bookingSlots.booking', function ($q) {
             $q->whereIn('status', ['paid', 'partially_refunded']);
-        })
+        })*/
 
         // 🔹 Mind. ein Slot ist noch nicht eingecheckt
+        /*
         ->whereHas('bookingSlots', function ($q) {
             $q->where('status', 'booked')
             ->whereNull('checked_in_at');
-        })
+        })*/
 
         
 
