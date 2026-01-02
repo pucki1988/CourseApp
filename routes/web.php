@@ -43,7 +43,8 @@ Route::middleware(['auth'])->group(function () {
     
         Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
+
+        Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
     });
     Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
-    Volt::route('/checkin', 'course_management.checkin.index')->name('course_management.checkin.index');
 });

@@ -12,13 +12,15 @@
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
+                <flux:navlist.group class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
-
+                <flux:navlist.group class="grid">
+                    <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('User') }}</flux:navlist.item>
+                </flux:navlist.group>
                 
             </flux:navlist>
 
