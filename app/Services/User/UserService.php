@@ -10,6 +10,8 @@ class UserService
 {
     public function register(array $data): User
     {
+
+        
         $user = User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
