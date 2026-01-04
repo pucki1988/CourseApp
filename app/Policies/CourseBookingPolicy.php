@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Course\CourseBooking;
+use App\Models\Course\CourseBookingSlot;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Auth\Access\HandlesAuthorization;
