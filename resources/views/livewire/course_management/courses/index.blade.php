@@ -32,7 +32,8 @@ new class extends Component {
             'description' => '',
             'capacity' => null,
             'coach_id' => null,
-            'location' => ''
+            'location' => '',
+            'member_discount' => null
         ];
     }
 
@@ -185,6 +186,9 @@ new class extends Component {
                     <flux:select.option value="{{$coach->id}}">{{ $coach?->name }}</flux:select.option>
                 @endforeach
             </flux:select>
+
+            <flux:input wire:model="newCourse.member_discount" label="Mitglieder Rabatt" step="0.01" type="number" />
+
             <div class="flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">Kurs erstellen</flux:button>

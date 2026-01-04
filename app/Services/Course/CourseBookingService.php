@@ -86,6 +86,13 @@ class CourseBookingService
 
             $createBookingSlots = [];
             $totalPrice   = 0;
+            $user=auth('sanctum')->user();
+            $isMember = $user && $user->hasRole('member');
+            
+            $discount=0;
+            if($isMember){
+                $discount=$course->member_discount;
+            }
 
             foreach ($selectedSlots as $slot) {
                 $bookedSlotsCount = $slot->bookingSlots()
@@ -97,12 +104,12 @@ class CourseBookingService
                 }
 
                 $createBookingSlots[] = $slot;
-                $totalPrice += $slot->price;  
+                $totalPrice += ($slot->price - $discount);  
             }
 
             $booking = CourseBooking::create([
                 'user_id'     => auth()->id(),
-                'user_name' => auth()->user()->name,
+                'user_name' => $user->name,
                 'course_id'   => $course->id,
                 'course_title' => $course->title,
                 'total_price' => $totalPrice,
@@ -116,7 +123,7 @@ class CourseBookingService
                 }
                 $booking->bookingSlots()->create([
                     'course_slot_id' => $slot->id,
-                    'price'          => $slot->price,
+                    'price'          => ($slot->price - $discount),
                 ]);
             }
             return $booking;

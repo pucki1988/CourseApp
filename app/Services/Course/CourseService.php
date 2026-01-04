@@ -44,15 +44,15 @@ class CourseService
 
 
        
-        $user=auth('sanctum')->user();
+       $user=auth('sanctum')->user();
         
-        $isMember = $user && $user->hasRole('member');
+       $isMember = $user && $user->hasRole('member');
 
        $courses->each(function ($course) use ($isMember) {
             $course->slots->each(function ($slot) use ($isMember) {
 
                 $slot->display_price = $isMember
-                    ? max(0, $slot->price - 1)
+                    ? max(0, $slot->price - $course->member_discount)
                     : $slot->price;
 
             });
@@ -161,6 +161,7 @@ class CourseService
             'capacity' => 'nullable|integer|min:1',
             'coach_id' => 'nullable|exists:coaches,id',
             'location' => 'required|string|max:255',
+            'member_discount' =>'nullable|numeric|min:0',
 
             // Slots optional
             'slots' => 'nullable|array',

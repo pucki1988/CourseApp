@@ -15,9 +15,6 @@ new class extends Component {
    public array $newCourseSlots;
    public array $assistent;
 
-   
-
-    
     public ?CourseSlot $slotToCancel = null;
     public ?CourseSlot $slotToDelete = null;
 

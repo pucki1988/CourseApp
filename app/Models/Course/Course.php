@@ -8,7 +8,10 @@ use App\Models\Course\Coach;
 class Course extends Model
 {
 
-    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location'];
+    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location','member_discount'];
+    protected $casts = [
+        'member_discount' => 'decimal:2',
+    ];
 
     public function slots()
     {
