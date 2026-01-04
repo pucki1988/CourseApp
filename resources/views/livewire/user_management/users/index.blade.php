@@ -10,6 +10,8 @@ new class extends Component {
 
     public $users;
     public $roles;
+    public $username = '';
+    
 
     public function mount(UserService $userService)
     {
@@ -17,11 +19,32 @@ new class extends Component {
         
     }
 
+    public function updatedUsername(UserService $userService)
+    {
+        
+        $this->loadUsers($userService);
+    }
+
     private function loadUsers(UserService $userService){
-        $this->users=$userService->usersWithFrontendAccess();
+
+        $filters = [
+            'username' => $this->username
+        ];
+        $this->users=$userService->usersWithFrontendAccess($filters);
     }
 
    
+    public function setAsMember(int $userId,UserService $userService): void
+    {
+        $userService->approveMember($userId);
+        $this->loadUsers($userService);
+    }
+
+    public function unsetAsMember(int $userId,UserService $userService): void
+    {
+        $userService->unsetMember($userId);
+        $this->loadUsers($userService);
+    }
 
     
 
@@ -32,17 +55,49 @@ new class extends Component {
     @include('partials.users-heading')
 
     <x-users.layout :heading="__('User')" :subheading="__('Deine User')">
-        <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 xl:grid-cols-3">
+
+        <!-- FILTERS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+        <!-- Suche -->
+
+        <flux:input
+        wire:model.live.debounce.300ms="username"
+        placeholder="Suche nach Name…"
+        icon="magnifying-glass"
+        />
+
+    
+
+        </div>
+
+
+        <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Rolle</th>
+                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
+            </tr>
+        </thead>
+        <tbody class=" divide-gray-100">
      @foreach ($users as $user)
-        <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
-            <div>
-                <flux:text weight="medium">
-                    {{ $user->name }} <flux:badge>{{ $user->getRoleNames()[0]}}</flux:badge>
-                </flux:text>
-            </div>
-    </div>
+    <tr>
+     <td class="px-4 py-2">{{ $user->name }}</td>
+     <td class="px-4 py-2">{{ $user->getRoleNames()[0] }}</td>
+    <td class="px-4 py-2 text-right">
+            
+                    @if($user->hasRole('member'))
+                    <flux:button variant="primary" size="xs" color="red" wire:click="unsetAsMember({{ $user->id }})">Mitgliedschaft entfernen</flux:button>
+                    @else
+                    <flux:button variant="primary" size="xs" color="green" wire:click="setAsMember({{ $user->id }})">Als Mitglied setzen</flux:button>
+                    @endif
+                    
+    </td>
+    </tr>
     @endforeach
+    </tbody>
+    </table>
 </div>
 </div>
     </x-users.layout>

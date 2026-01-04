@@ -26,15 +26,22 @@ class UserService
         return $user;
     }
 
-    public function usersWithFrontendAccess()
+    public function usersWithFrontendAccess(array $filters = [])
     {
-        $users=User::whereHas('roles', function ($q) {
-            $q->whereIn('name', ['user', 'member']);
-            })
-            ->orWhereDoesntHave('roles')
-            ->with('roles')
-            ->get();
-        return $users;
+        $users = User::with('roles')
+            ->where(function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', ['user', 'member']);
+                })
+                ->orWhereDoesntHave('roles');
+            });
+
+        if (!empty($filters['username'])) {
+            $users->where('name', 'like', '%' . $filters['username'] . '%');
+        }
+
+
+        return $users->get();
     }
 
     public function usersWithMemberRequest(){
@@ -65,6 +72,18 @@ class UserService
     public function disapproveMember(int $userId): void
     {
         $user = User::findOrFail($userId);
+        $user->update([
+            'member_requested' => false,
+        ]);
+    }
+
+    public function unsetMember(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+
+        // alte Rolle raus, neue rein
+        $user->syncRoles(['user']);
+
         $user->update([
             'member_requested' => false,
         ]);

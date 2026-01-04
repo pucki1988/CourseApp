@@ -76,9 +76,7 @@ new class extends Component {
         <thead class="bg-gray-50">
             <tr>
                 <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Nr</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Gebucht</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Kurs</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Status</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
             </tr>
         </thead>
@@ -86,13 +84,9 @@ new class extends Component {
             @forelse($bookings as $booking)
             <tr>
                 <td class="px-4 py-2">{{ $booking->id }}</td>
-                <td class="px-4 py-2">{{ date_format($booking->created_at,'d.m.Y') }}</td>
-                <td class="px-4 py-2">{{ $booking->course->title }}</td>
-                <td class="px-4 py-2"><flux:badge color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></td>
+                <td class="px-4 py-2">{{ $booking->user->name }}</td>
                 <td class="px-4 py-2 text-right">
-                    
                 <flux:button size="xs" href="{{ route('course_management.bookings.show', $booking) }}">Details</flux:button>
-                    
                 </td>
             </tr>
             @empty
