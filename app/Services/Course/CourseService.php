@@ -52,7 +52,7 @@ class CourseService
             $course->slots->each(function ($slot) use ($isMember) {
 
                 $slot->display_price = $isMember
-                    ? max(0, $slot->price - $course->member_discount)
+                    ? max(0, $slot->price - $slot->course->member_discount)
                     : $slot->price;
 
             });
