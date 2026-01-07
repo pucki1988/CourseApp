@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
     Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
+    Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
     
     Route::middleware('role:admin|manager')->group(function () {
               
@@ -47,5 +48,5 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
     });
-    Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
+   
 });
