@@ -47,8 +47,17 @@ class CourseService
        $user=auth('sanctum')->user();
         
        $isMember = $user && $user->hasRole('member');
+       
+       
 
        $courses->each(function ($course) use ($isMember) {
+
+            if($course->booking_type == "per_course"){
+                $course->display_price = $isMember
+                    ? max(0, $course->price - $course->member_discount)
+                    : $course->price;
+            }
+
             $course->slots->each(function ($slot) use ($isMember) {
 
                 $slot->display_price = $isMember

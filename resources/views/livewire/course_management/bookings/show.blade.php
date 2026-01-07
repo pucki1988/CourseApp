@@ -90,10 +90,16 @@ new class extends Component {
                 <tr>
                 <td class="px-4 py-2">{{ ($index+1) }}</td>
                 <td class="px-4 py-2">{{ $bookingSlot->slot->date->format('d.m.Y') }} | {{ $bookingSlot->slot->start_time->format('H:i') }}</td>
-                <td class="px-4 py-2">€ {{ $bookingSlot->price }}</td>
+                <td class="px-4 py-2">€ {{ $booking->booking_type ==="per_slot" ? $bookingSlot->price : '--' }}</td>
                 <td class="px-4 py-2"><flux:badge color="{{ $bookingSlot->status == 'booked' ? 'green' : ($bookingSlot->status == 'canceled' ? 'red' : 'gray') }}">{{ $bookingSlot->status }}</flux:badge></td>
                 </tr>
             @endforeach
+             <tr class="border-t">
+                <td class="px-4 py-2"></td>
+                <td class="px-4 py-2">Gesamt</td>
+                <td class="px-4 py-2">€ {{ $booking->total_price }}</td>
+                <td class="px-4 py-2"><flux:badge color="{{ $booking->payment_status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></td>
+                </tr>
             </tbody>
             </table>
             @endif

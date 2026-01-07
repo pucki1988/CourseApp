@@ -42,14 +42,22 @@ class CourseBookingService
             return;
         }
 
-        $user=auth()->user();
+         $user=auth('sanctum')->user();
+            $isMember = $user && $user->hasRole('member');
+            
+            $discount=0;
+            if($isMember){
+                $discount=$course->member_discount;
+            }
+
+        
 
         $booking = CourseBooking::create([
             'user_id'     => auth()->id(),
             'user_name' => $user->name,
             'course_id'   => $course->id,
             'course_title' => $course->title,
-            'total_price' => $course->price,
+            'total_price' => $course->price - $discount,
             'booking_type' => $course->booking_type
         ]);
 
