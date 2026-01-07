@@ -15,12 +15,16 @@
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
+                @if(auth()->user()->canCheckIn())
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
+                @endif
+                @role(['admin', 'manager'])
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
+                @endrole
                 
             </flux:navlist>
 
