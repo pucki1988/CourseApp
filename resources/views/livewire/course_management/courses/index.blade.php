@@ -62,13 +62,17 @@ new class extends Component {
 
     public function createCourse(CourseService $service)
     {
-        $service->createCourse($this->newCourse);
+         $course=$service->createCourse($this->newCourse);
         
         // Modal schließen
         Flux::modal('course')->close();
-        $this->initializeNewCourse();
+        #$this->initializeNewCourse();
 
-         $this->loadCourses($service);
+         #$this->loadCourses($service);
+         return $this->redirect(
+         route('course_management.courses.show', $course->id),
+              navigate: true
+            );
     }
 
 };

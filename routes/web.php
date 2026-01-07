@@ -34,10 +34,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
     Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
     Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
-    
+
     Route::middleware('role:admin|manager')->group(function () {
               
-        Volt::route('/courses/{course}', '.course_management.courses.show')->name('course_management.courses.show');
+        Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
         Volt::route('/bookings', 'course_management.bookings.index')->name('course_management.bookings.index');
         Volt::route('/bookings/{booking}', 'course_management.bookings.show')->name('course_management.bookings.show');
     
