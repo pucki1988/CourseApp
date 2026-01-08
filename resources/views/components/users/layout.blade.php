@@ -32,7 +32,7 @@
             </flux:navlist>
     </div>
 
-    <flux:separator class="md:hidden" />
+    <flux:separator class="hidden" />
     <div class="flex-1 self-stretch max-md:pt-6">
         <flux:heading size="xl">{{ $heading ?? '' }}</flux:heading>
 
