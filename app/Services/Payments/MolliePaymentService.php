@@ -126,7 +126,7 @@ class MolliePaymentService implements PaymentService
     private function handleFailed(CourseBooking $booking): void
     {
         $this->bookingPaymentService->markFailed($booking);
-        foreach($booking->bookingSlots() as $bookingSlot ){
+        foreach($booking->bookingSlots as $bookingSlot ){
             $this->courseBookingSlotService->cancel($bookingSlot);
         }
         
