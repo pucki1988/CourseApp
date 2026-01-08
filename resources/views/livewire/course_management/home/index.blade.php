@@ -130,6 +130,7 @@ new class extends Component {
         Flux::modal('checkin')->show();
         $this->dispatch('startScanner');
     }
+    
     #[On('qrScanned')]
     public function qrScanned($value)
     {
@@ -273,7 +274,7 @@ new class extends Component {
                     <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
                     @if(auth()->user()->canCheckIn())
-                    <flux:menu.item icon="check-circle" wire:click="openCheckin({{ $slot->id }})">Check In</flux:menu.item>
+                    <flux:menu.item icon="qr-code" wire:click="openCheckin({{ $slot->id }})">Check In</flux:menu.item>
                     @endif
                     </flux:menu>
                     </flux:dropdown>

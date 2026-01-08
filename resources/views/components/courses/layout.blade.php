@@ -1,23 +1,63 @@
 <div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist>
-            @if(auth()->user()->canCheckIn())
-            <flux:navlist.item :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Home') }}</flux:navlist.item>
-            @endif
-            @role(['admin', 'manager'])
-            
-            
-            <flux:navlist.item :href="route('course_management.courses.index')" :current="request()->routeIs('course_management.courses.index')" wire:navigate>{{ __('Kurse') }}</flux:navlist.item>
-            
-            <flux:navlist.item :href="route('course_management.bookings.index')" :current="request()->routeIs('course_management.bookings.index')"  wire:navigate>{{ __('Buchungen') }}</flux:navlist.item>
+    <div class="fixed bottom-0 left-0 z-50 w-full md:me-10
+        border-t bg-white md:pt-0
+        md:static md:z-auto md:w-[220px] md:border-0 md:bg-transparent
+        pb-safe">
+    <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
+        @if(auth()->user()->canCheckIn())
+            <flux:navlist.item
+                :href="route('course_management.home.index')"
+                :current="request()->routeIs('course_management.home.index')"
+                wire:navigate
+                class="h-14"
+                
+            >
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.home class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Home') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endif
 
-            <flux:navlist.item :href="route('course_management.coaches.index')" :current="request()->routeIs('course_management.coaches.index')"  wire:navigate>{{ __('Trainer') }}</flux:navlist.item>
-            @endrole
-            
-            
-        
-            </flux:navlist>
-    </div>
+        @role(['admin', 'manager'])
+            <flux:navlist.item
+                :href="route('course_management.courses.index')"
+                :current="request()->routeIs('course_management.courses.index')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2 s">
+                <flux:icon.flag class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Kurse') }}</span>
+                </span>
+            </flux:navlist.item>
+
+            <flux:navlist.item
+                :href="route('course_management.bookings.index')"
+                :current="request()->routeIs('course_management.bookings.index')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.list-bullet class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __(key: 'Buchungen') }}</span>
+                </span>
+            </flux:navlist.item>
+
+            <flux:navlist.item
+                :href="route('course_management.coaches.index')"
+                :current="request()->routeIs('course_management.coaches.index')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Trainer') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endrole
+    </flux:navlist>
+</div>
 
     <flux:separator class="md:hidden" />
 

@@ -1,10 +1,29 @@
 <div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist>
+
+    
+
+
+
+    <div class="fixed bottom-0 left-0 z-50 w-full md:me-10
+        border-t bg-white md:pt-0
+        md:static md:z-auto md:w-[220px] md:border-0 md:bg-transparent
+        pb-safe">
+        <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
             
             @role(['admin', 'manager'])
-            <flux:navlist.item :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Users') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('user_management.users.member_request')" :current="request()->routeIs('user_management.users.member_request')" wire:navigate>{{ __('Anfragen') }}</flux:navlist.item>
+            <flux:navlist.item :href="route('user_management.users.index')" class="h-14" :current="request()->routeIs('user_management.users.index')" wire:navigate>
+            
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __(key: 'Users') }}</span>
+                </span>
+            </flux:navlist.item>
+            <flux:navlist.item :href="route('user_management.users.member_request')" class="h-14" :current="request()->routeIs('user_management.users.member_request')" wire:navigate>
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.question-mark-circle class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Anfragen') }}</span>
+                </span>
+            </flux:navlist.item>
             
             @endrole
             
