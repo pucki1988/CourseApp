@@ -10,6 +10,7 @@ use App\Models\Course\CourseBooking;
 use App\Services\Bookings\BookingPaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingService;
+use App\Services\Course\CourseBookingSlotService;
 
 use App\Exceptions\PaymentFailedException;
 
@@ -19,7 +20,8 @@ class MolliePaymentService implements PaymentService
     public function __construct(
         protected BookingPaymentService $bookingPaymentService,
         protected BookingRefundService $bookingRefundService,
-        protected CourseBookingService $courseBookingService
+        protected CourseBookingService $courseBookingService,
+        protected CourseBookingSlotService $courseBookingSlotService
     ) {}
 
     public function createPayment(CourseBooking $booking): PaymentResult
@@ -34,7 +36,8 @@ class MolliePaymentService implements PaymentService
                 "value" => number_format($booking->total_price, 2, '.', '') // You must send the correct number of decimals, thus we enforce the use of strings
             ],
             "description" => "Buchung ".$booking->id,
-            "redirectUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id,
+            "redirectUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id.'&success=true',
+            "cancelUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id.'&success=false',
             "webhookUrl" => route('webhooks.mollie'),
             #"webhookUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse',
             "metadata" => [
@@ -123,6 +126,10 @@ class MolliePaymentService implements PaymentService
     private function handleFailed(CourseBooking $booking): void
     {
         $this->bookingPaymentService->markFailed($booking);
+        foreach($booking->bookingSlots() as $bookingSlot ){
+            $this->courseBookingSlotService->cancel($bookingSlot);
+        }
+        
         $this->courseBookingService->refreshBookingStatus($booking);
     }
 
