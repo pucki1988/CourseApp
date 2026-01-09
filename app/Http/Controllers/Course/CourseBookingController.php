@@ -41,6 +41,14 @@ class CourseBookingController extends Controller
             $this->courseBookingService->listBookings()
         );
     }
+
+    public function show(CourseBooking $courseBooking)
+    {
+        return response()->json(
+            $this->courseBookingService->loadBooking($courseBooking)
+        );
+    }
+
     //Der Buchende sagt den gebuchten Slot ab.
     public function cancelBookingSlot(CourseBooking $courseBooking, CourseBookingSlot $courseBookingSlot,UserCancelBookingSlotAction $action)
     {

@@ -27,6 +27,27 @@ class CourseBookingService
         return $this->bookPerSlot($request, $course);
     }
 
+    /**
+     * Einzelne Buchung mit Relationen laden
+     */
+    public function loadBooking(CourseBooking $courseBooking)
+    {
+        if (! auth()->user()->hasAnyRole('admin', 'manager')
+        && $courseBooking->user_id !== auth()->id()
+        ) {
+            abort(403);
+        }
+        
+        return $courseBooking->load([
+        'course',
+        'course.slots' => function ($q) {
+            $q->orderBy('date')
+              ->orderBy('start_time');
+        },
+        'bookingSlots',
+        ]);
+    }
+
 
     /**
      * Ganze Kursbuchung
@@ -42,7 +63,7 @@ class CourseBookingService
             return;
         }
 
-         $user=auth('sanctum')->user();
+            $user=auth('sanctum')->user();
             $isMember = $user && $user->hasRole('member');
             
             $discount=0;
