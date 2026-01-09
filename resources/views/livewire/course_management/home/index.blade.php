@@ -8,7 +8,7 @@ use App\Services\Course\CourseSlotService;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
 use App\Actions\Course\CancelCourseSlotAction;
-
+use Livewire\Attributes\On;
 use App\Models\User;
 
 new class extends Component {
@@ -130,7 +130,7 @@ new class extends Component {
         Flux::modal('checkin')->show();
         $this->dispatch('startScanner');
     }
-    
+
     #[On('qrScanned')]
     public function qrScanned($value)
     {

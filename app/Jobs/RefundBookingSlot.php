@@ -95,10 +95,10 @@ class RefundBookingSlot implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         try {
-     // 1️⃣ Logging
+        // 1️⃣ Logging
         report($exception);
 
-         $bookingSlotService->refund_failed($bookingSlot);
+        $bookingSlotService->refund_failed($bookingSlot);
 
         // 3️⃣ Admin informieren
         Notification::route('mail', env('ADMIN_MAIL', 'aschuster.development@outlook.de'),)

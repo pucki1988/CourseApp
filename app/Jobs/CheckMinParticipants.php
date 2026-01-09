@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Course\CourseSlot;
 
 use App\Actions\Course\CancelCourseSlotAction;
+use App\Actions\Course\CancelCourseAction;
 
 class CheckMinParticipants implements ShouldQueue
 {
@@ -28,9 +29,9 @@ class CheckMinParticipants implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(CancelCourseSlotAction $cancelAction): void
+    public function handle(CancelCourseSlotAction $cancelCourseSlotAction,CancelCourseAction $cancelCourseAction): void
     {
-        
+        DB::transaction(function () use ($cancelCourseSlotAction, $cancelCourseAction) {
             $slot = CourseSlot::lockForUpdate()->find($this->slot->id);
 
             if ($slot->status !== 'active') {
@@ -40,13 +41,19 @@ class CheckMinParticipants implements ShouldQueue
             $count = $slot->bookedSlots()->count();
 
             if ($count < $slot->min_participants) {
-                $cancelAction->execute($slot,'Mindestteilnehmerzahl von '. $slot->min_participants.' nicht erreicht');
+                $reason = 'Mindestteilnehmerzahl von ' . $slot->min_participants . ' nicht erreicht';
+                if($slot->course->booking_type === 'per_course'){
+                    $cancelCourseAction->execute($slot,$reason);
+                }else{
+                    $cancelCourseSlotAction->execute($slot,$reason);
+                }
+                
 
             } /*else {
                 Mail::to(
                     $slot->bookings->pluck('email')
                 )->send(new CourseConfirmedMail($slot));
             }*/
-        
+        });
     }
 }
