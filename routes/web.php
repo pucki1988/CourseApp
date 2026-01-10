@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
 
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
+        Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
     });
    

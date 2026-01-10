@@ -15,7 +15,14 @@
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
                 <flux:icon.users class="h-5 w-5 md:hidden" />
-                <span class="md:inline">{{ __(key: 'Users') }}</span>
+                <span class="md:inline">{{ __(key: 'Frontend User') }}</span>
+                </span>
+            </flux:navlist.item>
+            <flux:navlist.item :href="route('user_management.users.backend_user')" class="h-14" :current="request()->routeIs('user_management.users.backend_user')" wire:navigate>
+            
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __(key: 'Backend User') }}</span>
                 </span>
             </flux:navlist.item>
             <flux:navlist.item :href="route('user_management.users.member_request')" class="h-14" :current="request()->routeIs('user_management.users.member_request')" wire:navigate>

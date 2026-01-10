@@ -31,7 +31,25 @@ class UserService
         $users = User::with('roles')
             ->where(function ($query) {
                 $query->whereHas('roles', function ($q) {
-                    $q->whereIn('name', ['user', 'member']);
+                    $q->whereNotIn('name', ['admin', 'manager']);
+                })
+                ->orWhereDoesntHave('roles');
+            });
+
+        if (!empty($filters['username'])) {
+            $users->where('name', 'like', '%' . $filters['username'] . '%');
+        }
+
+
+        return $users->get();
+    }
+
+    public function usersWithBackendAccess(array $filters = [])
+    {
+        $users = User::with('roles')
+            ->where(function ($query) {
+                $query->whereHas('roles', function ($q) {
+                    $q->whereIn('name', ['admin', 'manager']);
                 })
                 ->orWhereDoesntHave('roles');
             });
