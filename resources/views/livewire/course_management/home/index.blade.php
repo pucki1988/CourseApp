@@ -261,7 +261,7 @@ new class extends Component {
                     </div>
                 </div>
 
-                
+                @if($slot->status ==='active')
                 <div class="flex gap-2">
                     <flux:spacer />
                     <flux:dropdown position="top">
@@ -279,7 +279,7 @@ new class extends Component {
                     </flux:menu>
                     </flux:dropdown>
                 </div>
-                
+                @endif
                 
             </div>
         @empty
