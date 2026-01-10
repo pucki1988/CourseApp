@@ -31,7 +31,10 @@ class UserService
         $users = User::with('roles')
             ->where(function ($query) {
                 $query->whereHas('roles', function ($q) {
-                    $q->whereNotIn('name', ['admin', 'manager']);
+                    $q->whereIn('name', ['member', 'user']);
+                })
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->whereIn('name', ['admin', 'manager']);
                 })
                 ->orWhereDoesntHave('roles');
             });
