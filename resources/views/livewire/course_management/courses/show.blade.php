@@ -301,6 +301,7 @@ new class extends Component {
                     
                     </div>
                 </div>
+                @if($slot->status ==='active')
                  <div class="flex gap-2">
                     <flux:spacer />
                     @if(auth()->user()->can('reschedule', $slot) || auth()->user()->can('cancel', $slot) || auth()->user()->can('delete', $slot))
@@ -320,7 +321,7 @@ new class extends Component {
                     </flux:dropdown>
                     @endif
                 </div>
-
+                @endif
             </div>
             @empty
             @endforelse
