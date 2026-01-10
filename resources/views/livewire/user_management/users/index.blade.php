@@ -77,20 +77,24 @@ new class extends Component {
             <tr>
                 <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
                 <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Rolle</th>
-                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
+                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Mitglied</th>
             </tr>
         </thead>
         <tbody class=" divide-gray-100">
      @foreach ($users as $user)
     <tr>
      <td class="px-4 py-2">{{ $user->name }}</td>
-     <td class="px-4 py-2">{{ $user->getRoleNames()[0] }}</td>
+     <td class="px-4 py-2"><div>
+    @foreach ($user->getRoleNames() as $role)
+    <flux:badge size="sm">{{ $role }}</flux:badge>
+    @endforeach
+    </div></td>
     <td class="px-4 py-2 text-right">
             
                     @if($user->hasRole('member'))
-                    <flux:button variant="primary" size="xs" color="red" wire:click="unsetAsMember({{ $user->id }})">Mitgliedschaft entfernen</flux:button>
+                    <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsMember({{ $user->id }})">Nein</flux:button>
                     @else
-                    <flux:button variant="primary" size="xs" color="green" wire:click="setAsMember({{ $user->id }})">Als Mitglied setzen</flux:button>
+                    <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsMember({{ $user->id }})">Ja</flux:button>
                     @endif
                     
     </td>

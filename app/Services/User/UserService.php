@@ -83,11 +83,23 @@ class UserService
         $user = User::findOrFail($userId);
 
         // alte Rolle raus, neue rein
-        $user->syncRoles(['member']);
 
-        $user->update([
-            'member_requested' => false,
-        ]);
+        if($user->hasAnyRole(['manager','admin']))
+        {
+            if($user->hasRole('user')){
+                $user->removeRole('user');
+                $user->assignRole('member');
+            }else{
+                $user->assignRole('member');
+            }
+        }else{
+            $user->syncRoles(['member']);
+
+            $user->update([
+                'member_requested' => false,
+            ]);
+        }
+        
     }
 
     public function disapproveMember(int $userId): void
@@ -102,12 +114,20 @@ class UserService
     {
         $user = User::findOrFail($userId);
 
-        // alte Rolle raus, neue rein
-        $user->syncRoles(['user']);
-
-        $user->update([
-            'member_requested' => false,
-        ]);
+        if($user->hasAnyRole(['manager','admin']))
+        {
+            $user->removeRole('member');
+            $user->assignRole('user');
+        }else{
+            // alte Rolle raus, neue rein
+            $user->syncRoles(['user']);
+            $user->update([
+                'member_requested' => false,
+            ]);
+        }
     }
+
+
+
 
 }
