@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use App\Services\Course\CourseService;
 use App\Services\Course\CourseBookingService;
 use App\Models\Course\CourseBooking;
+use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
 use Carbon\Carbon;
 use App\Models\User;
@@ -29,7 +30,12 @@ new class extends Component {
     }
 
     
-
+    public function cancelBookingSlot(CourseBooking $courseBooking,CourseBookingSlot $courseBookingSlot)
+    {
+        $service = app(CourseBookingService::class);   // Service automatisch aus Container holen
+        $service->cancelBookingSlot($courseBooking,$courseBookingSlot);
+        
+    }
     
 };
 ?>
@@ -83,6 +89,7 @@ new class extends Component {
                         <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Datum</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Betrag</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Aktionen</th>
                     </tr>
                 </thead>
                 <tbody class=" divide-gray-100">
@@ -92,6 +99,7 @@ new class extends Component {
                 <td class="px-4 py-2">{{ $bookingSlot->slot->date->format('d.m.Y') }} | {{ $bookingSlot->slot->start_time->format('H:i') }}</td>
                 <td class="px-4 py-2">€ {{ $booking->booking_type ==="per_slot" ? $bookingSlot->price : '--' }}</td>
                 <td class="px-4 py-2"><flux:badge color="{{ $bookingSlot->status == 'booked' ? 'green' : ($bookingSlot->status == 'canceled' ? 'red' : 'gray') }}">{{ $bookingSlot->status }}</flux:badge></td>
+                <td class="px-4 py-2">@if($booking->booking_type==='per_slot' && $bookingSlot->status === 'booked')<flux:button variant="danger" size="xs" wire:click="cancelBookingSlot({{ $booking }} ,{{ $bookingSlot }})">stornieren</flux:button>@endif</td>
                 </tr>
             @endforeach
              <tr class="border-t">

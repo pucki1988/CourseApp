@@ -92,7 +92,7 @@ class RefundBooking implements ShouldQueue
         report($exception);
 
         // 3️⃣ Admin informieren
-        Notification::route('mail', env('ADMIN_MAIL', 'aschuster.development@outlook.de'),)
+        Notification::route('mail', env('ADMIN_MAIL', 'aschuster.development@outlook.de'))
             ->notify(new RefundFailedNotification(
                 bookingId: $this->bookingId,
                 bookingSlotId: 0,

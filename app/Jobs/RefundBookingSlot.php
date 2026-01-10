@@ -97,11 +97,12 @@ class RefundBookingSlot implements ShouldQueue
         try {
         // 1️⃣ Logging
         report($exception);
-
-        $bookingSlotService->refund_failed($bookingSlot);
+        $bookingSlot = CourseBookingSlot::find($this->bookingSlotId);
+        $bookingSlot->update(['status' => 'refund_failed']);
+        #$bookingSlotService->refund_failed($bookingSlot);
 
         // 3️⃣ Admin informieren
-        Notification::route('mail', env('ADMIN_MAIL', 'aschuster.development@outlook.de'),)
+        Notification::route('mail', env('ADMIN_MAIL', 'aschuster.development@outlook.de'))
             ->notify(new RefundFailedNotification(
                 bookingId: $this->bookingId,
                 bookingSlotId: $this->bookingSlotId,

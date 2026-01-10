@@ -5,15 +5,17 @@ namespace App\Services\Course;
 use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use App\Models\Course\CourseBooking;
+use App\Models\Course\CourseBookingSlot;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 
 class CourseBookingService
 {
 
     public function __construct(
-        protected CourseBookingSlotService $courseBookingSlotService
+        
     ) {}
     /**
      * Buchung starten – entscheidet zwischen WholeCourse und PerSlot
@@ -25,6 +27,12 @@ class CourseBookingService
         }
 
         return $this->bookPerSlot($request, $course);
+    }
+
+    public function cancelBookingSlot(CourseBooking $courseBooking,CourseBookingSlot $courseBookingSlot){
+        
+        $action = app(UserCancelBookingSlotAction::class);
+        $action->execute($courseBooking,$courseBookingSlot);
     }
 
     /**
