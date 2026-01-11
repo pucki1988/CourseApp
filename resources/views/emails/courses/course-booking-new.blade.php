@@ -30,7 +30,7 @@ Ort: <strong>{{ $booking->course->location }}</strong>
 @endforeach
 </div>
 <p class="price">Gesamtpreis: € {{ number_format($booking->total_price, 2, ',', '.') }}</p>
-<p><strong>Hinweis:</strong> Die Buchung gilt erst nach Abschluss des Zahlungsvorgangs als vollständig.</p>
+<p><strong>Hinweis:</strong> Deine Buchung gilt erst nach Abschluss des Zahlungsvorgangs als vollständig.</p>
 <p>Wir freuen uns auf deine Teilnahme.</p>
 <p>Viele Grüße</p>
 </div>

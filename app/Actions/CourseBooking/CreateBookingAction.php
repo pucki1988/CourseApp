@@ -27,7 +27,7 @@ class CreateBookingAction
 
             $data["payment"] = $this->paymentService->createPayment($newBooking);
 
-            $this->bookingPaymentService->setTransactionId($newBooking,$data["payment"]->transactionId);
+            $this->bookingPaymentService->setPaymentData($newBooking,$data["payment"]->transactionId,$data["payment"]->checkoutUrl);
             $this->courseBookingService->refreshBookingStatus($newBooking);
 
             $data["booking"]=$newBooking->refresh();

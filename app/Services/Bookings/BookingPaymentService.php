@@ -6,10 +6,11 @@ use App\Models\Course\CourseBooking;
 
 class BookingPaymentService
 {
-    public function setTransactionId(CourseBooking $booking,string $paymentTransactionId): void
+    public function setPaymentData(CourseBooking $booking,string $paymentTransactionId,string $checkoutUrl): void
     {
         $booking->update([
-            'payment_transaction_id' => $paymentTransactionId
+            'payment_transaction_id' => $paymentTransactionId,
+            'checkout_url' => $checkoutUrl
         ]);
     }
 
