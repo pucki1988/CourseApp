@@ -117,33 +117,31 @@ new class extends Component {
         
 
     </div>
-    
 
-    <!-- COURSES LIST -->
-    <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Titel</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Trainer</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Termine</th>
-                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
+            <div class="space-y-3 grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @foreach($courses as $course)
-            <tr>
-                <td class="px-4 py-2">{{ $course->title }}</td>
-                <td class="px-4 py-2">{{ $course?->coach?->name ?? '-' }}</td>
-                <td class="px-4 py-2"><flux:badge>{{ $course->slots()->count() }}</flux:badge></td>
-                <td class="px-4 py-2 text-right">
-                    @can('update', $course)
-                    <flux:button size="xs" href="{{ route('course_management.courses.show', $course) }}">Details</flux:button>
-                    @endcan
-                </td>
-            </tr>
+
+            <div class="border rounded-lg p-3 bg-white shadow-sm">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Titel</span>
+                                <span>{{ $course->title }}</span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Trainer</span>
+                                <span>{{ $course?->coach?->name ?? '-' }}</span>
+                            </div>
+                            <div class="flex justify-center mt-1">
+                                @can('update', $course)
+                                <flux:button size="xs" href="{{ route('course_management.courses.show', $course) }}">Details</flux:button>
+                                @endcan
+                            </div>
+                        </div>
+            </div>
             @endforeach
-        </tbody>
-    </table>
+        </div>
+        
 
     <!-- Pagination -->
     <div class="mt-4">

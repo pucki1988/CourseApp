@@ -9,6 +9,7 @@ new class extends Component {
 
     public $bookings;
     public string $statusFilter = ''; // '' = alle
+    public ?int $bookingId =null;
     public array $allowedStatuses = ['pending','paid','partially_refunded','refunded'];
     public $perPage = 10;
 
@@ -23,14 +24,26 @@ new class extends Component {
         $this->loadCloadBookingsourses($service);
     }*/
 
-    public function updatedStatusFilter($property, CourseBookingService $service)
+    public function updatedBookingId(CourseBookingService $service)
     {
         
-            $filters = [
-                'status' => $this->statusFilter
-            ];
-             $this->bookings=$service->listBookings($filters);
+        $this->applyFilters($service);
+    }
+
+    public function updatedStatusFilter(CourseBookingService $service)
+    {
+        $this->applyFilters($service);
+    }
+
+    private function applyFilters(CourseBookingService $service)
+    {
         
+        $filters = array_filter([
+        'bookingId' => $this->bookingId !== null ? $this->bookingId : null,
+        'status'    => $this->statusFilter,
+        ], fn ($value) => $value !== null);
+
+    $this->bookings = $service->listBookings($filters);
     }
 
     public function loadBookings(CourseBookingService $service)
@@ -50,6 +63,14 @@ new class extends Component {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
         <!-- Suche -->
+            <flux:field class="mb-4">
+            <flux:label>Buchungsnummer</flux:label>
+            <flux:input
+            wire:model.live.debounce.300ms="bookingId"
+            placeholder="Suche nach Buchung…"
+            icon="magnifying-glass"
+            />
+        </flux:field>
 
         <flux:field class="mb-4">
             <flux:label>Status</flux:label>
@@ -70,31 +91,36 @@ new class extends Component {
         
 
     </div>
-
-    <!-- COURSES LIST -->
-    <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Nr</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
-                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Aktionen</th>
-            </tr>
-        </thead>
-        <tbody class=" divide-gray-100">
+    <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @forelse($bookings as $booking)
-            <tr>
-                <td class="px-4 py-2">{{ $booking->id }}</td>
-                <td class="px-4 py-2">{{ $booking->user->name }}</td>
-                <td class="px-4 py-2 text-right">
-                <flux:button size="xs" href="{{ route('course_management.bookings.show', $booking) }}">Details</flux:button>
-                </td>
-            </tr>
+            <div class="border rounded-lg p-3 bg-white shadow-sm">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Buchungsnummer</span>
+                                <span>{{ $booking->id }}</span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Name</span>
+                                <span>{{  $booking->user->name  }}</span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Betrag</span>
+                                <span>€ {{  $booking->total_price }}</span>
+                            </div>
+
+                            <div class="flex justify-center mt-1">
+                                
+                                <span><flux:button size="xs" href="{{ route('course_management.bookings.show', $booking) }}">Details</flux:button></span>
+                            </div>
+                        </div>
+            </div>
             @empty
                 <flux:text>Keine Buchungen gefunden</flux:text>
             @endforelse
-            
-        </tbody>
-    </table>
+            </div>
+        
 
     <!-- Pagination -->
     <div class="mt-4">

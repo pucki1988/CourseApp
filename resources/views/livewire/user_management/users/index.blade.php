@@ -69,41 +69,34 @@ new class extends Component {
 
     
 
-        </div>
+    </div>
 
-
-        <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Rolle</th>
-                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600">Mitglied</th>
-            </tr>
-        </thead>
-        <tbody class=" divide-gray-100">
+    <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
      @foreach ($users as $user)
-    <tr>
-     <td class="px-4 py-2">{{ $user->name }}</td>
-     <td class="px-4 py-2"><div>
-    @foreach ($user->getRoleNames() as $role)
-    <flux:badge size="sm">{{ $role }}</flux:badge>
-    @endforeach
-    </div></td>
-    <td class="px-4 py-2 text-right">
-            
-                    @if($user->hasRole('member'))
+    <div class="border rounded-lg p-3 bg-white shadow-sm">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Name</span>
+                                <span>{{ $user->name }}</span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Rolle</span>
+                                <span>@foreach ($user->getRoleNames() as $role)<flux:badge size="sm">{{ $role }}</flux:badge>@endforeach</span>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Mitglied</span>
+                                <span> 
+                                    @if($user->hasRole('member'))
                     <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsMember({{ $user->id }})">Nein</flux:button>
                     @else
                     <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsMember({{ $user->id }})">Ja</flux:button>
-                    @endif
-                    
-    </td>
-    </tr>
+                    @endif</span>
+                            </div>
+                        </div>
+    </div>
     @endforeach
-    </tbody>
-    </table>
-</div>
-</div>
+    </div>
     </x-users.layout>
 
 </section>

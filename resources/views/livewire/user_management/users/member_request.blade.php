@@ -49,25 +49,31 @@ new class extends Component {
 
     <x-users.layout :heading="__('Anfragen Vereinsmitgliedschaft')" :subheading="__('Deine User')">
         <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 xl:grid-cols-3">
-     @foreach ($users as $user)
-        <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
-            <div>
-                <flux:text weight="medium">
-                    {{ $user->name }}
-                </flux:text>
+       <div class="grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
+     @forelse ($users as $user)
+    <div class="border rounded-lg p-3 bg-white shadow-sm">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Name</span>
+                                <span>{{ $user->name }}</span>
+                            </div>
 
-                <flux:text size="sm" class="text-gray-500">
-                    {{ $user->email }}
-                </flux:text>
-                <flux:button variant="primary" color="green" wire:click="approveMember({{ $user->id }})">Bestätigen</flux:button>
-                <flux:button variant="primary" color="red" wire:click="disapproveMember({{ $user->id }})">Ablehnen</flux:button>
-            </div>
-
-            
-
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">E-Mail</span>
+                                <span>{{$user->email}}</span>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Anfrage</span>
+                                <span> 
+                                    <flux:button variant="primary" size="xs" color="green" wire:click="approveMember({{ $user->id }})">Bestätigen</flux:button>
+                                    <flux:button variant="primary" size="xs" color="red" wire:click="disapproveMember({{ $user->id }})">Ablehnen</flux:button>
+                                </span>
+                            </div>
+                        </div>
     </div>
-    @endforeach
+    @empty
+                <flux:text>Keine Anfragen gefunden</flux:text>
+    @endforelse
 </div>
 </div>
     </x-users.layout>

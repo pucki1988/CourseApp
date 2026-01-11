@@ -74,32 +74,33 @@ new class extends Component {
     
         
 
-    <!-- COACHES LIST -->
-    <table class="min-w-full divide-y divide-gray-200 bg-white shadow rounded-lg overflow-hidden">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Aktiv</th>
-                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Aktionen</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
+     <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @foreach($coaches as $coach)
-            <tr>
-                <td class="px-4 py-2">{{ $coach->name }}</td>
-                <td class="px-4 py-2">
-                <flux:badge color="{{ $coach->active?'green':'red' }}">{{ $coach->active?'aktiv':'inaktiv' }}</flux:badge>
-                </td>
-                <td class="px-4 py-2 text-right">
-                    @can('update',Coach::class)
+            <div class="border rounded-lg p-3 bg-white shadow-sm">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Name</span>
+                                <span>{{ $coach->name }}</span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Status</span>
+                                <span><flux:badge size="sm" color="{{ $coach->active?'green':'red' }}">{{ $coach->active?'aktiv':'inaktiv' }}</flux:badge></span>
+                            </div>
+                            <div class="flex justify-center mt-1">
+                                
+                                <span> @can('update',Coach::class)
                     <flux:button size="xs" variant="danger" wire:click="deleteCoach({{ $coach }})">Löschen</flux:button>
                     <flux:button size="xs" href="{{ route('course_management.coaches.show', $coach) }}">Details</flux:button>
-                    @endcan
-                </td>
-            </tr>
+                    @endcan</span>
+                            </div>
+                        </div>
+            </div>
+
+
+            
             @endforeach
-        </tbody>
-    </table>
+</div>
 
 
     

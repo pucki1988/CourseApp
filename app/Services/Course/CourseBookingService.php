@@ -187,6 +187,10 @@ class CourseBookingService
             $query->where('status',$filters['status']);
         }
 
+        if (!empty($filters['bookingId'])) {
+            $query->where('id',$filters['bookingId']);
+        }
+
 
 
         $query->orderByDesc('created_at');
