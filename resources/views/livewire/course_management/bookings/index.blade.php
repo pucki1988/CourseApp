@@ -10,6 +10,7 @@ new class extends Component {
     public $bookings;
     public string $statusFilter = ''; // '' = alle
     public ?int $bookingId =null;
+    public string $username='';
     public array $allowedStatuses = ['pending','paid','partially_refunded','refunded'];
     public $perPage = 10;
 
@@ -35,12 +36,18 @@ new class extends Component {
         $this->applyFilters($service);
     }
 
+    public function updatedUsername(CourseBookingService $service)
+    {
+        $this->applyFilters($service);
+    }
+
     private function applyFilters(CourseBookingService $service)
     {
         
         $filters = array_filter([
         'bookingId' => $this->bookingId !== null ? $this->bookingId : null,
         'status'    => $this->statusFilter,
+        'username'  => $this->username,
         ], fn ($value) => $value !== null);
 
     $this->bookings = $service->listBookings($filters);
@@ -60,7 +67,7 @@ new class extends Component {
     <x-courses.layout :heading="__('Buchungen')" :subheading="__('Deine Buchungen')">
         
     <!-- FILTERS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 
         <!-- Suche -->
             <flux:field class="mb-4">
@@ -68,6 +75,16 @@ new class extends Component {
             <flux:input
             wire:model.live.debounce.300ms="bookingId"
             placeholder="Suche nach Buchung…"
+            icon="magnifying-glass"
+            type="number"
+            />
+        </flux:field>
+
+        <flux:field class="mb-4">
+            <flux:label>Name</flux:label>
+            <flux:input
+            wire:model.live.debounce.300ms="username"
+            placeholder="Suche nach Name…"
             icon="magnifying-glass"
             />
         </flux:field>

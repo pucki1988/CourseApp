@@ -174,7 +174,7 @@ class CourseBookingService
      */
     public function listBookings(array $filters = [])
     {
-        $query=CourseBooking::with(['course','bookingSlots.slot']);
+        $query=CourseBooking::with(['course','bookingSlots.slot','user']);
 
         if (!auth()->user()->hasAnyRole('admin','manager')) {
         // Normale User sehen nur eigene
@@ -189,6 +189,12 @@ class CourseBookingService
 
         if (!empty($filters['bookingId'])) {
             $query->where('id',$filters['bookingId']);
+        }
+
+        if (!empty($filters['username'])) {
+            $query->whereHas('user', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['username'] . '%');
+            });
         }
 
 
