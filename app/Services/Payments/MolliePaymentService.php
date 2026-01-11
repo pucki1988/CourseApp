@@ -120,6 +120,9 @@ class MolliePaymentService implements PaymentService
     private function handlePaid(CourseBooking $booking): void
     {
         $this->bookingPaymentService->markPaid($booking);
+        foreach($booking->bookingSlots as $bookingSlot ){
+            $bookingSlot->update(['status' => 'booked']);
+        }
         $this->courseBookingService->refreshBookingStatus($booking);
     }
 
