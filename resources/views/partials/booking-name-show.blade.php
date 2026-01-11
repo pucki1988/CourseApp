@@ -3,6 +3,15 @@
         <div>
             <flux:heading size="lg">Buchungen</flux:heading>
         </div>
+
+        {{-- Feedback --}}
+        @if($message)
+            <flux:callout
+                variant="{{ $state === 'success' ? 'success' : 'danger' }}">
+                {{ $message }}
+            </flux:callout>
+        @endif
+
         @foreach (($this->showSlot->bookedSlots) ?? [] as $index => $bookedSlot)
         <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
 

@@ -115,10 +115,12 @@ new class extends Component {
                                 <span>{{ $bookingSlot->slot->date->format('d.m.Y') }} || {{ $bookingSlot->slot->start_time->format('H:i') }}</span>
                             </div>
 
+                            @if($booking->booking_type ==="per_slot")
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Betrag</span>
-                                <span>€ {{ $booking->booking_type ==="per_slot" ? $bookingSlot->price : '--' }}</span>
+                                <span>€ {{  $bookingSlot->price }}</span>
                             </div>
+                            @endif
 
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Status</span>

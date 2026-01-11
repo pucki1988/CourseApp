@@ -118,7 +118,7 @@ new class extends Component {
 
     </div>
 
-            <div class="space-y-3 grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
+            <div class="grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @foreach($courses as $course)
 
             <div class="border rounded-lg p-3 bg-white shadow-sm">

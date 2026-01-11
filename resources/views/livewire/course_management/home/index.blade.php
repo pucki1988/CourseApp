@@ -110,14 +110,24 @@ new class extends Component {
     }
 
     public function showBookings(CourseSlot $slot){
+
+        $this->reset(['message', 'state']);
         $this->showSlot=$slot;
         Flux::modal('bookings')->show();
     }
 
     public function checkInCourseBookingSlot(CourseBookingSlot $courseBookingSlot){
-            $courseBookingSlot->update([
-                'checked_in_at' => now(),
-            ]);
+            
+            if($courseBookingSlot->booking->status ==="paid" ||  $courseBookingSlot->booking->status ==="partially_refunded"){
+                $courseBookingSlot->update([
+                    'checked_in_at' => now(),
+                ]);
+                $this->state = 'success';
+                $this->message = 'Check-in erfolgreich';
+            }else{
+                $this->state = 'error';
+                $this->message = 'Buchung nicht bezahlt';
+            }
     }
 
     public function openCheckin(int $slotId)
