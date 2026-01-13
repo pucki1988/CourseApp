@@ -29,8 +29,8 @@ class CourseBookingSlotResource extends JsonResource
                 'id' => $this->slot->id,
                 'course_id' => $this->slot->course_id,
                 'date' => $this->slot->date->toDateString(), // <-- Fix
-                'start_time' => $this->slot->start_time,
-                'end_time' => $this->slot->end_time,
+                'start_time' => $this->slot->start_time->format("H:i"),
+                'end_time' => $this->slot->end_time->format("H:i"),
                 'price' => $this->slot->price,
                 'capacity' => $this->slot->capacity,
                 'status' => $this->slot->status,

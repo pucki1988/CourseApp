@@ -47,8 +47,8 @@ class CourseBookingResource extends JsonResource
                         'id' => $bookingSlot->slot->id,
                         'course_id' => $bookingSlot->slot->course_id,
                         'date' => $bookingSlot->slot->date->toDateString(), // ✅ hier fix
-                        'start_time' => $bookingSlot->slot->start_time,
-                        'end_time' => $bookingSlot->slot->end_time,
+                        'start_time' => $bookingSlot->slot->start_time->format("H:i"),
+                        'end_time' => $bookingSlot->slot->end_time->format("H:i"),
                         'price' => $bookingSlot->slot->price,
                         'capacity' => $bookingSlot->slot->capacity,
                         'status' => $bookingSlot->slot->status,
