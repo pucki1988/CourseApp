@@ -34,6 +34,7 @@ class CourseBookingSlotResource extends JsonResource
                 'price' => $this->slot->price,
                 'capacity' => $this->slot->capacity,
                 'status' => $this->slot->status,
+                'course' =>$this->course
             ],
 
             // optional: weitere Relationen wie Booking
