@@ -69,6 +69,24 @@ class CourseSlot extends Model
             && $this->isInFuture();
     }
 
+    public function minParticipantsReminderIsInFuture(){
+        // Den Reminder holen
+        $reminder = $this->reminders()
+            ->where('type', 'min_participants_check')
+            ->first();
+
+        // Wenn kein Reminder existiert → keine Einschränkung
+        if (!$reminder) {
+            return true;
+        }
+
+        // Check-Zeit berechnen: Startzeit minus Minuten des Reminders
+        $checkTime = $this->startDateTime()->subMinutes($reminder->minutes_before);
+
+        // true, wenn wir noch vor der Checkzeit sind
+        return now()->lt($checkTime);
+    }
+
     public function isInFuture(): bool
     {
         return  $this->startDateTime()->isFuture();
