@@ -28,7 +28,7 @@ class CourseBookingSlotController extends Controller
     {
         $slots = $this->courseBookingSlotService->listBookedSlots();
 
-        return CourseBookingSlotResource::collection($slots);
+        return CourseBookingSlotResource::collection($slots)->resolve();
     }
    
 

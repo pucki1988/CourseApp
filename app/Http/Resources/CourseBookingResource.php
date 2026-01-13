@@ -31,7 +31,7 @@ class CourseBookingResource extends JsonResource
 
             'course' => $this->course, // Optional: du kannst hier auch CourseResource machen
 
-            'booking_slots' => $this->booking_slots->map(function ($bookingSlot) {
+            'booking_slots' => $this->bookingSlots->map(function ($bookingSlot) {
                 return [
                     'id' => $bookingSlot->id,
                     'course_booking_id' => $bookingSlot->course_booking_id,
