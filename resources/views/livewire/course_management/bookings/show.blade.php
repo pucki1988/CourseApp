@@ -93,7 +93,11 @@ new class extends Component {
                         <div class="text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-900">Gesamtbetrag</span>
-                                <span class="font-medium">€ {{ $booking->total_price }}</span>
+                                <span class="font-medium">
+                                @if($booking->refunds->where('status', 'completed')->sum('amount') >0)
+                                <flux:badge color="red">€ -{{ $booking->refunds->where('status', 'completed')->sum('amount') }}</flux:badge>
+                                @endif
+                                <flux:badge color="green"> € {{ $booking->total_price }}</flux:badge></span>
                             </div>
                         </div>
             </div>
