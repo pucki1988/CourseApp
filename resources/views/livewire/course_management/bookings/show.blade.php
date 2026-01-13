@@ -50,27 +50,27 @@ new class extends Component {
             
             <div>
             <flux:heading size="lg">Buchung</flux:heading>
-            <div class="border rounded-lg p-3 bg-white shadow-sm">
-                        <div class="text-sm">
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Buchungsnummer</span>
-                                <span>{{ $booking->id }}</span>
-                            </div>
+                <div class="border rounded-lg p-3 bg-white shadow-sm">
+                            <div class="text-sm">
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Buchungsnummer</span>
+                                    <span>{{ $booking->id }}</span>
+                                </div>
 
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Datum</span>
-                                <span>{{ $booking->created_at->format('d.m.Y H:i') }}</span>
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Datum</span>
+                                    <span>{{ $booking->created_at->format('d.m.Y H:i') }}</span>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Buchungsstatus</span>
+                                    <span><flux:badge size="sm" color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></span>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Zahlungsstatus</span>
+                                    <span><flux:badge size="sm" color="{{ $booking->payment_status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></span>
+                                </div>
                             </div>
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Buchungsstatus</span>
-                                <span><flux:badge size="sm" color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></span>
-                            </div>
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Zahlungsstatus</span>
-                                <span><flux:badge size="sm" color="{{ $booking->payment_status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></span>
-                            </div>
-                        </div>
-            </div>
+                </div>
             </div>
             <div>
             <flux:heading size="lg">Benutzer</flux:heading>
@@ -86,25 +86,22 @@ new class extends Component {
                                 <span>{{ $booking->user->email }}</span>
                             </div>
                             
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Rollen</span>
+                                <span>
+                                @foreach ($booking->user->getRoleNames() as $role)
+                                <flux:badge size="sm">{{ $role }}</flux:badge>
+                                @endforeach
+                                </span>
+                            </div>
 
                         </div>
                 </div>
-                <div class="border rounded-lg p-3 bg-white shadow-sm mt-3">
-                        <div class="text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-900">Gesamtbetrag</span>
-                                <span class="font-medium">
-                                @if($booking->refunds->where('status', 'completed')->sum('amount') >0)
-                                <flux:badge color="red">€ -{{ $booking->refunds->where('status', 'completed')->sum('amount') }}</flux:badge>
-                                @endif
-                                <flux:badge color="green"> € {{ $booking->total_price }}</flux:badge></span>
-                            </div>
-                        </div>
-            </div>
+                
             </div>
             
 
-            </div>
+            
             </div>
             
 
@@ -168,6 +165,7 @@ new class extends Component {
                                 <span class="text-gray-500">Betrag</span>
                                 <span>€ {{ $refund->amount }}</span>
                             </div>
+                            
 
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Status</span>
@@ -180,8 +178,28 @@ new class extends Component {
 
             </div>
             @endif
-            </div>
-
+            <flux:heading size="lg">Zusammenfassung</flux:heading>
+            <div class="border rounded-lg p-3 bg-white shadow-sm mt-3">
+                        <div class="text-sm">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-900">Buchungen</span>
+                                <span class="font-medium">
+                                <flux:badge color="green" size="sm">{{ $booking->total_price }} €</flux:badge></span>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-900">Erstattungen</span>
+                                <span class="font-medium">
+                                <flux:badge color="red" size="sm">- {{ number_format($booking->refunds->where('status', 'completed')->sum('amount'), 2, '.', '') }} €</flux:badge>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-900">Gesamt</span>
+                                <span class="font-medium">
+                                <flux:badge color="green" size="sm">{{ number_format($booking->total_price -$booking->refunds->where('status', 'completed')->sum('amount'), 2, '.', '')}} €</flux:badge></span>
+                            </div>
+                        </div>
+                </div>
+            
+            
              
         
        
