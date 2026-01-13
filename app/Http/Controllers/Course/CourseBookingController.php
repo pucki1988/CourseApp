@@ -17,6 +17,8 @@ use App\Actions\CourseBooking\CancelCourseBookingAction;
 use App\Actions\CourseBooking\CreateBookingAction;
 use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 use App\Exceptions\PaymentFailedException;
+use App\Http\Resources\CourseBookingResource;
+
 
 class CourseBookingController extends Controller
 {
@@ -37,33 +39,9 @@ class CourseBookingController extends Controller
     public function index()
     {
         $bookings = $this->courseBookingService->listBookings();
-
-        return response()->json(
-            $bookings->map(function ($booking) {
-
-                return array_merge(
-                    $booking->toArray(),
-                    [
-                        'booking_slots' => $booking->bookingSlots->map(function ($bookingSlot) {
-
-                            return array_merge(
-                                $bookingSlot->toArray(),
-                                [
-                                    'slot' => array_merge(
-                                        $bookingSlot->slot->toArray(),
-                                        [
-                                            // 👇 DAS ist der Fix
-                                            'date' => $bookingSlot->slot->date->toDateString(),
-                                        ]
-                                    ),
-                                ]
-                            );
-                        }),
-                    ]
-                );
-
-            })
-        );
+        // Collection direkt zurückgeben, ohne "data" Wrapper
+        return CourseBookingResource::collection($bookings)->resolve();
+        
     }
 
     public function show(CourseBooking $courseBooking)
