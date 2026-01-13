@@ -66,7 +66,7 @@ class CourseSlot extends Model
     public function isCancelable(): bool
     {
         return $this->status === 'active'
-            && $this->startDateTime()->isFuture();
+            && $this->isInFuture();
     }
 
     public function isInFuture(): bool

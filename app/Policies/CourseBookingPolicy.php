@@ -58,6 +58,10 @@ class CourseBookingPolicy
                 return false;
         }
 
+        if(!$courseBookingSlot->slot->minParticipantsReminderIsInFuture()){
+            return false;
+        }
+
         return $user->id === $booking->user_id;
     }
 
