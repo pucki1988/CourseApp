@@ -14,6 +14,9 @@ new class extends Component {
     public $coachId = null;
     public $perPage = 10;
 
+    public ?string $message = null;
+    public string $state = 'idle'; // idle, success, error
+
    public array $newCourse;
 
     public function mount(CourseService $service,CoachService $coachService)

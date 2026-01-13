@@ -22,6 +22,9 @@ new class extends Component {
 
     public array $slotToReschedule = [];
 
+    public ?string $message = null;
+    public string $state = 'idle'; // idle, success, error
+
     public function mount(Course $course, CourseService $service)
     {   
         $this->authorize('update', $course);
