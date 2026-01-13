@@ -40,7 +40,7 @@ class CourseBookingController extends Controller
     {
         $bookings = $this->courseBookingService->listBookings();
         // Collection direkt zurückgeben, ohne "data" Wrapper
-        return CourseBookingResource::collection($bookings)->resolve();
+        return CourseBookingResource::collection($bookings);
         
     }
 
