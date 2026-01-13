@@ -157,7 +157,7 @@ new class extends Component {
                         <div class="text-sm">
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Datum</span>
-                                <span>{{ $refund?->refunded_at?->format('d.m.Y') }}</span>
+                                <span>{{ $refund?->refunded_at?->format('d.m.Y H:i') }}</span>
                             </div>
 
                             <div class="flex justify-between mt-1">

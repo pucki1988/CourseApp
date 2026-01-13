@@ -220,12 +220,16 @@ class CourseBookingService
             ->where('status', 'refunded')
             ->count();
 
-        if ($refundedSlots === 0) {
+        $canceledSlots = $booking->bookingSlots()
+            ->where('status', 'canceled')
+            ->count();
+
+        if (($refundedSlots + $canceledSlots)  === 0) {
             $booking->update(['status' => 'paid']);
             return;
         }
 
-        if ($refundedSlots < $totalSlots) {
+        if (($refundedSlots + $canceledSlots)  < $totalSlots) {
             $booking->update(['status' => 'partially_refunded']);
             return;
         }
