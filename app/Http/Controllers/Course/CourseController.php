@@ -31,7 +31,7 @@ class CourseController extends Controller
 
         $courses->each(function ($course) {
             $course->slots->each(function ($slot) {
-                $slot->date = $slot->date->format('Y-m-d');
+                $slot->date = $slot->date->toDateString();;
             });
         });
 
