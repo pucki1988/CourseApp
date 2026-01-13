@@ -15,6 +15,7 @@ use App\Services\Bookings\BookingRefundService;
 use App\Services\Bookings\BookingPaymentService;
 use App\Actions\CourseBooking\UserCancelBookingSlotAction;
 use App\Actions\CourseBooking\CreateBookingAction;
+use App\Http\Resources\CourseBookingSlotResource;
 
 class CourseBookingSlotController extends Controller
 {
@@ -27,17 +28,7 @@ class CourseBookingSlotController extends Controller
     {
         $slots = $this->courseBookingSlotService->listBookedSlots();
 
-        $slots = $slots->map(function ($bookingSlot) {
-
-            // nur date im slot anpassen
-            if ($bookingSlot->slot) {
-                $bookingSlot->slot->date = $bookingSlot->slot->date->toDateString();
-            }
-
-            return $bookingSlot;
-        });
-
-        return response()->json($slots);
+        return CourseBookingSlotResource::collection($slots);
     }
    
 
