@@ -28,6 +28,14 @@ class CourseController extends Controller
     {
         #$this->authorize('viewAny', Course::class);
         $courses = $service->listCourses($request->only(['coach_id', 'booking_type']));
+
+        $courses->each(function ($course) {
+            $course->slots->each(function ($slot) {
+                $slot->date = $slot->date->format('Y-m-d');
+            });
+        });
+
+
         return response()->json($courses);
     }
 
