@@ -7,7 +7,7 @@ use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseBookingSlot;
 use App\Http\Controllers\Controller;
 use App\Services\Course\CourseBookingService;
-use App\Services\Course\CourseBookingSlotService;
+
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Contracts\PaymentService;
@@ -23,7 +23,6 @@ class CourseBookingController extends Controller
 
     public function __construct(
         protected CourseBookingService $courseBookingService,
-        protected CourseBookingSlotService $courseBookingSlotService,
         protected PaymentService $paymentService,
         protected BookingRefundService $bookingRefundService,
         protected BookingPaymentService $bookingPaymentService,
@@ -37,8 +36,33 @@ class CourseBookingController extends Controller
 
     public function index()
     {
+        $bookings = $this->courseBookingService->listBookings();
+
         return response()->json(
-            $this->courseBookingService->listBookings()
+            $bookings->map(function ($booking) {
+
+                return array_merge(
+                    $booking->toArray(),
+                    [
+                        'booking_slots' => $booking->bookingSlots->map(function ($bookingSlot) {
+
+                            return array_merge(
+                                $bookingSlot->toArray(),
+                                [
+                                    'slot' => array_merge(
+                                        $bookingSlot->slot->toArray(),
+                                        [
+                                            // 👇 DAS ist der Fix
+                                            'date' => $bookingSlot->slot->date->toDateString(),
+                                        ]
+                                    ),
+                                ]
+                            );
+                        }),
+                    ]
+                );
+
+            })
         );
     }
 

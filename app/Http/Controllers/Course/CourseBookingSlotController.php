@@ -25,9 +25,19 @@ class CourseBookingSlotController extends Controller
 
     public function index()
     {
-        return response()->json(
-            $this->courseBookingSlotService->listBookedSlots()
-        );
+        $slots = $this->courseBookingSlotService->listBookedSlots();
+
+        $slots = $slots->map(function ($bookingSlot) {
+
+            // nur date im slot anpassen
+            if ($bookingSlot->slot) {
+                $bookingSlot->slot->date = $bookingSlot->slot->date->toDateString();
+            }
+
+            return $bookingSlot;
+        });
+
+        return response()->json($slots);
     }
    
 
