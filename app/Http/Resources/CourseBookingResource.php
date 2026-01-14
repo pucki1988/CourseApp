@@ -54,6 +54,7 @@ class CourseBookingResource extends JsonResource
                         'status' => $bookingSlot->slot->status,
                         'rescheduled_at' => $bookingSlot->slot->rescheduled_at,
                         'min_participants' => $bookingSlot->slot->min_participants,
+                        'is_cancelable' => $bookingSlot->slot->isCancelable(),
                         'created_at' => $bookingSlot->slot->created_at,
                         'updated_at' => $bookingSlot->slot->updated_at,
                     ],
