@@ -6,6 +6,7 @@ use App\Models\Course\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Course\CourseService;
+use App\Http\Resources\CourseResource;
 
 class CourseController extends Controller
 {
@@ -29,24 +30,8 @@ class CourseController extends Controller
         #$this->authorize('viewAny', Course::class);
         $courses = $service->listCourses($request->only(['coach_id', 'booking_type']));
 
-        return response()->json(
-            $courses->map(function ($course) {
-                return array_merge(
-                    $course->toArray(),
-                    [
-                        'slots' => $course->slots->map(function ($slot) {
-                            return array_merge(
-                                $slot->toArray(),
-                                [
-                                    'date' => $slot->date->toDateString(), // 👈 HIER greift es
-                                ]
-                            );
-                        }),
-                    ]
-                );
-            })
-        );
-        #return response()->json($courses);
+        return CourseResource::collection($courses)->resolve();
+        
     }
 
     /**
