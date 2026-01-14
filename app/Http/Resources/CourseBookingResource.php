@@ -41,6 +41,7 @@ class CourseBookingResource extends JsonResource
                     'checked_in_at' => $bookingSlot->checked_in_at,
                     'created_at' => $bookingSlot->created_at,
                     'updated_at' => $bookingSlot->updated_at,
+                    'is_cancelable' => $bookingSlot->isCancelable(),
 
                     // slot verschachtelt, date fixiert
                     'slot' => [
@@ -54,7 +55,6 @@ class CourseBookingResource extends JsonResource
                         'status' => $bookingSlot->slot->status,
                         'rescheduled_at' => $bookingSlot->slot->rescheduled_at,
                         'min_participants' => $bookingSlot->slot->min_participants,
-                        'is_cancelable' => $bookingSlot->slot->isCancelable(),
                         'created_at' => $bookingSlot->slot->created_at,
                         'updated_at' => $bookingSlot->slot->updated_at,
                     ],

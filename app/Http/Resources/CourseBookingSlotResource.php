@@ -23,6 +23,7 @@ class CourseBookingSlotResource extends JsonResource
             'checked_in_at' => $this->checked_in_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'is_cancelable' => $this->isCancelable(),
 
             // ✅ Hier das Slot-Datum korrekt als String
             'slot' => [
@@ -34,8 +35,7 @@ class CourseBookingSlotResource extends JsonResource
                 'price' => $this->slot->price,
                 'capacity' => $this->slot->capacity,
                 'status' => $this->slot->status,
-                'course' => $this->slot->course,
-                'is_cancelable' => $this->slot->isCancelable()
+                'course' => $this->slot->course
             ],
 
             // optional: weitere Relationen wie Booking

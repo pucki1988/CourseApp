@@ -93,6 +93,11 @@ class CourseBookingPolicy
             if(!$bookingSlot->slot->isInFuture()){
                 return false;
             }
+
+            if(!$bookingSlot->slot->minParticipantsReminderIsInFuture()){
+                return false;
+            }
+
             return true; 
         });
         

@@ -43,4 +43,11 @@ class CourseBookingSlot extends Model
     {
         return $this->price > 0;
     }
+
+    public function isCancelable(): bool
+    {
+        return $this->slot->status === 'active'
+            && $this->slot->minParticipantsReminderIsInFuture() 
+            && $this->booking->booking_type==="per_slot";
+    }
 }
