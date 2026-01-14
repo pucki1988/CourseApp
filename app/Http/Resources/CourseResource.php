@@ -36,8 +36,8 @@ class CourseResource extends JsonResource
                     // 🔥 DAS ist der entscheidende Fix
                     'date' => $slot->date->toDateString(),
 
-                    'start_time' => $slot->start_time,
-                    'end_time' => $slot->end_time,
+                    'start_time' => $slot->start_time->format("H:i"),
+                    'end_time' => $slot->end_time->format("H:i"),
                     'price' => $slot->price,
                     'capacity' => $slot->capacity,
                     'status' => $slot->status,
