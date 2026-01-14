@@ -51,7 +51,7 @@ class CourseBooking extends Model
             return false;
         }
 
-        return $this->bookingSlots->slot->first()->minParticipantsReminderIsInFuture() 
+        return $this->bookingSlots->first()->slot->minParticipantsReminderIsInFuture() 
             && $this->booking_type==="per_course"
             && $this->bookingSlots->every(fn ($slot) => $slot->status === 'booked');
     }
