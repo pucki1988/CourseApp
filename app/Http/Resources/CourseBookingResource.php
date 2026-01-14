@@ -28,6 +28,7 @@ class CourseBookingResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'checkout_url' => $this->checkout_url,
+            'is_cancelable' => $this->isCancelable(),
 
             'course' => $this->course, // Optional: du kannst hier auch CourseResource machen
 

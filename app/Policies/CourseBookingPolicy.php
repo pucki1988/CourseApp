@@ -67,16 +67,18 @@ class CourseBookingPolicy
 
     public function cancelBooking(User $user, CourseBooking $booking)
     {
-        // 1️⃣ Nur der Eigentümer
-        if ($user->id !== $booking->user_id) {
-            return false;
-        }
-
         // Slots laden (falls lazy)
         $booking->loadMissing('bookingSlots.slot');
 
+
+        if(!$booking->isCancelable()){
+            return false;
+        }
+
+        return $user->id === $booking->user_id;
+
         // 2️⃣ Alle Slots müssen Status "booked" haben
-        $allBooked = $booking->bookingSlots->every(function ($bookingSlot) {
+        /*$allBooked = $booking->bookingSlots->every(function ($bookingSlot) {
             return $bookingSlot->status === 'booked';
         });
 
@@ -99,7 +101,7 @@ class CourseBookingPolicy
             }
 
             return true; 
-        });
+        });*/
         
     }
 

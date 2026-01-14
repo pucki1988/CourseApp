@@ -69,6 +69,7 @@ class CourseSlot extends Model
             && $this->isInFuture();
     }
 
+    
 
     public function minParticipantsReminderIsInFuture(){
         // Den Reminder holen

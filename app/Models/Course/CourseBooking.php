@@ -44,4 +44,17 @@ class CourseBooking extends Model
             ->where('status', 'refunded')
             ->exists();
     }
+
+    public function isCancelable(): bool
+    {
+        if ($this->bookingSlots->isEmpty()) {
+            return false;
+        }
+
+        return $this->bookingSlots->slot->first()->minParticipantsReminderIsInFuture() 
+            && $this->booking_type==="per_course"
+            && $this->bookingSlots->every(fn ($slot) => $slot->status === 'booked');
+    }
+
+
 }
