@@ -38,7 +38,7 @@ class MembershipConfirmedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'users.membership-confirmed',
+            view: 'emails.users.membership-confirmed',
         );
     }
 
