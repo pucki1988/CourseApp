@@ -4,6 +4,7 @@ namespace App\Services\User;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Events\UserRegistered;
+use App\Events\MembershipConfirmed;
 use Spatie\Permission\Models\Role;
 
 class UserService
@@ -94,6 +95,10 @@ class UserService
             }
         }else{
             $user->syncRoles(['member']);
+
+            if($user->member_requested){
+                event(new MembershipConfirmed($user));
+            }
 
             $user->update([
                 'member_requested' => false,

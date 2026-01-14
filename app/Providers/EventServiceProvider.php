@@ -16,7 +16,8 @@ use App\Listeners\SendManagerNewUserMail;
 use App\Events\UserRegistered;
 use App\Listeners\SendCourseSlotRescheduleMail;
 use App\Events\CourseSlotRescheduled;
-
+use App\Listeners\SendMembershipConfirmedMail;
+use App\Events\MembershipConfirmed;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,9 @@ class EventServiceProvider extends ServiceProvider
             SendWelcomeMail::class,
             SendManagerNewUserMail::class,
         ],
+        MembershipConfirmed::class => [
+            SendMembershipConfirmedMail::class
+        ]
     ];
 
     public function boot()

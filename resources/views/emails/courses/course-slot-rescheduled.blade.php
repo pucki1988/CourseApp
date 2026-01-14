@@ -9,5 +9,8 @@
     </p>
 
 </p>
+<p>
+    Wenn du am neuen Termin verhindert bist, kannst du bis zu 24 Stunden vor dem neuen Termin deine Buchung kostenfrei stornieren.
+</p>
 
 <p>Viele Grüße</p>
