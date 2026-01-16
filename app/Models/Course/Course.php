@@ -30,6 +30,10 @@ class Course extends Model
 
     public function isVisible()
     {
+        if($this->booking_type==="per_slot"){
+            return true;
+        }
+
         $firstSlot = $this->slots()->first();
 
         if (! $firstSlot) {
