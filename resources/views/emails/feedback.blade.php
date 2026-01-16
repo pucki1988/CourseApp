@@ -8,5 +8,5 @@
 <p>{{ $feedbackMessage }}</p>
 
 @if(!empty($feedbackEmail))
-    <p><strong>Absender:</strong> {{ $email }}</p>
+    <p><strong>Absender:</strong> {{ $feedbackEmail }}</p>
 @endif
