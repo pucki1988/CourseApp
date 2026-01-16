@@ -27,4 +27,9 @@ class Course extends Model
     {
         return $this->belongsTo(Coach::class, 'coach_id');
     }
+
+    public function isVisible()
+    {
+        return $this->slots->first()->isInFuture();
+    }
 }

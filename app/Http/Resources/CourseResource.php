@@ -27,6 +27,7 @@ class CourseResource extends JsonResource
             'location' => $this->location,
             'member_discount' => $this->member_discount,
             'display_price' => $this->display_price,
+            'is_visible' => $this->isVisible(),
             // ✅ Slots
             'slots' => $this->slots?->map(function ($slot) {
                 return [
