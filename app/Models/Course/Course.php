@@ -15,7 +15,7 @@ class Course extends Model
 
     public function slots()
     {
-        return $this->hasMany(CourseSlot::class);
+        return $this->hasMany(CourseSlot::class)->orderBy('date')->orderBy('start_time');
     }
 
     public function bookings()
@@ -30,6 +30,12 @@ class Course extends Model
 
     public function isVisible()
     {
-        return $this->slots->first()->isInFuture();
+        $firstSlot = $this->slots()->first();
+
+        if (! $firstSlot) {
+            return false;
+        }
+
+        return $firstSlot->isInFuture();
     }
 }
