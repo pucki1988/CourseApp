@@ -39,7 +39,7 @@ class CourseService
     
 
         if (!empty($filters['coach_id'])) {
-            $query->where('coach_id', $filters['coach_id']);
+            $courses ->where('coach_id', $filters['coach_id']);
         }
 
 
