@@ -10,6 +10,7 @@ use App\Http\Controllers\Course\CourseController;
 use App\Http\Controllers\Course\CourseSlotController;
 use App\Http\Controllers\Course\CourseBookingSlotController;
 use App\Http\Controllers\Webhook\MollieWebhookController;
+use App\Http\Controllers\FeedbackController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
@@ -58,3 +59,5 @@ Route::get('/status', function(){
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->name('webhooks.mollie');
 Route::get('/courses', [CourseController::class, 'index']);
+
+Route::post('/feedback', [FeedbackController::class, 'send']);

@@ -126,6 +126,10 @@ new class extends Component {
                                 <span class="text-gray-500">Betrag</span>
                                 <span>€ {{  $booking->total_price }}</span>
                             </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Status</span>
+                                <span><flux:badge size="sm" color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></span>
+                            </div>
 
                             <div class="flex justify-center mt-1">
                                 
