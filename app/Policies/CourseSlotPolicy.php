@@ -11,14 +11,12 @@ class CourseSlotPolicy
 {
     public function before(User $user, $ability)
     {
-        if ($user->hasRole('admin')) {
-            return true;
-        }
+        
     }
 
     public function create(User $user, $course)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasRole(['manager','admin'])) {
             return true;
         }
         
@@ -27,7 +25,7 @@ class CourseSlotPolicy
 
     public function update(User $user, CourseSlot $courseSlot)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasRole(['manager','admin'])) {
             return true;
         }
 
@@ -35,7 +33,7 @@ class CourseSlotPolicy
 
     public function reschedule(User $user, CourseSlot $courseSlot)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasRole(['manager','admin'])) {
             return $courseSlot->isCancelable();
         }
     }
@@ -53,7 +51,7 @@ class CourseSlotPolicy
             }
 
             //  Manager
-            if ($user->hasRole('manager')) {
+            if ($user->hasRole(['manager','admin'])) {
                 return $this->minParticipantsNotReached($slot);
             }
 
@@ -62,9 +60,6 @@ class CourseSlotPolicy
 
     public function delete(User $user, CourseSlot $slot)
     {
-        if ($user->hasRole('manager')) {
-            #return $slot->bookedSlots()->count() === 0;
-        }
         return false;
     }
 
