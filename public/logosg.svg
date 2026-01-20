@@ -1,4 +1,6 @@
-
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+ "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
 <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
  width="345.000000pt" height="387.000000pt" viewBox="0 0 345.000000 387.000000"
  preserveAspectRatio="xMidYMid meet">
@@ -136,4 +138,3 @@ l-113 -45 -92 36 c-204 81 -439 220 -624 369 -143 116 -332 314 -434 455 l-25
 -38 7 -125 80 -58 49 -108 89 -111 89 -3 0 -7 -3 -10 -8z"/>
 </g>
 </svg>
-
