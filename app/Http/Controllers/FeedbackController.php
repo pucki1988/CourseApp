@@ -16,7 +16,7 @@ class FeedbackController extends Controller
         ]);
 
         Mail::send('emails.feedback', $data, function ($mail) use ($data) {
-            $mail->to(env("MANAGER_MAIL") ?? "aschuster.development@outlook.de")
+            $mail->to(config('mail.manager_mail') ?? "aschuster.development@outlook.de")
                  ->subject('Neues Feedback');
 
             if (!empty($data['feedbackEmail'])) {
