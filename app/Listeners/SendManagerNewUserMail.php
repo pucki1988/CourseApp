@@ -26,7 +26,7 @@ class SendManagerNewUserMail implements ShouldQueue
         $user = $event->user;
 
         // Admin-Mail-Adresse (Config empfohlen!)
-        $adminEmail = env("MANAGER_MAIL") ?? "aschuster.development@outlook.de";
+        $adminEmail = config('mail.manager_mail') ?? "aschuster.development@outlook.de";
 
         Mail::to($adminEmail)->send(
             new ManagerNewUserMail($user)
