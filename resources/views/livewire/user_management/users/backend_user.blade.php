@@ -94,7 +94,7 @@ new class extends Component {
                                 <span class="text-gray-500">Als manager</span>
                                 <span> 
                                 @if($user->hasRole('manager'))               
-                                <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsManager({{ $user->id }})">Ja</flux:button>
+                                <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsManager({{ $user->id }})">Nein</flux:button>
                                 @endif
                                 </span>
                             </div>
