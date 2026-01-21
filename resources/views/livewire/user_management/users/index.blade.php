@@ -40,6 +40,12 @@ new class extends Component {
         $this->loadUsers($userService);
     }
 
+    public function setAsManager(int $userId,UserService $userService): void
+    {
+        $userService->approveManager($userId);
+        $this->loadUsers($userService);
+    }
+
     public function unsetAsMember(int $userId,UserService $userService): void
     {
         $userService->unsetMember($userId);
@@ -84,6 +90,18 @@ new class extends Component {
                                 <span class="text-gray-500">Rolle</span>
                                 <span>@foreach ($user->getRoleNames() as $role)<flux:badge size="sm">{{ $role }}</flux:badge>@endforeach</span>
                             </div>
+
+                            @role(['admin', 'manager'])
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Als manager</span>
+                                <span> 
+                                @if(!$user->hasRole('manager'))               
+                                <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsManager({{ $user->id }})">Ja</flux:button>
+                                @endif
+                                </span>
+                            </div>
+                            @endrole
+
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Mitglied</span>
                                 <span> 

@@ -107,6 +107,30 @@ class UserService
         
     }
 
+    public function approveManager(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+
+        // alte Rolle raus, neue rein
+        if($user->hasAnyRole(['manager','admin']))
+        {
+            return;
+        }
+        
+        $user->assignRole('manager');
+    }
+
+    public function unsetManager(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+
+        if($user->hasAnyRole(['manager']))
+        {
+            $user->removeRole('manager');
+            
+        }
+    }
+
     public function disapproveMember(int $userId): void
     {
         $user = User::findOrFail($userId);
