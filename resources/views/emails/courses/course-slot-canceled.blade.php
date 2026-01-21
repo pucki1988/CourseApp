@@ -13,7 +13,7 @@
 <body>
 <p>Hallo {{ $booking->user->name ?? 'Teilnehmer' }},</p>
 <p>
-    der Termin am <strong>{{ $slot->date->format('d.m.Y') }} | {{ $slot->start_time }}</strong> deines Kurses
+    der Termin am <strong>{{ $slot->date->format('d.m.Y') }} | {{ $slot->start_time->format('H:i') }}</strong> deines Kurses
     <strong>{{ $booking->course->title }}</strong> wurde abgesagt.
 </p>
 
