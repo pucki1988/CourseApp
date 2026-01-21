@@ -25,7 +25,11 @@
                     <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
                 @endrole
-                
+                @role(['admin', 'manager'])
+                <flux:navlist.group class="grid">
+                    <flux:navlist.item icon="users" :href="route('member_management.members.index')" :current="request()->routeIs('member_management.members.index')" wire:navigate>{{ __('Mitgliederverwaltung') }}</flux:navlist.item>
+                </flux:navlist.group>
+                @endrole
             </flux:navlist>
 
 

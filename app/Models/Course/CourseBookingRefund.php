@@ -23,4 +23,6 @@ class CourseBookingRefund extends Model
     {
         return $this->belongsTo(CourseBooking::class, 'course_booking_id');
     }
+
+    
 }

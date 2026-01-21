@@ -11,6 +11,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Course\Coach;
+use App\Models\Member\Member;
 
 class User extends Authenticatable
 {
@@ -74,6 +75,11 @@ class User extends Authenticatable
     public function coach()
     {
         return $this->hasOne(Coach::class);
+    }
+
+    public function members()
+    {
+        return $this->hasMany(Member::class);
     }
 
     public function isCoach(): bool
