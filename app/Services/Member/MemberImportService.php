@@ -73,15 +73,28 @@ class MemberImportService
 
     protected function importNewMembers(array $rows): int
     {
+        $importIds = collect($rows)
+            ->pluck('lID')
+            ->filter()
+            ->values()
+            ->toArray();
+
         // vorhandene IDs einmalig laden → performant
         $existingIds = Member::pluck('external_id')->toArray();
 
         $newRows = array_filter($rows, fn ($row) =>
             !in_array($row['lID'], $existingIds)
         );
+        // Zu löschende IDs
+        $idsToDelete = array_diff($existingIds, $importIds);
         $count=0;
 
-        DB::transaction(function () use ($newRows, &$count) {
+        DB::transaction(function () use ($newRows, $idsToDelete, &$count) {
+            // ❌ Entfernen
+            if (!empty($idsToDelete)) {
+                Member::whereIn('external_id', $idsToDelete)->delete();
+            }
+            
             foreach ($newRows as $row) {
                 Member::create(
                     $this->transform($row)
