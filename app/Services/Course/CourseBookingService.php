@@ -56,6 +56,8 @@ class CourseBookingService
         ]);
     }
 
+    
+
 
     /**
      * Ganze Kursbuchung

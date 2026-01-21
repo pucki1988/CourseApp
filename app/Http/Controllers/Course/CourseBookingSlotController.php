@@ -30,7 +30,12 @@ class CourseBookingSlotController extends Controller
 
         return CourseBookingSlotResource::collection($slots)->resolve();
     }
-   
 
+    public function settlement()
+    {
+        return response()->json(
+            $this->courseBookingSlotService->loadSettlements()
+        );
+    }
     
 }

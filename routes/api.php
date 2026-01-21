@@ -61,3 +61,5 @@ Route::post('/webhooks/mollie', MollieWebhookController::class)
 Route::get('/courses', [CourseController::class, 'index']);
 
 Route::post('/feedback', [FeedbackController::class, 'send']);
+
+Route::get('/settlement', [CourseBookingSlotController::class, 'settlement']);
