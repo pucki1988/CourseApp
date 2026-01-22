@@ -36,8 +36,8 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return config('app.url')
-                . '/reset-password?token=' . $token
-                . '&email=' . urlencode($user->email);
+                . '/reset-password/' . $token
+                . '?email=' . urlencode($user->email);
         });
     }
 }
