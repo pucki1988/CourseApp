@@ -11,11 +11,12 @@ use App\Http\Controllers\Course\CourseSlotController;
 use App\Http\Controllers\Course\CourseBookingSlotController;
 use App\Http\Controllers\Webhook\MollieWebhookController;
 use App\Http\Controllers\FeedbackController;
+use Illuminate\Support\Facades\Password;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
-    Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])->name('qr.checkin');
+    #Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])->name('qr.checkin');
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
@@ -63,3 +64,42 @@ Route::get('/courses', [CourseController::class, 'index']);
 Route::post('/feedback', [FeedbackController::class, 'send']);
 
 Route::get('/settlement', [CourseBookingSlotController::class, 'settlement']);
+
+Route::post('/password/forgot', function (Request $request) {
+    $request->validate(['email' => 'required|email']);
+
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+
+    return response()->json([
+        'status' => __($status)
+    ]);
+});
+
+
+Route::post('/password/reset', function (Request $request) {
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|confirmed|min:8',
+    ]);
+
+    $status = Password::reset(
+        $request->only(
+            'email',
+            'password',
+            'password_confirmation',
+            'token'
+        ),
+        function ($user, $password) {
+            $user->forceFill([
+                'password' => bcrypt($password),
+            ])->save();
+        }
+    );
+
+    return response()->json([
+        'status' => __($status),
+    ]);
+});
