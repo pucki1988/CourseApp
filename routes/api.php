@@ -10,13 +10,14 @@ use App\Http\Controllers\Course\CourseController;
 use App\Http\Controllers\Course\CourseSlotController;
 use App\Http\Controllers\Course\CourseBookingSlotController;
 use App\Http\Controllers\Webhook\MollieWebhookController;
+use App\Http\Controllers\Course\CheckinController;
 use App\Http\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Password;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
-    #Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])->name('qr.checkin');
+    Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])->name('qr.checkin');
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
