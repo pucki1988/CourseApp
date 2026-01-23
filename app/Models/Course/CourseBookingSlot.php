@@ -48,6 +48,7 @@ class CourseBookingSlot extends Model
     {
         return $this->slot->status === 'active'
             && $this->slot->minParticipantsReminderIsInFuture() 
-            && $this->booking->booking_type==="per_slot";
+            && $this->booking->booking_type==="per_slot"
+            && $this->checked_in_at === null;
     }
 }
