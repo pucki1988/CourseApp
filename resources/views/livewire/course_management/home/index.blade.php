@@ -178,7 +178,29 @@ new class extends Component {
                 ->whereIn('status', ['paid', 'partially_refunded']);
             });
 
+            $hasBooking=(clone $baseQuery)
+                ->first();
+
+             if (!$hasBooking) {
+
+                $bookingSlotRefunded = $this->activeSlot
+                    ->bookingSlots()
+                    ->whereHas('booking', function ($q) use ($userId) {
+                        $q->where('user_id', $userId)
+                        ->where('status', 'refunded');
+                    })
+                    ->first();
+
+                if($bookingSlotRefunded){
+                    throw new \Exception('Termin wurde zurückerstattet');
+                }
+                
+                throw new \Exception('Keine gültige Buchung für diesen Termin');
+            }
+
+             
             $alreadyCheckedIn = (clone $baseQuery)
+                ->where('status', 'booked')
                 ->whereNotNull('checked_in_at')
                 ->exists();
 
@@ -192,6 +214,17 @@ new class extends Component {
                 ->first();
 
             if (!$bookingSlot) {
+
+                $refundedSlot = (clone $baseQuery)
+                ->whereIn('status', ['refunded','refund_failed'])
+                ->whereNull('checked_in_at')
+                ->first();
+
+                if($refundedSlot){
+                    throw new \Exception('Termin wurde zurückerstattet');
+                }
+
+
                 throw new \Exception('Keine gültige Buchung für diesen Termin');
             }
 
