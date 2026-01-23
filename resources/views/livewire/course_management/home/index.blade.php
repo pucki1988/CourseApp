@@ -185,31 +185,27 @@ new class extends Component {
 
              if (!$hasBooking) {
 
-                $bookingSlotRefunded = $this->activeSlot
-                    ->bookingSlots()
-                    ->whereHas('booking', function ($q) use ($userId) {
-                        $q->where('user_id', $userId)
-                        ->where('status', 'refunded');
-                    })
+                $bookingSlotRefunded = (clone $baseQuery)
+                    ->whereIn('status', ['refunded','refund_failed'])
                     ->first();
 
                 if($bookingSlotRefunded){
                     throw new \Exception('Termin wurde zurückerstattet');
                 }
-                
-                throw new \Exception('Keine gültige Buchung für diesen Termin');
-            }
 
-             
-            $alreadyCheckedIn = (clone $baseQuery)
+                $alreadyCheckedIn = (clone $baseQuery)
                 ->where('status', 'booked')
                 ->whereNotNull('checked_in_at')
                 ->exists();
 
-            if ($alreadyCheckedIn) {
-                throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+                if ($alreadyCheckedIn) {
+                    throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+                }
+                
+                throw new \Exception('Buchung wurde vollständig zurückerstattet');
             }
 
+             
             $bookingSlot = (clone $baseQuery)
                 ->where('status', 'booked')
                 ->whereNull('checked_in_at')
