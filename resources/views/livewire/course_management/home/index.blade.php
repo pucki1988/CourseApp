@@ -9,6 +9,8 @@ use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
 use App\Actions\Course\CancelCourseSlotAction;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Models\User;
 
 new class extends Component {
@@ -206,37 +208,52 @@ new class extends Component {
             }
 
              
-            $bookingSlot = (clone $baseQuery)
-                ->where('status', 'booked')
-                ->whereNull('checked_in_at')
-                ->first();
+            try {
 
-            if (!$bookingSlot) {
+                $lock = Cache::lock('qr-scan-user-' . $userId, 5);
 
-                $refundedSlot = (clone $baseQuery)
-                ->whereIn('status', ['refunded','refund_failed'])
-                ->whereNull('checked_in_at')
-                ->first();
-
-                if($refundedSlot){
-                    throw new \Exception('Termin wurde zurückerstattet');
+                if (! $lock->get()) {
+                    return;
                 }
 
+                DB::transaction(function () use ($baseQuery) {
+                    $bookingSlot = (clone $baseQuery)
+                        ->where('status', 'booked')
+                        ->whereNull('checked_in_at')
+                        ->first();
 
-                throw new \Exception('Keine gültige Buchung für diesen Termin');
+                    if (!$bookingSlot) {
+
+                        $refundedSlot = (clone $baseQuery)
+                        ->whereIn('status', ['refunded','refund_failed'])
+                        ->whereNull('checked_in_at')
+                        ->first();
+
+                        if($refundedSlot){
+                            throw new \Exception('Termin wurde zurückerstattet');
+                        }
+
+
+                        throw new \Exception('Keine gültige Buchung für diesen Termin');
+                    }
+
+                    $bookingSlot->update([
+                        'checked_in_at' => now(),
+                    ]);
+                });
+
+                $this->state = 'success';
+                $this->message = 'Check-in erfolgreich';
             }
-
-            $bookingSlot->update([
-                'checked_in_at' => now(),
-            ]);
-
-            $this->state = 'success';
-            $this->message = 'Check-in erfolgreich';
+            finally{
+                optional($lock ?? null)->release();
+            }
 
         } catch (\Throwable $e) {
             $this->state = 'error';
             $this->message = $e->getMessage();
         } finally {
+            
             $this->dispatch('restartScanner');
         }
 
