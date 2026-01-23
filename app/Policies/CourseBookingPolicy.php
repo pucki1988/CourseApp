@@ -54,6 +54,10 @@ class CourseBookingPolicy
                 return false; // Slot gelöscht → Sicherheit
         }
 
+        if($courseBookingSlot->checked_in_at !== null){
+            return false;
+        }
+
         if(!$courseBookingSlot->slot->isInFuture()){
                 return false;
         }
