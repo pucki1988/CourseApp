@@ -202,8 +202,7 @@ new class extends Component {
 
                 if ($alreadyCheckedIn) {
                     // nichts tun – Scan wurde bereits verarbeitet
-                    return;
-                    #throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+                    throw new \Exception('Teilnehmer wurde bereits eingecheckt');
                 }
                 
                 throw new \Exception('Buchung wurde vollständig zurückerstattet');
@@ -450,7 +449,7 @@ new class extends Component {
 
 <script>
 let qrScanner = null;
-
+let scanLocked = false;
 
 function startScanner() {
     if (qrScanner) return; // 🚫 schon aktiv
@@ -461,6 +460,10 @@ function startScanner() {
             { facingMode: "environment" },
             { fps: 10, qrbox: 250 },
             decodedText => {
+
+                if (scanLocked) return;
+
+                scanLocked = true;
                 Livewire.dispatch('qrScanned', {
                     value: decodedText
                 });
@@ -485,7 +488,10 @@ function stopScanner() {
 
 function restartScanner() {
     stopScanner();
-    setTimeout(startScanner, 2500);
+    setTimeout(() => {
+        scanLocked = false;
+        startScanner();
+    }, 2500); // ⏱️ Cooldown
 }
 
 /* Livewire Events */
