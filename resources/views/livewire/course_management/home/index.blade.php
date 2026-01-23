@@ -201,7 +201,9 @@ new class extends Component {
                 ->exists();
 
                 if ($alreadyCheckedIn) {
-                    throw new \Exception('Teilnehmer wurde bereits eingecheckt');
+                    // nichts tun – Scan wurde bereits verarbeitet
+                    return;
+                    #throw new \Exception('Teilnehmer wurde bereits eingecheckt');
                 }
                 
                 throw new \Exception('Buchung wurde vollständig zurückerstattet');
