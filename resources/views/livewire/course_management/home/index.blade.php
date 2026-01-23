@@ -179,7 +179,7 @@ new class extends Component {
             });
 
             $hasBooking=(clone $baseQuery)
-                ->whereNotNull('checked_in_at')
+                ->whereNull('checked_in_at')
                 ->first();
 
              if (!$hasBooking) {
