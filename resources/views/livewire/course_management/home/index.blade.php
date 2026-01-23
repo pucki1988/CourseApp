@@ -220,6 +220,8 @@ new class extends Component {
                     $bookingSlot = (clone $baseQuery)
                         ->where('status', 'booked')
                         ->whereNull('checked_in_at')
+                        ->orderBy('created_at')
+                        ->lockForUpdate()
                         ->first();
 
                     if (!$bookingSlot) {
