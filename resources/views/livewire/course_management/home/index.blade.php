@@ -179,6 +179,7 @@ new class extends Component {
             });
 
             $hasBooking=(clone $baseQuery)
+                ->where('status', 'booked')
                 ->whereNull('checked_in_at')
                 ->first();
 
