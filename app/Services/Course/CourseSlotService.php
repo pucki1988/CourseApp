@@ -72,16 +72,16 @@ class CourseSlotService
         $user=auth()->user();
 
         if ($user->hasAnyRole(['user', 'member'])) {
-        $query->whereHas('bookings', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        });
+            $query->whereHas('bookings', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
         }
 
         return $query->get();
     }
 
 
-    public function listAllBookedSlots(array $filters = [])
+    public function listAllBookedSlotsBackend(array $filters = [])
     {
         //Nur Slots wo mindestens 1 Buchung vorhanden ist und mindestens 1 BookingSlot noch nicht eingecheckt
         $query = CourseSlot::query()
@@ -115,17 +115,20 @@ class CourseSlotService
         ->orderBy('date')
         ->orderBy('start_time');
 
+
         $user=auth()->user();
-        $coachId = $user->coach?->id;
 
-        if ($coachId) {
-            $query->whereHas('course', function ($q) use ($coachId) {
-                $q->where('coach_id', $coachId);
-            });
+        if ($user->hasAnyRole(['admin', 'manager'])) {
+            return $query->get();
         }
+            $coachId = $user->coach?->id;
 
-    
-        return $query->get();
+            if ($coachId) {
+                $query->whereHas('course', function ($q) use ($coachId) {
+                    $q->where('coach_id', $coachId);
+                });
+            }    
+            return $query->get();
     }
 
 

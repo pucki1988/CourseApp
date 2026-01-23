@@ -50,7 +50,7 @@ new class extends Component {
         'username'  => $this->username,
         ], fn ($value) => $value !== null);
 
-    $this->bookings = $service->listBookings($filters);
+        $this->bookings = $service->listBookings($filters);
     }
 
     public function loadBookings(CourseBookingService $service)

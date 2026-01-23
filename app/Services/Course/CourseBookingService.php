@@ -207,6 +207,19 @@ class CourseBookingService
         return $query->get();
     }
 
+    public function listBookingsFrontend()
+    {
+        $query=CourseBooking::with(['course','bookingSlots.slot','user']);
+        
+        $query->where('user_id', auth()->user()->id);
+        
+        $query->whereIn('payment_status',['pending','open','paid']);
+
+        $query->orderByDesc('created_at');
+
+        return $query->get();
+    }
+
     /**
      * Automatische Status-Neuberechnung
      */

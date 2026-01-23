@@ -38,7 +38,7 @@ class CourseBookingController extends Controller
 
     public function index()
     {
-        $bookings = $this->courseBookingService->listBookings();
+        $bookings = $this->courseBookingService->listBookingsFrontend();
         // Collection direkt zurückgeben, ohne "data" Wrapper
         return CourseBookingResource::collection($bookings)->resolve();
         

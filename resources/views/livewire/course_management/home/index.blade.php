@@ -101,7 +101,7 @@ new class extends Component {
             'status' => 'active'
         ];
 
-        $this->slots = $service->listAllBookedSlots($filters);
+        $this->slots = $service->listAllBookedSlotsBackend($filters);
     }
 
     public function hideCallout()
