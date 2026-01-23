@@ -47,7 +47,7 @@ class CoursePolicy
         if ($user->hasRole('manager')) {
             // Prüfen: gibt es Buchungen auf Slots?
             foreach ($course->slots as $slot) {
-                if ($slot->bookings()->count() > 0) {
+                if ($slot->bookedSlots->count() > 0) {
                     return false; // Kurs darf nicht gelöscht werden
                 }
             }

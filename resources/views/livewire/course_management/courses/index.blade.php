@@ -14,6 +14,8 @@ new class extends Component {
     public $coachId = null;
     public $perPage = 10;
 
+    public ?Course $courseToDelete = null;
+
     public ?string $message = null;
     public string $state = 'idle'; // idle, success, error
 
@@ -78,6 +80,19 @@ new class extends Component {
             );
     }
 
+    public function confirmDelete(Course $course)
+    {
+        $this->courseToDelete = $course;
+        Flux::modal('delete')->show();
+    }
+
+    public function delete(CourseService $service)
+    {
+        $service->deleteCourse($this->courseToDelete);
+        Flux::modal('delete')->close();
+        $this->loadCourses($service);
+    }
+
 };
 ?>
 
@@ -138,6 +153,11 @@ new class extends Component {
                             <div class="flex justify-center mt-1">
                                 @can('update', $course)
                                 <flux:button size="xs" href="{{ route('course_management.courses.show', $course) }}">Details</flux:button>
+                                @can('delete', $course)
+                                <flux:button size="xs" variant="danger"  wire:click="confirmDelete({{ $course }})">Löschen</flux:button>
+                                @endcan
+                                
+                                
                                 @endcan
                             </div>
                         </div>
@@ -200,7 +220,33 @@ new class extends Component {
             </div>
             </form>
         </div>
-    </flux:modal>    
+    </flux:modal>
+    
+    <flux:modal name="delete" >
+        <flux:heading size="lg">Kurs endgültig löschen</flux:heading>
+        
+        
+        <flux:text class="mt-2">    
+            Bist du sicher, dass du den Kurs engültig löschen möchtest? 
+        </flux:text>
+        <flux:callout variant="warning" class="my-2" icon="exclamation-circle" heading="Die Aktion kann nicht mehr rückgängig gemacht werden" />
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="danger"
+                wire:click="delete"
+            >
+                Löschen
+            </flux:button>
+        </div>
+        </flux:modal>
         
     </x-courses.layout>
 </section>
