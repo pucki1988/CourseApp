@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use App\Http\Controllers\Course\CheckinController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -12,7 +13,9 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-
+Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])
+    ->name('qr.checkin')
+    ->middleware('signed');
 
 
 Route::middleware(['auth'])->group(function () {

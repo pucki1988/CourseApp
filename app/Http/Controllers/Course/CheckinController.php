@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course\Course;
 use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseBookingSlot;
+use App\Models\Course\CourseSlot;
 
 class CheckinController extends Controller
 {
