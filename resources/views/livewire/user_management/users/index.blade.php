@@ -11,6 +11,7 @@ new class extends Component {
     public $users;
     public $roles;
     public $username = '';
+    public int $userId;
     
 
     public function mount(UserService $userService)
@@ -34,25 +35,44 @@ new class extends Component {
     }
 
    
-    public function setAsMember(int $userId,UserService $userService): void
+    public function setAsMember(UserService $userService): void
     {
-        $userService->approveMember($userId);
+        $userService->approveMember($this->userId);
         $this->loadUsers($userService);
+        Flux::modal('setMember')->close();
     }
 
-    public function setAsManager(int $userId,UserService $userService): void
+    public function setAsManager(UserService $userService): void
     {
-        $userService->approveManager($userId);
+        $userService->approveManager($this->userId);
         $this->loadUsers($userService);
+        Flux::modal('setManager')->close();
     }
 
-    public function unsetAsMember(int $userId,UserService $userService): void
+    public function unsetAsMember(UserService $userService): void
     {
-        $userService->unsetMember($userId);
+        $userService->unsetMember($this->userId);
         $this->loadUsers($userService);
+        Flux::modal('unsetMember')->close();
     }
 
-    
+    public function modalSetAsMember(int $userId)
+    {
+        $this->userId = $userId;
+        Flux::modal('setMember')->show();
+    }
+
+    public function modalUnsetAsMember(int $userId)
+    {
+        $this->userId = $userId;
+        Flux::modal('unsetMember')->show();
+    }
+
+    public function modalSetAsManager(int $userId)
+    {
+        $this->userId = $userId;
+        Flux::modal('setManager')->show();
+    }
 
 };
 ?>
@@ -96,7 +116,7 @@ new class extends Component {
                                 <span class="text-gray-500">Als manager</span>
                                 <span> 
                                 @if(!$user->hasRole('manager'))               
-                                <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsManager({{ $user->id }})">Ja</flux:button>
+                                <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="modalSetAsManager({{ $user->id }})">Ja</flux:button>
                                 @endif
                                 </span>
                             </div>
@@ -106,9 +126,9 @@ new class extends Component {
                                 <span class="text-gray-500">Mitglied</span>
                                 <span> 
                                     @if($user->hasRole('member'))
-                    <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsMember({{ $user->id }})">Nein</flux:button>
+                    <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="modalUnsetAsMember({{ $user->id }})">Nein</flux:button>
                     @else
-                    <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsMember({{ $user->id }})">Ja</flux:button>
+                    <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="modalSetAsMember({{ $user->id }})">Ja</flux:button>
                     @endif</span>
                             </div>
                         </div>
@@ -116,5 +136,73 @@ new class extends Component {
     @endforeach
     </div>
     </x-users.layout>
+<flux:modal name="setMember" >
+        <flux:heading size="lg">Mitgliedschaft</flux:heading>
 
+        <flux:text class="mt-2">
+            Soll der User als Mitglied gesetzt werden?
+        </flux:text>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="primary" color="green"
+                wire:click="setAsMember"
+            >
+                Ja
+            </flux:button>
+        </div>
+    </flux:modal>
+    <flux:modal name="unsetMember" >
+        <flux:heading size="lg">Mitgliedschaft</flux:heading>
+
+        <flux:text class="mt-2">
+            Soll die Mitgliedschaft des Users entfernt werden?
+        </flux:text>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="danger" 
+                wire:click="unsetAsMember"
+            >
+                Ja
+            </flux:button>
+        </div>
+    </flux:modal>
+    <flux:modal name="setManager" >
+        <flux:heading size="lg">Manager</flux:heading>
+
+        <flux:text class="mt-2">
+            Soll der User als Manager gesetzt werden?
+        </flux:text>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="primary" color="green"
+                wire:click="setAsManager"
+            >
+                Ja
+            </flux:button>
+        </div>
+    </flux:modal>
 </section>
