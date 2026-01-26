@@ -68,19 +68,19 @@ class CourseBookingSlotService
     public function loadSettlements()
     {
         $slots = CourseSlot::with(['course.coach'])
-    ->whereDate('date', '<', today()) // nur Slots in der Vergangenheit
-    ->whereHas('bookingSlots', fn ($q) =>
+        #->whereDate('date', '<', today()) // nur Slots in der Vergangenheit
+        ->whereHas('bookingSlots', fn ($q) =>
         $q->where('status', 'booked')
-    )
-    ->withCount([
-        'bookingSlots as bookings_count' => fn ($q) =>
-            $q->where('status', 'booked')
-    ])
-    ->get()
-    ->map(function ($slot) {
-        $slot->revenue =  $slot->bookingSlots->where('status', 'booked')->sum('price') ?? 0;
-        return $slot;
-    });
+        )
+        ->withCount([
+            'bookingSlots as bookings_count' => fn ($q) =>
+                $q->where('status', 'booked')
+        ])
+        ->get()
+        ->map(function ($slot) {
+            $slot->revenue =  $slot->bookingSlots->where('status', 'booked')->sum('price') ?? 0;
+            return $slot;
+        });
 
         return $slots;
     }
