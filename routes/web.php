@@ -18,10 +18,12 @@ Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])
     ->middleware('signed');
 
 
+
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-    
+     Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
     
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/password', 'settings.password')->name('user-password.edit');
@@ -55,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
     
         Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
     
-        Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
+       
     });
    
 });
