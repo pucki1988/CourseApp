@@ -8,6 +8,7 @@ use App\Models\Course\Coach;
 new class extends Component {
 
     public $slots;
+    public int $slotId;
 
     public function mount(CourseBookingSlotService $courseBookingSlotService)
     {
@@ -17,6 +18,17 @@ new class extends Component {
     public function loadSlots(CourseBookingSlotService $service)
     {
         $this->slots = $service->loadSettlements();
+    }
+
+    public function openSettlementModal(int $slotId)
+    {
+        $this->slotId=$slotId;
+        Flux::modal('settlementModal')->show();
+    }
+
+    public function createSettlement()
+    {
+        Flux::modal('settlementModal')->close();
     }
 
 };
@@ -79,8 +91,39 @@ new class extends Component {
                             </div>
                             
                         </div>
+                         @role(['admin', 'manager'])
+                        <div class="flex justify-end mt-1">
+                               
+                                <flux:button size="xs" variant="primary" wire:click="openSettlementModal({{ $slot->id }})">Abrechnen</flux:button>
+                                
+                        </div>
+                        @endrole
             </div>
             @endforeach
 </div>
+
+<flux:modal name="settlementModal" >
+        <flux:heading size="lg">Termin abrechnen</flux:heading>
+
+        <flux:text class="mt-2">
+            Soll der Termin abgerechnet werden?
+        </flux:text>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+            <flux:button
+                variant="ghost"
+            >
+                Abbrechen
+            </flux:button>
+            </flux:modal.close>
+            <flux:button
+                variant="primary" color="green"
+                wire:click="createSettlement"
+            >
+                Ja
+            </flux:button>
+        </div>
+    </flux:modal>
     </x-courses.layout>
 </section>

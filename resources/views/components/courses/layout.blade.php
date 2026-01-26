@@ -65,7 +65,7 @@
                 class="h-14"
             >
                 <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
-                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <flux:icon.document-currency-euro class="h-5 w-5 md:hidden" />
                 <span class="md:inline">{{ __('Abrechnung') }}</span>
                 </span>
             </flux:navlist.item>
