@@ -47,6 +47,7 @@ new class extends Component {
                                 <span class="text-gray-500">Min / Max</span>
                                 <span>{{ $slot->min_participants }} / {{ $slot->course->capacity }}</span>
                             </div>
+                            @role(['admin', 'manager'])
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Einnamen</span>
                                 <span>{{ $slot->revenue }} €</span>
@@ -59,9 +60,18 @@ new class extends Component {
                                 <span class="text-gray-500">Gesamt</span>
                                 <span>{{ $slot->revenue - ($slot->bookings_count * 0.5) }} €</span>
                             </div>
+                            @endrole
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Eingecheckt</span>
                                 <span>{{ $slot->checked_in_users }}</span>
+                            </div>
+                             <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Zahlung an Trainer</span>
+                                @if($slot->bookings_count >= $slot->min_participants)
+                                <span>{{ ($slot->min_participants * ($slot->price - $slot->course->member_discount)) + ((($slot->checked_in_users - $slot->min_participants) /2) * $slot->price)  }} €</span>
+                                @else
+                                 <span>{{ ($slot->bookings_count * ($slot->price - $slot->course->member_discount)) + ((($slot->checked_in_users) /2) * $slot->price)  }} €</span>
+                                @endif
                             </div>
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Trainer</span>

@@ -55,7 +55,9 @@
                 <span class="md:inline">{{ __('Trainer') }}</span>
                 </span>
             </flux:navlist.item>
+            @endrole
 
+            @if(auth()->user()->canCheckIn())
             <flux:navlist.item
                 :href="route('course_management.settlement.index')"
                 :current="request()->routeIs('course_management.settlement.index')"
@@ -67,8 +69,8 @@
                 <span class="md:inline">{{ __('Abrechnung') }}</span>
                 </span>
             </flux:navlist.item>
-            
-        @endrole
+            @endif
+        
     </flux:navlist>
 </div>
 
