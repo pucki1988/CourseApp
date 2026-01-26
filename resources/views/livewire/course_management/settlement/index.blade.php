@@ -70,7 +70,7 @@ new class extends Component {
                                 @if($slot->bookings_count >= $slot->min_participants)
                                 <span>{{ ($slot->min_participants * ($slot->price - $slot->course->member_discount)) + ((($slot->bookings_count - $slot->min_participants) /2) * ($slot->price -$slot->course->member_discount))  }} €</span>
                                 @else
-                                 <span>{{ ($slot->bookings_count * ($slot->price - $slot->course->member_discount)) + (($slot->bookings_count /2) * ($slot->price-$slot->course->member_discount))  }} €</span>
+                                 <span>{{ ($slot->bookings_count * ($slot->price - $slot->course->member_discount))  }} €</span>
                                 @endif
                             </div>
                             <div class="flex justify-between mt-1">
