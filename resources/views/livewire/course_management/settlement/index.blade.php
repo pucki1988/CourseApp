@@ -60,6 +60,10 @@ new class extends Component {
                                 <span>{{ $slot->revenue - ($slot->bookings_count * 0.5) }} €</span>
                             </div>
                             <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Eingecheckt</span>
+                                <span>{{ $slot->checked_in_users }}</span>
+                            </div>
+                            <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Trainer</span>
                                 <span>{{ $slot->course?->coach?->name }} </span>
                             </div>
