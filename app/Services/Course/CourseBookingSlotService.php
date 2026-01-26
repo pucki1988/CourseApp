@@ -74,11 +74,12 @@ class CourseBookingSlotService
         )
         ->withCount([
             'bookingSlots as bookings_count' => fn ($q) =>
-                $q->where('status', 'booked')
+                $q->where('status', 'booked')->whereNotNull('checked_in_at')
         ])
+        ->orderByDesc('id')
         ->get()
         ->map(function ($slot) {
-            $slot->revenue =  $slot->bookingSlots->where('status', 'booked')->sum('price') ?? 0;
+            $slot->revenue =  $slot->bookingSlots->where('status', 'booked')->whereNotNull('checked_in_at')->sum('price') ?? 0;
             return $slot;
         });
 

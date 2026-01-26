@@ -45,8 +45,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
         Volt::route('/bookings', 'course_management.bookings.index')->name('course_management.bookings.index');
         Volt::route('/bookings/{booking}', 'course_management.bookings.show')->name('course_management.bookings.show');
-    
-    
+
         Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
 
@@ -54,8 +53,9 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
     
-         Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
+        Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
     
+        Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
     });
    
 });
