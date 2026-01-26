@@ -32,8 +32,14 @@ class CourseBookingController extends Controller
 
     public function store(Request $request, Course $course,CreateBookingAction $action)
     {
-        $data = $action->execute($request,$course);
-        return response()->json($data);
+        try {
+            $data = $action->execute($request,$course);
+            return response()->json($data);
+        }catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(), // 👈 HIER
+            ], 422);
+        }
     }
 
     public function index()
