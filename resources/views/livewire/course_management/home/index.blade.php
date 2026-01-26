@@ -305,9 +305,20 @@ new class extends Component {
                     <flux:badge icon="calendar">{{ $slot->date->format('d.m.Y') }}</flux:badge> 
                     <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
+                    @role(['admin', 'manager'])
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
+                    @endrole
+
+                    @unlessrole(['admin', 'manager'])
+                    <flux:text class="mt-2">
+                    Zusagen <flux:badge icon="information-circle">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
+                    </flux:text>
+                    @endunlessrole
+
+                    
+                    
                     
                     <flux:text class="mt-2">
                     Coach<flux:badge>
