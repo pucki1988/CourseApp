@@ -18,6 +18,9 @@ use App\Listeners\SendCourseSlotRescheduleMail;
 use App\Events\CourseSlotRescheduled;
 use App\Listeners\SendMembershipConfirmedMail;
 use App\Events\MembershipConfirmed;
+use App\Listeners\SendCourseBookingPaidMail;
+use App\Events\CourseBookingPaid;
+
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -44,6 +47,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         MembershipConfirmed::class => [
             SendMembershipConfirmedMail::class
+        ],
+        CourseBookingPaid::class => [
+            SendCourseBookingPaidMail::class
         ]
     ];
 

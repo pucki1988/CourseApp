@@ -3,6 +3,7 @@
 namespace App\Services\Bookings;
 
 use App\Models\Course\CourseBooking;
+use App\Events\CourseBookingPaid;
 
 class BookingPaymentService
 {
@@ -20,9 +21,12 @@ class BookingPaymentService
             return; // idempotent
         }
 
+    
         $booking->update([
             'payment_status' => 'paid'
         ]);
+
+        event(new CourseBookingPaid($booking));
     }
 
     public function markFailed(CourseBooking $booking): void
