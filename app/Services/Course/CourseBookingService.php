@@ -70,7 +70,7 @@ class CourseBookingService
 
         if($bookingCount >= $course->capacity)
         {
-            return;
+            throw new \Exception("Kurs {$course->title} ist ausgebucht");
         }
 
             $user=auth('sanctum')->user();
