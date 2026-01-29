@@ -60,19 +60,13 @@ new class extends Component {
 
     <x-courses.layout :heading="__('Trainer')" :subheading="__('Trainer')">
     @can('create', Coach::class)
-    <div class="text-end">
-    <flux:dropdown>
-        <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>
-        <flux:menu>
-            <flux:modal.trigger name="coach">
-                <flux:menu.item icon="plus">Neuen Trainer erstellen</flux:menu.item>
-            </flux:modal.trigger>
-        </flux:menu>
-    </flux:dropdown>
-    </div>    
+
+    <div class="flex justify-end">
+                <flux:modal.trigger name="coach">
+                    <flux:button icon="plus">Neuen Trainer </flux:button>
+                </flux:modal.trigger>
+            </div>
     @endcan
-    
-        
 
      <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @foreach($coaches as $coach)

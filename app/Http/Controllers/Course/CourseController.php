@@ -15,10 +15,23 @@ class CourseController extends Controller
         $this->authorize('create', Course::class);
 
         $course = $service->createCourse($request->all());
+        
+        // Sportarten speichern wenn vorhanden
+        if ($request->has('sport_type_ids') && is_array($request->input('sport_type_ids'))) {
+            $course->sportTypes()->sync($request->input('sport_type_ids'));
+        }
+        
+        // Ausrüstung speichern wenn vorhanden
+        if ($request->has('equipment_item_ids') && is_array($request->input('equipment_item_ids'))) {
+            $course->equipmentItems()->sync($request->input('equipment_item_ids'));
+        }
+        
+        // Lade die Relations für Response
+        $course->load(['sportTypes', 'equipmentItems', 'slots', 'coach']);
 
         return response()->json([
             'message' => 'Kurs erstellt',
-            'course' => $course
+            'course' => new CourseResource($course)
         ]);
     }
 
@@ -29,6 +42,9 @@ class CourseController extends Controller
     {
         #$this->authorize('viewAny', Course::class);
         $courses = $service->listCourses($request->only(['coach_id', 'booking_type']));
+        
+        // Lade die neuen Relations
+        $courses->load(['sportTypes', 'equipmentItems']);
 
         return CourseResource::collection($courses)->resolve();
         
@@ -39,7 +55,8 @@ class CourseController extends Controller
      */
     public function show(Course $course, CourseService $service)
     {
-        return response()->json($service->loadCourse($course));
+        $course = $service->loadCourse($course);
+        return response()->json(new CourseResource($course));
     }
 
 

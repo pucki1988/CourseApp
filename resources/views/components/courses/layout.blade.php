@@ -55,6 +55,30 @@
                 <span class="md:inline">{{ __('Trainer') }}</span>
                 </span>
             </flux:navlist.item>
+
+            <flux:navlist.item
+                :href="route('course_management.settings.sport-types')"
+                :current="request()->routeIs('course_management.settings.sport-types')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.tag class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Sportarten') }}</span>
+                </span>
+            </flux:navlist.item>
+
+            <flux:navlist.item
+                :href="route('course_management.settings.equipment-items')"
+                :current="request()->routeIs('course_management.settings.equipment-items')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.wrench-screwdriver class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Ausrüstung') }}</span>
+                </span>
+            </flux:navlist.item>
             @endrole
 
             @if(auth()->user()->canCheckIn())

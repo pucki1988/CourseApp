@@ -4,12 +4,16 @@ use Livewire\Volt\Component;
 use App\Services\Course\CourseService;
 use App\Services\Course\CoachService;
 use App\Models\Course\Course;
+use App\Models\Course\SportType;
+use App\Models\Course\EquipmentItem;
 use App\Models\User;
 
 new class extends Component {
 
     public $courses;
     public $coaches;
+    public $sportTypes;
+    public $equipmentItems;
     public $search = '';
     public $coachId = null;
     public $perPage = 10;
@@ -20,13 +24,17 @@ new class extends Component {
     public string $state = 'idle'; // idle, success, error
 
    public array $newCourse;
+   public array $selectedSportTypes = [];
+   public array $selectedEquipmentItems = [];
 
-    public function mount(CourseService $service,CoachService $coachService)
+    public function mount(CourseService $service, CoachService $coachService)
     {
         $this->authorize('viewAny', Course::class);
         $this->initializeNewCourse();
         $this->loadCourses($service);
         $this->loadCoaches($coachService);
+        $this->loadSportTypes();
+        $this->loadEquipmentItems();
     }
 
     private function initializeNewCourse(){
@@ -38,8 +46,21 @@ new class extends Component {
             'capacity' => null,
             'coach_id' => null,
             'location' => '',
-            'member_discount' => null
+            'member_discount' => null,
+            'difficulty_level' => null
         ];
+        $this->selectedSportTypes = [];
+        $this->selectedEquipmentItems = [];
+    }
+
+    public function loadSportTypes()
+    {
+        $this->sportTypes = SportType::all();
+    }
+
+    public function loadEquipmentItems()
+    {
+        $this->equipmentItems = EquipmentItem::all();
     }
 
     public function updated($property, CourseService $service)
@@ -68,6 +89,16 @@ new class extends Component {
     public function createCourse(CourseService $service)
     {
          $course=$service->createCourse($this->newCourse);
+        
+        // Sportarten speichern
+        if (!empty($this->selectedSportTypes)) {
+            $course->sportTypes()->sync($this->selectedSportTypes);
+        }
+        
+        // Equipment speichern
+        if (!empty($this->selectedEquipmentItems)) {
+            $course->equipmentItems()->sync($this->selectedEquipmentItems);
+        }
         
         // Modal schließen
         Flux::modal('course')->close();
@@ -214,7 +245,46 @@ new class extends Component {
 
             <flux:input wire:model="newCourse.member_discount" label="Mitglieder Rabatt" step="0.01" type="number" />
 
-            <div class="flex">
+            <flux:field>
+            <flux:label>Schwierigkeitsgrad</flux:label>
+            <flux:select wire:model="newCourse.difficulty_level" placeholder="Wähle den Schwierigkeitsgrad">
+                <flux:select.option value="">Kein Schwierigkeitsgrad</flux:select.option>
+                <flux:select.option value="beginner">Anfänger</flux:select.option>
+                <flux:select.option value="intermediate">Fortgeschrittene</flux:select.option>
+                <flux:select.option value="advanced">Fortgeschrittene+</flux:select.option>
+                <flux:select.option value="expert">Experte</flux:select.option>
+            </flux:select>
+            </flux:field>
+
+            <flux:field>
+            <flux:label>Sportarten</flux:label>
+            <div class="space-y-2">
+                @foreach($sportTypes as $sport)
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" 
+                               wire:model="selectedSportTypes" 
+                               value="{{ $sport->id }}"
+                               class="rounded" />
+                        <span>{{ $sport->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            </flux:field>
+
+            <flux:field>
+            <flux:label>Benötigte Ausrüstung</flux:label>
+            <div class="space-y-2">
+                @foreach($equipmentItems as $equipment)
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" 
+                               wire:model="selectedEquipmentItems" 
+                               value="{{ $equipment->id }}"
+                               class="rounded" />
+                        <span>{{ $equipment->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            </flux:field>
                 <flux:spacer />
                 <flux:button type="submit" variant="primary">Kurs erstellen</flux:button>
             </div>

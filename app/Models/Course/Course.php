@@ -8,10 +8,20 @@ use App\Models\Course\Coach;
 class Course extends Model
 {
 
-    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location','member_discount'];
+    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location','member_discount','difficulty_level'];
     protected $casts = [
         'member_discount' => 'decimal:2',
     ];
+
+    public function sportTypes()
+    {
+        return $this->belongsToMany(\App\Models\Course\SportType::class, 'course_sport_type');
+    }
+
+    public function equipmentItems()
+    {
+        return $this->belongsToMany(\App\Models\Course\EquipmentItem::class, 'course_equipment');
+    }
 
     public function slots()
     {

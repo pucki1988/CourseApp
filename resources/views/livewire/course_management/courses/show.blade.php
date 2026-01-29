@@ -227,6 +227,62 @@ new class extends Component {
             @endif
             
             </div>
+
+            <div class="grid auto-rows-min gap-4 xl:grid-cols-3 mt-4">
+                <flux:field>
+                <flux:label>Schwierigkeitsgrad</flux:label>
+                <div class="text-sm text-gray-700">
+                    @if($course->difficulty_level)
+                        @switch($course->difficulty_level)
+                            @case('beginner')
+                                Anfänger
+                                @break
+                            @case('intermediate')
+                                Fortgeschrittene
+                                @break
+                            @case('advanced')
+                                Fortgeschrittene+
+                                @break
+                            @case('expert')
+                                Experte
+                                @break
+                        @endswitch
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </div>
+                </flux:field>
+
+                <flux:field>
+                <flux:label>Sportarten</flux:label>
+                <div class="text-sm text-gray-700">
+                    @if($course->sportTypes->count() > 0)
+                        <div class="space-y-1">
+                            @foreach($course->sportTypes as $sport)
+                                <div class="badge badge-sm badge-primary">{{ $sport->name }}</div>
+                            @endforeach
+                        </div>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </div>
+                </flux:field>
+
+                <flux:field>
+                <flux:label>Benötigte Ausrüstung</flux:label>
+                <div class="text-sm text-gray-700">
+                    @if($course->equipmentItems->count() > 0)
+                        <div class="space-y-1">
+                            @foreach($course->equipmentItems as $equipment)
+                                <div class="badge badge-sm badge-info">{{ $equipment->name }}</div>
+                            @endforeach
+                        </div>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </div>
+                </flux:field>
+            </div>
             </div>
             <div class="my-3">
             <flux:dropdown>

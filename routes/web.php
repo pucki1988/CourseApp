@@ -51,6 +51,9 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
 
+        Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
+        Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
+
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
         Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');

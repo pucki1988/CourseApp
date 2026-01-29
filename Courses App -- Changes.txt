@@ -2,7 +2,7 @@ ToDo
 
 Kurs / SLot
 e Slot verschieben oder absagen
-+ E-Mail beim absagen oder verschieben
+e E-Mail beim absagen oder verschieben
 e Wenn schon Buchungen auf Slots dann löschen nicht mehr möglich
 e Wenn Mindestteilnehmer erreicht dann absagen auch nicht mehr möglich nur verschieben
 e Mindestteilnehmer je Slot 
@@ -12,7 +12,11 @@ e Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermitt
 e Bei "all" Buchungen ist das absagen einzelner Slots nicht möglich. Nur verschieben.
 e Check In in Home Ansicht integrieren.
 o Mitglieder exklusiv Kurse 
-
+o Warteliste 
+o Sportarten
+o Schwierigkeitsgrad / Level
+o Veranstaltungsort mit Anfahrt
+o Für jemand anderen buchen
 
 Buchungen
 e Was passiert beim absagen oder verschieben mit der Buchung?
@@ -23,12 +27,12 @@ e Zahlungsabwicklungen
 e Bei "all" Buchungen ist das stornieren einzelner Slots nicht möglich.
 
 Adminbereich
-+ Useransicht. Rollen ändern
+e Useransicht. Rollen ändern
 
 
 Preislogik
-+ Mitglieder reduziert
-+ Endpreis erst nach Login Sichtbar
+e Mitglieder reduziert
+e Endpreis erst nach Login Sichtbar
 
 
 e Course Booking Slots Pricefeld einfügen? Und Startdatum des Slots? Wie kann der aktualsiert werden?
@@ -39,7 +43,7 @@ e Zahlung auf Course Booking Slot oder weiter auf Course Booking (Teilrückersta
 
 //API Rückmeldungen
 + Beim Löschen, abfragen oder updaten von nicht mehr existenten Objekten
-+ Coach Daten sollen im Response nur teilweise sichtbar sein
+e Coach Daten sollen im Response nur teilweise sichtbar sein
 
 Future
 o Raumplan 

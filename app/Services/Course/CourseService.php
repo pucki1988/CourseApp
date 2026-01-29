@@ -33,7 +33,7 @@ class CourseService
                 )
                 ->with(['bookedSlots', 'reminders']);
             },
-            'coach'
+            'coach','sportTypes','equipmentItems'
         ])->get();
 
     
@@ -106,9 +106,14 @@ class CourseService
      */
     public function loadCourse(Course $course)
     {
-        return $course->load(['slots' => function ($q) {
-        $q->orderBy('date')->orderBy('start_time');
-        }],'coach');
+        return $course->load([
+            'slots' => function ($q) {
+                $q->orderBy('date')->orderBy('start_time');
+            },
+            'coach',
+            'sportTypes',
+            'equipmentItems'
+        ]);
     }
 
 
@@ -171,6 +176,7 @@ class CourseService
             'coach_id' => 'nullable|exists:coaches,id',
             'location' => 'required|string|max:255',
             'member_discount' =>'nullable|numeric|min:0',
+            'difficulty_level' => ['nullable', Rule::in(['beginner', 'intermediate', 'advanced', 'expert'])],
 
             // Slots optional
             'slots' => 'nullable|array',
@@ -198,6 +204,7 @@ class CourseService
             'capacity' => 'sometimes|nullable|integer|min:1',
             'coach_id' => 'sometimes|nullable|exists:coaches,id',
             'location' => 'sometimes|required|string|max:255',
+            'difficulty_level' => ['sometimes', 'nullable', Rule::in(['beginner', 'intermediate', 'advanced', 'expert'])],
 
             'slots' => 'nullable|array',
             'slots.*.id' => 'nullable|exists:slots,id',

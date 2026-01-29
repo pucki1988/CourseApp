@@ -26,8 +26,21 @@ class CourseResource extends JsonResource
             'updated_at' => $this->updated_at,
             'location' => $this->location,
             'member_discount' => $this->member_discount,
+            'difficulty_level' => $this->difficulty_level,
             'display_price' => $this->display_price,
             'is_visible' => $this->isVisible(),
+            // Sportarten
+            'sport_types' => $this->sportTypes?->map(fn ($sport) => [
+                'id' => $sport->id,
+                'name' => $sport->name,
+                'description' => $sport->description,
+            ]) ?? [],
+            // Ausrüstung
+            'equipment_items' => $this->equipmentItems?->map(fn ($equipment) => [
+                'id' => $equipment->id,
+                'name' => $equipment->name,
+                'description' => $equipment->description,
+            ]) ?? [],
             // ✅ Slots
             'slots' => $this->slots?->map(function ($slot) {
                 return [
