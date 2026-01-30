@@ -130,18 +130,17 @@ new class extends Component {
 <section class="w-full">
     @include('partials.courses-heading')
 
+
     <x-courses.layout :heading="__('Kurse')" :subheading="__('Deine Kurse')">
+        <div class="space-y-6">
     @can('create', Course::class)
-    <div class="text-end">
-    <flux:dropdown>
-        <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>
-        <flux:menu>
+    
+        <div class="flex justify-end">
             <flux:modal.trigger name="course">
-                <flux:menu.item icon="plus">Neuen Kurs erstellen</flux:menu.item>
+                <flux:button icon="plus">Neuer Kurs</flux:button>
             </flux:modal.trigger>
-        </flux:menu>
-    </flux:dropdown>
-    </div>    
+        </div>
+    
     @endcan
     
         
@@ -195,14 +194,14 @@ new class extends Component {
             </div>
             @endforeach
         </div>
-        
+        </div>
 
     <!-- Pagination -->
     <div class="mt-4">
         
     </div>
     
-    <flux:modal name="course" :dismissible="false" flyout>
+    <flux:modal name="course" flyout>
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Neuen Kurs erstellen</flux:heading>

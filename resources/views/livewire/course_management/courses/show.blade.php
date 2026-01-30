@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Volt\Flux;
 use App\Services\Course\CourseService;
 use App\Services\Course\CourseSlotService;
 use App\Models\Course\Course;
@@ -25,11 +26,23 @@ new class extends Component {
     public ?string $message = null;
     public string $state = 'idle'; // idle, success, error
 
+    // Bearbeitungsfelder
+    public bool $isEditing = false;
+    public $sportTypes;
+    public $equipmentItems;
+    public array $editData = [];
+    public array $selectedSportTypes = [];
+    public array $selectedEquipmentItems = [];
+
     public function mount(Course $course, CourseService $service)
     {   
         $this->authorize('update', $course);
 
         $this->course = $course;
+        
+        // Lade Sport-Types und Equipment
+        $this->sportTypes = \App\Models\Course\SportType::all();
+        $this->equipmentItems = \App\Models\Course\EquipmentItem::all();
 
         $this->assistent=[
             "date" => now()->format('Y-m-d'),
@@ -54,6 +67,38 @@ new class extends Component {
         $service = app(CourseService::class);   // Service automatisch aus Container holen
         $this->course = $service->loadCourse($this->course);
         
+    }
+
+    public function startEditing()
+    {
+        $this->isEditing = true;
+        $this->editData = [
+            'title' => $this->course->title,
+            'description' => $this->course->description,
+            'difficulty_level' => $this->course->difficulty_level,
+        ];
+        $this->selectedSportTypes = $this->course->sportTypes->pluck('id')->toArray();
+        $this->selectedEquipmentItems = $this->course->equipmentItems->pluck('id')->toArray();
+    }
+
+    public function cancelEditing()
+    {
+        $this->isEditing = false;
+        $this->editData = [];
+        $this->selectedSportTypes = [];
+        $this->selectedEquipmentItems = [];
+    }
+
+    public function saveCourse(CourseService $service)
+    {
+        $service->updateCourse($this->course, $this->editData);
+        
+        // Speichere Sport-Types und Equipment
+        $this->course->sportTypes()->sync($this->selectedSportTypes);
+        $this->course->equipmentItems()->sync($this->selectedEquipmentItems);
+        
+        $this->isEditing = false;
+        $this->loadCourse();
     }
 
     public function createSlots(CourseSlotService $service)
@@ -181,6 +226,66 @@ new class extends Component {
 
     <x-courses.layout :heading="$course->title" :subheading="__('Deine Kurse')">
     
+            @if(!$isEditing)
+            <div class="flex justify-end mb-4">
+                <flux:button wire:click="startEditing" icon="pencil">Bearbeiten</flux:button>
+            </div>
+            @endif
+
+            @if($isEditing)
+            <div class="space-y-4 mb-4">
+                <flux:input label="Titel" wire:model="editData.title" placeholder="Name des Kurses" type="text" />
+                
+                <flux:textarea label="Beschreibung" wire:model="editData.description" placeholder="Beschreibung des Kurses" rows="2" />
+
+                <flux:field>
+                <flux:label>Schwierigkeitsgrad</flux:label>
+                <flux:select wire:model="editData.difficulty_level" placeholder="Wähle den Schwierigkeitsgrad">
+                    <flux:select.option value="">Kein Schwierigkeitsgrad</flux:select.option>
+                    <flux:select.option value="beginner">Anfänger</flux:select.option>
+                    <flux:select.option value="intermediate">Fortgeschrittene</flux:select.option>
+                    <flux:select.option value="advanced">Fortgeschrittene+</flux:select.option>
+                    <flux:select.option value="expert">Experte</flux:select.option>
+                </flux:select>
+                </flux:field>
+
+                <flux:field>
+                <flux:label>Sportarten</flux:label>
+                <div class="space-y-2">
+                    @foreach($sportTypes as $sport)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" 
+                                   wire:model="selectedSportTypes" 
+                                   value="{{ $sport->id }}"
+                                   class="rounded" />
+                            <span>{{ $sport->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                </flux:field>
+
+                <flux:field>
+                <flux:label>Benötigte Ausrüstung</flux:label>
+                <div class="space-y-2">
+                    @foreach($equipmentItems as $equipment)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" 
+                                   wire:model="selectedEquipmentItems" 
+                                   value="{{ $equipment->id }}"
+                                   class="rounded" />
+                            <span>{{ $equipment->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                </flux:field>
+
+                <div class="flex gap-2">
+                    <flux:spacer />
+                    <flux:button variant="ghost" wire:click="cancelEditing">Abbrechen</flux:button>
+                    <flux:button variant="primary" wire:click="saveCourse">Speichern</flux:button>
+                </div>
+            </div>
+            @else
             <flux:input label="Titel" class="mb-3" placeholder="Name des Kurses" type="text" :value="$course->title" readonly disabled
              />
             
@@ -192,6 +297,7 @@ new class extends Component {
             >
             {{ $course->description }}
             </flux:textarea>
+            @endif
             
 
             <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
@@ -228,6 +334,7 @@ new class extends Component {
             
             </div>
 
+            @if(!$isEditing)
             <div class="grid auto-rows-min gap-4 xl:grid-cols-3 mt-4">
                 <flux:field>
                 <flux:label>Schwierigkeitsgrad</flux:label>
@@ -283,6 +390,7 @@ new class extends Component {
                 </div>
                 </flux:field>
             </div>
+            @endif
             </div>
             <div class="my-3">
             <flux:dropdown>

@@ -3,14 +3,13 @@
 use Livewire\Volt\Component;
 use App\Services\Course\CoachService;
 use App\Models\Course\Coach;
-use App\Models\User;
 
 new class extends Component {
 
     
     public $coaches;
-   
-
+    public $users;
+    public $editingId = null;
 
    public array $newCoach;
 
@@ -18,8 +17,14 @@ new class extends Component {
     {
         #$this->authorize('viewAny', Course::class);
         $this->initializeNewCoach();
+        $this->loadUsers();
 
         $this->loadCoaches($coachService);
+    }
+
+    public function loadUsers()
+    {
+        $this->users = \App\Models\User::all();
     }
 
     private function initializeNewCoach(){
@@ -36,6 +41,10 @@ new class extends Component {
 
     public function createCoach(CoachService $service)
     {
+        // Konvertiere leeren String zu null
+        if (empty($this->newCoach['user_id'])) {
+            $this->newCoach['user_id'] = null;
+        }
         $service->store($this->newCoach);
         
         // Modal schließen
@@ -44,12 +53,48 @@ new class extends Component {
 
          $this->loadCoaches($service);
     }
-    
-    public function deleteCoach(CoachService $service,Coach $coachToDelete)
+
+    public function edit(Coach $coach)
     {
-        $service->delete($coachToDelete);
+        $this->editingId = $coach->id;
+        $this->newCoach = [
+            'name' => $coach->name,
+            'active' => $coach->active,
+            'user_id' => $coach->user_id
+        ];
+        Flux::modal('coach')->show();
+    }
+
+    public function updateCoach(CoachService $service)
+    {
+        // Konvertiere leeren String zu null
+        if (empty($this->newCoach['user_id'])) {
+            $this->newCoach['user_id'] = null;
+        }
+        $coach = Coach::find($this->editingId);
+        $service->update($coach, $this->newCoach);
+        
+        Flux::modal('coach')->close();
+        $this->initializeNewCoach();
+        $this->editingId = null;
+        $this->loadCoaches($service);
+    }
+    
+    public function deleteCoach(CoachService $service, $coachId)
+    {
+        $coach = Coach::find($coachId);
+        if ($coach) {
+            $service->delete($coach);
+        }
 
         $this->loadCoaches($service);
+    }
+
+    public function cancel()
+    {
+        $this->initializeNewCoach();
+        $this->editingId = null;
+        Flux::modal('coach')->close();
     }
 
 };
@@ -58,67 +103,86 @@ new class extends Component {
 <section class="w-full">
     @include('partials.courses-heading')
 
-    <x-courses.layout :heading="__('Trainer')" :subheading="__('Trainer')">
-    @can('create', Coach::class)
-
-    <div class="flex justify-end">
+    <x-courses.layout :heading="__('Trainer')" :subheading="__('Verwalte deine Trainer')">
+        <div class="space-y-6">
+            <div class="flex justify-end">
                 <flux:modal.trigger name="coach">
-                    <flux:button icon="plus">Neuen Trainer </flux:button>
+                    <flux:button icon="plus">Neuen Trainer</flux:button>
                 </flux:modal.trigger>
             </div>
-    @endcan
 
-     <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
-            @foreach($coaches as $coach)
-            <div class="border rounded-lg p-3 bg-white shadow-sm">
-                        <div class="text-sm">
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Name</span>
-                                <span>{{ $coach->name }}</span>
-                            </div>
-
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Status</span>
-                                <span><flux:badge size="sm" color="{{ $coach->active?'green':'red' }}">{{ $coach->active?'aktiv':'inaktiv' }}</flux:badge></span>
-                            </div>
-                            <div class="flex justify-center mt-1">
-                                
-                                <span> @can('update',Coach::class)
-                    <flux:button size="xs" variant="danger" wire:click="deleteCoach({{ $coach }})">Löschen</flux:button>
-                    <flux:button size="xs" href="{{ route('course_management.coaches.show', $coach) }}">Details</flux:button>
-                    @endcan</span>
+            <div class="grid gap-4">
+                @forelse($coaches as $coach)
+                <div class="border rounded-lg p-4 bg-white shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-lg">{{ $coach->name }}</h3>
+                            <div class="mt-2 space-y-2">
+                                <flux:badge color="{{ $coach->active ? 'green' : 'red' }}">
+                                    {{ $coach->active ? 'Aktiv' : 'Inaktiv' }}
+                                </flux:badge>
+                                @if($coach->user_id)
+                                    <div class="text-sm text-gray-600">
+                                        <span class="font-medium">User:</span> {{ $coach->user?->name ?? 'N/A' }}
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-400">
+                                        Kein User zugewiesen
+                                    </div>
+                                @endif
                             </div>
                         </div>
+                        <div class="flex gap-2">
+                            <flux:button size="sm" wire:click="edit({{ $coach->id }})">
+                                Bearbeiten
+                            </flux:button>
+                            <flux:button size="sm" variant="danger" 
+                                wire:click="deleteCoach({{ $coach->id }})" 
+                                onclick="return confirm('Wirklich löschen?')">
+                                Löschen
+                            </flux:button>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-8 text-gray-500">
+                    <p>Keine Trainer vorhanden.</p>
+                </div>
+                @endforelse
             </div>
-
-
-            
-            @endforeach
-</div>
-
+        </div>
+    </x-courses.layout>
 
     
     <flux:modal name="coach" :dismissible="false" flyout>
         <div class="space-y-6">
             <div>
-                <flux:heading size="lg">Neuen Trainer erstellen</flux:heading>
+                <flux:heading size="lg">{{ $editingId ? 'Trainer bearbeiten' : 'Neuen Trainer erstellen' }}</flux:heading>
                 <flux:text class="mt-2"></flux:text>
             </div>
-            <form wire:submit.prevent="createCoach" class="space-y-4">
-            <flux:input label="Name" placeholder="Name des Trainers" type="text" :value="$newCoach['name']"
-    wire:change="$set('newCoach.name', $event.target.value)" />
+            <form wire:submit.prevent="{{ $editingId ? 'updateCoach' : 'createCoach' }}" class="space-y-4">
+            <flux:input label="Name" placeholder="Name des Trainers" type="text" wire:model="newCoach.name" />
+            <flux:field>
+                <flux:label>User zuweisen</flux:label>
+                <flux:select wire:model="newCoach.user_id" placeholder="Wähle einen User oder lasse leer">
+                    <flux:select.option value="">Keinen User</flux:select.option>
+                    @foreach($users as $user)
+                        <flux:select.option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</flux:select.option>
+                    @endforeach
+                </flux:select>
+            </flux:field>
             <flux:field variant="inline">
                 <flux:checkbox wire:model="newCoach.active" />
                 <flux:label>Aktiv</flux:label>
             </flux:field>
            
-            <div class="flex">
+            <div class="flex gap-2">
                 <flux:spacer />
-                <flux:button type="submit" variant="primary">Trainer erstellen</flux:button>
+                <flux:button type="button" variant="ghost" wire:click="cancel">Abbrechen</flux:button>
+                <flux:button type="submit" variant="primary">{{ $editingId ? 'Trainer aktualisieren' : 'Trainer erstellen' }}</flux:button>
             </div>
             </form>
         </div>
-    </flux:modal>    
-        
-    </x-courses.layout>
+    </flux:modal>
+</section>
 </section>

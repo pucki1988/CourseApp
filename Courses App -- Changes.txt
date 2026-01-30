@@ -11,12 +11,13 @@ e Info bei Absagen oder Verschiebungen an Teilnehmer
 e Slot wird verschoben. Muss dass auch in die Buchungen der Teilnehmer übermittelt werden? 
 e Bei "all" Buchungen ist das absagen einzelner Slots nicht möglich. Nur verschieben.
 e Check In in Home Ansicht integrieren.
-o Mitglieder exklusiv Kurse 
-o Warteliste 
-o Sportarten
-o Schwierigkeitsgrad / Level
+e Sportarten
+e Schwierigkeitsgrad / Level
+e Equipment
 o Veranstaltungsort mit Anfahrt
 o Für jemand anderen buchen
+o Mitglieder exklusiv Kurse 
+o Warteliste 
 
 Buchungen
 e Was passiert beim absagen oder verschieben mit der Buchung?

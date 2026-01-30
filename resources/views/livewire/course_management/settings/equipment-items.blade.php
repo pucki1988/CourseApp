@@ -112,14 +112,14 @@ new class extends Component {
                 </div>
                 @empty
                 <div class="text-center py-8 text-gray-500">
-                    <p>Keine Ausrüstung vorhanden. <a href="#" class="text-blue-600 hover:underline" onclick="Flux.modal('equipment-form').show()">Neue erstellen</a></p>
+                    <p>Keine Ausrüstung vorhanden.</p>
                 </div>
                 @endforelse
             </div>
         </div>
     </x-courses.layout>
 
-    <flux:modal name="equipment-form" :dismissible="false">
+    <flux:modal name="equipment-form" flyout>
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">{{ $editingId ? 'Ausrüstung bearbeiten' : 'Neue Ausrüstung erstellen' }}</flux:heading>

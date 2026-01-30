@@ -46,7 +46,7 @@ class CoachService
 
             $coach->update([
                 'user_id'        => $data['user_id'] ?? null,
-                'name'          => $data['title'] ?? null,
+                'name'          => $data['name'] ?? null,
                 'active'         => $data['active'] ?? $coach->active,
             ]);
 
