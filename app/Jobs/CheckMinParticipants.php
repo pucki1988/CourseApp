@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Course\CourseSlot;
+use App\Mail\CourseConfirmedMail;
 
 use App\Actions\Course\CancelCourseSlotAction;
 use App\Actions\Course\CancelCourseAction;
@@ -49,11 +50,20 @@ class CheckMinParticipants implements ShouldQueue
                 }
                 
 
-            } /*else {
-                Mail::to(
-                    $slot->bookings->pluck('email')
-                )->send(new CourseConfirmedMail($slot));
-            }*/
+            } else {
+                $users = $slot->bookingSlots()
+                    ->where('course_booking_slots.status', 'booked')
+                    ->with('booking.user')
+                    ->get()
+                    ->map(fn($bs) => $bs->booking->user)
+                    ->filter(fn($u) => $u && $u->email)
+                    ->unique('id')
+                    ->values();
+
+                foreach ($users as $user) {
+                    Mail::to($user->email)->queue(new CourseConfirmedMail($slot, $user));
+                }
+            }
         });
     }
 }
