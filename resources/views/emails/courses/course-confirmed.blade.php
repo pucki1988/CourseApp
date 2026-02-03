@@ -25,6 +25,10 @@ für den Kurs <strong>{{ $slot->course->title }}</strong> findet statt.</p>
     </ul>
 @endif
 
+<p><strong>Information</strong><br/>
+Im Sportheim stehen dir außerdem <strong>Umkleide- und Duschmöglichkeiten</strong> zur Verfügung.
+</p>
+
 <p>Wir freuen uns auf dich!</p>
 
 <p>Viele Grüße</p>
