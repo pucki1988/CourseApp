@@ -23,7 +23,7 @@ class CourseConfirmedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kurs bestätigt — Mindestteilnehmer erreicht',
+            subject: 'Termin für Kurs bestätigt',
         );
     }
 
