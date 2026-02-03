@@ -33,7 +33,7 @@ Artisan::command('test:course-mail', function () {
     $slot = CourseSlot::find(50);
     $user = User::find(20);
 
-    Mail::to($user->email)->send(
+    Mail::to($user->email)->queue(
         new CourseConfirmedMail($slot, $user)
     );
 
