@@ -16,11 +16,11 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
                 
-                @can('courses.manage')
+                @canany(['courses.manage','coursebookings.manage'])
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
-                @endcan
+                @endcanany
                 
                @can('users.manage')
                 <flux:navlist.group class="grid">

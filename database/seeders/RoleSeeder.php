@@ -49,6 +49,7 @@ class RoleSeeder extends Seeder
             'coursebookings.view.own',
             'coursebookings.update',
             'coursebookings.update.own',
+            'coursebookings.manage',
 
             // Booking slots
             'coursebookingslots.view',
@@ -56,7 +57,7 @@ class RoleSeeder extends Seeder
             'coursebookingslots.update',
             'coursebookingslots.update.own',
 
-            // Members / Users
+            // Members 
             'members.create',
             'members.view',
             'members.view.own',
@@ -64,10 +65,14 @@ class RoleSeeder extends Seeder
             'members.update.own',
             'members.delete',
             'members.manage',
-
+            
+            // Users
+            'users.view',
             'users.view.own',
+            'users.update',
             'users.update.own',
             'users.manage',
+            'users.view.requested_membership',
         ];
 
         foreach ($permissions as $permission) {
@@ -92,7 +97,7 @@ class RoleSeeder extends Seeder
         $coursePerms = Permission::whereIn('name', [
             'courses.manage','courses.create','courses.view','courses.update','courses.update.own','courses.delete',
             'courseslots.create','courseslots.view','courseslots.update','courseslots.delete','courseslots.cancel','courseslots.reschedule',
-            'coursebookings.view','coursebookings.update',
+            'coursebookings.view','coursebookings.update','coursebookings.manage',
             'coursebookingslots.view','coursebookingslots.update'
         ])->get();
         $courseManager->syncPermissions($coursePerms);
@@ -106,7 +111,7 @@ class RoleSeeder extends Seeder
         $ownPerms = Permission::whereIn('name', [
             'members.view.own','members.update.own',
             'courses.view','coursebookings.view.own','coursebookings.update.own',
-            'coursebookingslots.view.own','users.view.own','users.update.own'
+            'coursebookingslots.view.own','users.view.own','users.update.own',
         ])->get();
 
         $member->syncPermissions($ownPerms);

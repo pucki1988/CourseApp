@@ -4,7 +4,7 @@
         md:static md:z-auto md:w-[220px] md:border-0 md:bg-transparent
         pb-safe">
     <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
-        @if(auth()->user()->canCheckIn())
+        @can('courses.manage')
             <flux:navlist.item
                 :href="route('course_management.home.index')"
                 :current="request()->routeIs('course_management.home.index')"
@@ -17,9 +17,9 @@
                 <span class="md:inline">{{ __('Home') }}</span>
                 </span>
             </flux:navlist.item>
-        @endif
+        @endcan
 
-        @role(['admin', 'manager'])
+        @can(['courses.manage'])
             <flux:navlist.item
                 :href="route('course_management.courses.index')"
                 :current="request()->routeIs('course_management.courses.index')"
@@ -31,7 +31,8 @@
                 <span class="md:inline">{{ __('Kurse') }}</span>
                 </span>
             </flux:navlist.item>
-
+        @endcan
+        @canany(['courses.manage', 'coursebookings.manage'])
             <flux:navlist.item
                 :href="route('course_management.bookings.index')"
                 :current="request()->routeIs('course_management.bookings.index')"
@@ -43,7 +44,8 @@
                 <span class="md:inline">{{ __(key: 'Buchungen') }}</span>
                 </span>
             </flux:navlist.item>
-
+        @endcanany
+        @can('courses.manage')
             <flux:navlist.item
                 :href="route('course_management.coaches.index')"
                 :current="request()->routeIs('course_management.coaches.index')"
@@ -55,7 +57,8 @@
                 <span class="md:inline">{{ __('Trainer') }}</span>
                 </span>
             </flux:navlist.item>
-
+        @endcan
+        @can('courses.manage')
             <flux:navlist.item
                 :href="route('course_management.settings.sport-types')"
                 :current="request()->routeIs('course_management.settings.sport-types')"
@@ -67,7 +70,8 @@
                 <span class="md:inline">{{ __('Sportarten') }}</span>
                 </span>
             </flux:navlist.item>
-
+            @endcan
+        @can(['courses.manage'])
             <flux:navlist.item
                 :href="route('course_management.settings.equipment-items')"
                 :current="request()->routeIs('course_management.settings.equipment-items')"
@@ -79,9 +83,9 @@
                 <span class="md:inline">{{ __('Ausrüstung') }}</span>
                 </span>
             </flux:navlist.item>
-            @endrole
+            @endcan
 
-            @if(auth()->user()->canCheckIn())
+            @can('courses.manage')
             <flux:navlist.item
                 :href="route('course_management.settlement.index')"
                 :current="request()->routeIs('course_management.settlement.index')"
@@ -93,7 +97,7 @@
                 <span class="md:inline">{{ __('Abrechnung') }}</span>
                 </span>
             </flux:navlist.item>
-            @endif
+            @endcan
         
     </flux:navlist>
 </div>

@@ -35,7 +35,7 @@ class UserService
                     $q->whereIn('name', ['member', 'user']);
                 })
                 ->whereDoesntHave('roles', function ($q) {
-                    $q->whereIn('name', ['admin', 'manager']);
+                    $q->whereIn('name', ['admin', 'manager', 'course_manager', 'member_manager']);
                 })
                 ->orWhereDoesntHave('roles');
             });
@@ -53,7 +53,7 @@ class UserService
         $users = User::with('roles')
             ->where(function ($query) {
                 $query->whereHas('roles', function ($q) {
-                    $q->whereIn('name', ['admin', 'manager']);
+                    $q->whereIn('name', ['admin', 'manager', 'course_manager', 'member_manager']);
                 })
                 ->orWhereDoesntHave('roles');
             });

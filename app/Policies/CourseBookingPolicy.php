@@ -30,8 +30,8 @@ class CourseBookingPolicy
             return true;
         }
 
-        // Normale User dürfen nur ihre eigenen Buchungen sehen (geregelt in Query)
-        return true;
+        // Berechtigung für das Anzeigen von Buchungen
+        return $user->canany(['coursebookings.view','coursebookings.view.own']);
     }
 
     public function update(User $user, CourseBooking $booking)

@@ -10,7 +10,7 @@
         pb-safe">
         <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
             
-            @role(['admin', 'manager'])
+            @can('users.view')
             <flux:navlist.item :href="route('user_management.users.index')" class="h-14" :current="request()->routeIs('user_management.users.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
@@ -18,6 +18,8 @@
                 <span class="md:inline">{{ __(key: 'Frontend User') }}</span>
                 </span>
             </flux:navlist.item>
+            @endcan
+            @can('users.view')
             <flux:navlist.item :href="route('user_management.users.backend_user')" class="h-14" :current="request()->routeIs('user_management.users.backend_user')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
@@ -25,14 +27,15 @@
                 <span class="md:inline">{{ __(key: 'Backend User') }}</span>
                 </span>
             </flux:navlist.item>
+            @endcan
+            @canany(['users.view','users.view.requested_membership'])
             <flux:navlist.item :href="route('user_management.users.member_request')" class="h-14" :current="request()->routeIs('user_management.users.member_request')" wire:navigate>
                 <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
                 <flux:icon.question-mark-circle class="h-5 w-5 md:hidden" />
                 <span class="md:inline">{{ __('Anfragen') }}</span>
                 </span>
             </flux:navlist.item>
-            
-            @endrole
+            @endcanany
             
             
         

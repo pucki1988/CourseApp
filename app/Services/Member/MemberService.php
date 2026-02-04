@@ -8,9 +8,22 @@ class MemberService
 {
     public function getMembers(array $filters = [])
     {
-        // Admin sieht alle
-        if (auth()->user()->hasAnyRole('admin', 'manager')) {
-            $members= Member::with('user')->orderBy('last_name')->orderBy('entry_date');
+        $user = auth()->user();
+        if (!$user) {
+            return collect();
+        }
+
+        $members = Member::with('user')
+            ->orderBy('last_name')
+            ->orderBy('entry_date');
+
+        // Berechtigungen: view = alle (Priorität), view.own = nur eigene
+        if ($user->can('members.view')) {
+            // alle anzeigen
+        } elseif ($user->can('members.view.own')) {
+            $members->where('user_id', $user->id);
+        } else {
+            return collect();
         }
 
         if (!empty($filters['name'])) {
