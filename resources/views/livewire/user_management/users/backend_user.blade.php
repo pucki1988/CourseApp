@@ -89,26 +89,19 @@ new class extends Component {
                                 <span class="text-gray-500">Rolle</span>
                                 <span>@foreach ($user->getRoleNames() as $role)<flux:badge size="sm">{{ $role }}</flux:badge>@endforeach</span>
                             </div>
-                             @role(['admin', 'manager'])
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Als manager</span>
-                                <span> 
-                                @if($user->hasRole('manager'))               
-                                <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsManager({{ $user->id }})">Nein</flux:button>
-                                @endif
+            
+                             
+
+                            <div class="flex justify-between mt-2">
+                                <span class="text-gray-500">Aktionen</span>
+                                <span>
+                                    <a href="{{ route('user_management.users.show', $user->id) }}">
+                                        <flux:button size="xs">Details</flux:button>
+                                    </a>
                                 </span>
                             </div>
-                            @endrole
 
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Mitglied</span>
-                                <span> 
-                                    @if($user->hasRole('member'))
-                    <flux:button variant="primary" size="xs" color="red" icon="x-mark" wire:click="unsetAsMember({{ $user->id }})">Nein</flux:button>
-                    @else
-                    <flux:button variant="primary" size="xs" color="green" icon="check" wire:click="setAsMember({{ $user->id }})">Ja</flux:button>
-                    @endif</span>
-                            </div>
+                            
                         </div>
     </div>
     @endforeach

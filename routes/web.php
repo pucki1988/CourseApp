@@ -42,7 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
     Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
 
-    Route::middleware('role:admin|manager')->group(function () {
+    Route::middleware('permission:courses.manage')->group(function () {
               
         Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
         Volt::route('/bookings', 'course_management.bookings.index')->name('course_management.bookings.index');
@@ -54,13 +54,23 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
 
-        Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
-        Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
+        
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
     
-        Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
+        
     
        
     });
+    
+    Route::middleware('permission:members.manage')->group(function () {
+       Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
+    });
+
+    Route::middleware('permission:users.manage')->group(function () {
+        Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
+        Volt::route('/users/{user}', 'user_management.users.show')->name('user_management.users.show');
+        Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
+    });
+
    
 });

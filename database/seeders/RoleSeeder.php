@@ -17,6 +17,8 @@ class RoleSeeder extends Seeder
         $roles = [
             'admin',
             'manager',
+            'course_manager',
+            'member_manager',
             'member',
             'user',
         ];
@@ -25,36 +27,90 @@ class RoleSeeder extends Seeder
             Role::firstOrCreate(['name' => $role]);
         }
 
-         $permissions = [
-            // Kurse
+        $permissions = [
+            // Kurse (global)
+            'courses.manage',
             'courses.create',
+            'courses.view',
             'courses.update',
-            'courses.update.own',
             'courses.delete',
-            'courses.delete.own',
 
             // Slots
             'courseslots.create',
-            'courseslots.create.own',
+            'courseslots.view',
             'courseslots.update',
-            'courseslots.update.own',
             'courseslots.delete',
-            'courseslots.delete.own',
             'courseslots.cancel',
-            'courseslots.cancel.own',
+            'courseslots.reschedule',
 
+            // Bookings
+            'coursebookings.create',
+            'coursebookings.view',
+            'coursebookings.view.own',
+            'coursebookings.update',
+            'coursebookings.update.own',
+
+            // Booking slots
+            'coursebookingslots.view',
+            'coursebookingslots.view.own',
+            'coursebookingslots.update',
+            'coursebookingslots.update.own',
+
+            // Members / Users
+            'members.create',
+            'members.view',
+            'members.view.own',
+            'members.update',
+            'members.update.own',
+            'members.delete',
+            'members.manage',
+
+            'users.view.own',
+            'users.update.own',
+            'users.manage',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
+        // Delete permissions that are no longer in the list
+        Permission::whereNotIn('name', $permissions)->delete();
+
         $admin = Role::where('name', 'admin')->first();
         $manager = Role::where('name', 'manager')->first();
-        
+        $courseManager = Role::where('name', 'course_manager')->first();
+        $memberManager = Role::where('name', 'member_manager')->first();
+        $member = Role::where('name', 'member')->first();
+        $user = Role::where('name', 'user')->first();
+
         // Admin + Manager = alle Permissions
         $admin->syncPermissions(Permission::all());
         $manager->syncPermissions(Permission::all());
+
+        // Course manager: manage courses, slots and related bookings
+        $coursePerms = Permission::whereIn('name', [
+            'courses.manage','courses.create','courses.view','courses.update','courses.update.own','courses.delete',
+            'courseslots.create','courseslots.view','courseslots.update','courseslots.delete','courseslots.cancel','courseslots.reschedule',
+            'coursebookings.view','coursebookings.update',
+            'coursebookingslots.view','coursebookingslots.update'
+        ])->get();
+        $courseManager->syncPermissions($coursePerms);
+
+        // Member manager: full member management
+        $memberManager->syncPermissions(Permission::whereIn('name', [
+            'members.create','members.view','members.update','members.delete','members.manage'
+        ])->get());
+
+        // Member & User: frontend-only, only own resources
+        $ownPerms = Permission::whereIn('name', [
+            'members.view.own','members.update.own',
+            'courses.view','coursebookings.view.own','coursebookings.update.own',
+            'coursebookingslots.view.own','users.view.own','users.update.own'
+        ])->get();
+
+        $member->syncPermissions($ownPerms);
+        $user->syncPermissions($ownPerms);
 
         
         

@@ -15,21 +15,24 @@
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
-                @if(auth()->user()->canCheckIn())
+                
+                @can('courses.manage')
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
-                @endif
-                @role(['admin', 'manager'])
+                @endcan
+                
+               @can('users.manage')
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
-                @endrole
-                @role(['admin', 'manager'])
+                @endcan
+
+                @can('members.manage')
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="users" :href="route('member_management.members.index')" :current="request()->routeIs('member_management.members.index')" wire:navigate>{{ __('Mitgliederverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
-                @endrole
+                @endcan
             </flux:navlist>
 
 
