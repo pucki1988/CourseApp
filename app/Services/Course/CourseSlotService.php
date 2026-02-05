@@ -89,7 +89,7 @@ class CourseSlotService
         ->where('status', 'active')
         // 🔹 Nur zukünftige / laufende Slots
         ->where(function ($q) {
-            $q->whereDate('date', '>', now()->addDays(3))
+            $q->whereDate('date', '>', now()->addDays(-3))
             ->orWhere(function ($q2) {
                 $q2->whereDate('date', now())
                     ->whereTime('start_time', '>=', now()->format('H:i'));
