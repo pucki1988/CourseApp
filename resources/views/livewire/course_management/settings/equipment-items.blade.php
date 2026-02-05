@@ -101,14 +101,18 @@ new class extends Component {
                             @endif
                         </div>
                         <div class="flex gap-2">
+                            @can('update', Course::class)
                             <flux:button size="sm" wire:click="edit({{ $equipment->id }})">
                                 Bearbeiten
                             </flux:button>
+                            @endcan
+                            @can('delete', Course::class)
                             <flux:button size="sm" variant="danger" 
                                 wire:click="delete({{ $equipment->id }})" 
                                 onclick="return confirm('Wirklich löschen?')">
                                 Löschen
                             </flux:button>
+                            @endcan
                         </div>
                     </div>
                 </div>

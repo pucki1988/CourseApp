@@ -333,6 +333,7 @@ new class extends Component {
                 </div>
 
                 @if($slot->status ==='active')
+                @canany(['reschedule','reschedule','cancel'], $slot)
                 <div class="flex gap-2">
                     <flux:spacer />
                     <flux:dropdown position="top">
@@ -350,6 +351,8 @@ new class extends Component {
                     </flux:menu>
                     </flux:dropdown>
                 </div>
+                @endcanany
+                 
                 @endif
                 
             </div>

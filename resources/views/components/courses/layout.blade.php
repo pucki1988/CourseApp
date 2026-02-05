@@ -45,7 +45,7 @@
                 </span>
             </flux:navlist.item>
         @endcanany
-        @can('courses.manage')
+        @can('coaches.manage')
             <flux:navlist.item
                 :href="route('course_management.coaches.index')"
                 :current="request()->routeIs('course_management.coaches.index')"
@@ -85,7 +85,7 @@
             </flux:navlist.item>
             @endcan
 
-            @can('courses.manage')
+            @can('courses.settlement')
             <flux:navlist.item
                 :href="route('course_management.settlement.index')"
                 :current="request()->routeIs('course_management.settlement.index')"
