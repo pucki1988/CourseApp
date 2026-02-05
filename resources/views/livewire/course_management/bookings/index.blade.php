@@ -16,7 +16,7 @@ new class extends Component {
 
     public function mount(CourseBookingService $service)
     {
-        $this->authorize('viewAny', CourseBooking::class);
+        #$this->authorize('viewAny', CourseBooking::class);
         $this->loadBookings($service);
     }
 

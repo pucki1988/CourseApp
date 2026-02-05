@@ -178,9 +178,14 @@ class CourseBookingService
     {
         $query=CourseBooking::with(['course','bookingSlots.slot','user']);
 
-        if (!auth()->user()->hasAnyRole('admin','manager')) {
-        // Normale User sehen nur eigene
-            $query->where('user_id', auth()->user()->id);
+        $user = auth()->user();
+
+        if ($user->can('coursebookings.view')) {
+            // alle Buchungen sichtbar
+        } elseif ($user->can('coursebookings.view.own')) {
+            $query->where('user_id', $user->id);
+        } else {
+            abort(403);
         }
 
          $query->whereIn('payment_status',['pending','open','paid']);

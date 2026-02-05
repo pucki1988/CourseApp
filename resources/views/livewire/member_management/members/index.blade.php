@@ -57,9 +57,9 @@ new class extends Component {
     <flux:dropdown>
         <flux:button icon:trailing="chevron-down" class="mb-3">Optionen</flux:button>
         <flux:menu>
-            
+             @can('members.update')
             <flux:menu.item wire:click="import" icon="arrow-down-tray">Aus Vereinssoftware importieren</flux:menu.item>
-            
+            @endcan
         </flux:menu>
     </flux:dropdown>
     </div>    
