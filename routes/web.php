@@ -23,7 +23,7 @@ Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-     Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
+     
     
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
     Volt::route('settings/password', 'settings.password')->name('user-password.edit');
@@ -39,17 +39,21 @@ Route::middleware(['auth'])->group(function () {
             ),
         )
         ->name('two-factor.show');
-    Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
-    Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
+    
+    
 
     Route::middleware('permission:courses.manage')->group(function () {
-
+        Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
+        Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
         Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
-        Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
-        Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
-       
+        Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
+    });
+
+    Route::middleware(['permission:coaches.manage','permission:coaches.view'])->group(function () {
+        Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
+        Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
     });
 
     Route::middleware(['permission:coursebookings.manage','permission:coursebookings.view'])->group(function () {
