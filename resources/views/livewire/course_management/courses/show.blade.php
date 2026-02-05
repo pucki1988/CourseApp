@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Component;
-use Livewire\Volt\Flux;
 use App\Services\Course\CourseService;
 use App\Services\Course\CourseSlotService;
 use App\Models\Course\Course;

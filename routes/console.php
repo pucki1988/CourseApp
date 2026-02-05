@@ -7,6 +7,7 @@ use App\Actions\Course\CancelCourseAction;
 use App\Models\User;
 use App\Mail\CourseConfirmedMail;
 use Illuminate\Support\Facades\Mail;
+use App\Services\Loyalty\LoyaltyPointService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -38,4 +39,30 @@ Artisan::command('test:course-mail', function () {
     );
 
     $this->info('Mail getestet ✅');
+});
+
+Artisan::command('loyalty:recalc {userId?}', function (?int $userId = null) {
+    $service = app(LoyaltyPointService::class);
+
+    if ($userId) {
+        $user = User::find($userId);
+
+        if (! $user) {
+            $this->error("User {$userId} nicht gefunden.");
+            return 1;
+        }
+
+        $balance = $service->recalculate($user);
+        $this->info("User {$userId} neu berechnet: {$balance}");
+        return 0;
+    }
+
+    User::chunkById(200, function ($users) use ($service) {
+        foreach ($users as $user) {
+            $service->recalculate($user);
+        }
+    });
+
+    $this->info('Alle User neu berechnet.');
+    return 0;
 });

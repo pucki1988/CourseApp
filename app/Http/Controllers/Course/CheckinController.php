@@ -2,14 +2,15 @@
 namespace App\Http\Controllers\Course;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course\Course;
-use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseSlot;
+use App\Models\User;
+use App\Services\Course\CourseBookingSlotService;
+use Illuminate\Http\Request;
 
 class CheckinController extends Controller
 {
-    public function handle(Request $request, User $user)
+    public function handle(Request $request, User $user, CourseBookingSlotService $bookingSlotService)
     {
         if (! $request->hasValidSignature()) {
             abort(403, 'Ungültiger QR-Code');
@@ -34,10 +35,7 @@ class CheckinController extends Controller
         abort_if(! $bookingSlot, 403, 'Keine gültige Buchung');
 
         // 3️⃣ Check-in
-        $bookingSlot->update([
-            'checked_in_at' => now(),
-            'status' => 'checked_in',
-        ]);
+        $bookingSlotService->checkIn($bookingSlot);
 
         return response()->json([
             'message' => 'Check-in erfolgreich'

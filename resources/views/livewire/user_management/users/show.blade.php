@@ -73,6 +73,11 @@ new class extends Component {
                 <div>{{ $user->email }}</div>
             </div>
 
+            <div class="mb-4">
+                <label class="font-semibold">Loyalty Points</label>
+                <div>{{ $user->loyalty_points }} Punkte</div>
+            </div>
+
             <div class="mb-6">
                 <label class="font-semibold">Rollen</label>
                 <div class="mt-2 space-y-2">

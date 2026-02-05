@@ -5,13 +5,18 @@ namespace App\Services\Course;
 use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use App\Models\Course\CourseBookingSlot;
+use App\Services\Loyalty\LoyaltyPointService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
 class CourseBookingSlotService
 {
-    
+    public function __construct(
+        private LoyaltyPointService $loyaltyPointService
+    ) {
+    }
+
     public function cancel(CourseBookingSlot $courseBookingSlot)
     {
         $courseBookingSlot->update(['status' => 'canceled']);
@@ -27,6 +32,32 @@ class CourseBookingSlotService
     {
         $courseBookingSlot->update(['status' => 'refund_failed']);
         
+    }
+
+    public function checkIn(CourseBookingSlot $bookingSlot): void
+    {
+        if ($bookingSlot->checked_in_at !== null) {
+            return; // idempotent
+        }
+        DB::transaction(function () use ($bookingSlot) {
+            $lockedSlot = CourseBookingSlot::whereKey($bookingSlot->id)->lockForUpdate()->first();
+
+            if ($lockedSlot->checked_in_at !== null) {
+                return;
+            }
+
+            $lockedSlot->update([
+                'checked_in_at' => now()
+            ]);
+
+            $this->loyaltyPointService->earn(
+                $lockedSlot->booking->user,
+                1,
+                'checkin',
+                $lockedSlot,
+                'Course'
+            );
+        });
     }
 
     public function listBookedSlots(array $filters = [])

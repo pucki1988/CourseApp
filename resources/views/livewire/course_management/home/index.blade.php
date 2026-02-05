@@ -118,12 +118,10 @@ new class extends Component {
         Flux::modal('bookings')->show();
     }
 
-    public function checkInCourseBookingSlot(CourseBookingSlot $courseBookingSlot){
+    public function checkInCourseBookingSlot(CourseBookingSlot $courseBookingSlot,CourseBookingSlotService $courseBookingSlotService){
             
             if($courseBookingSlot->booking->status ==="paid" ||  $courseBookingSlot->booking->status ==="partially_refunded"){
-                $courseBookingSlot->update([
-                    'checked_in_at' => now(),
-                ]);
+                $courseBookingSlotService->checkIn($courseBookingSlot);
                 $this->state = 'success';
                 $this->message = 'Check-in erfolgreich';
             }else{
@@ -217,33 +215,28 @@ new class extends Component {
                     return;
                 }
 
-                DB::transaction(function () use ($baseQuery) {
-                    $bookingSlot = (clone $baseQuery)
-                        ->where('status', 'booked')
-                        ->whereNull('checked_in_at')
-                        ->orderBy('created_at')
-                        ->lockForUpdate()
-                        ->first();
+                $bookingSlot = (clone $baseQuery)
+                    ->where('status', 'booked')
+                    ->whereNull('checked_in_at')
+                    ->orderBy('created_at')
+                    ->first();
 
-                    if (!$bookingSlot) {
+                if (!$bookingSlot) {
 
-                        $refundedSlot = (clone $baseQuery)
-                        ->whereIn('status', ['refunded','refund_failed'])
-                        ->whereNull('checked_in_at')
-                        ->first();
+                    $refundedSlot = (clone $baseQuery)
+                    ->whereIn('status', ['refunded','refund_failed'])
+                    ->whereNull('checked_in_at')
+                    ->first();
 
-                        if($refundedSlot){
-                            throw new \Exception('Termin wurde zurückerstattet');
-                        }
-
-
-                        throw new \Exception('Keine gültige Buchung für diesen Termin');
+                    if($refundedSlot){
+                        throw new \Exception('Termin wurde zurückerstattet');
                     }
 
-                    $bookingSlot->update([
-                        'checked_in_at' => now(),
-                    ]);
-                });
+
+                    throw new \Exception('Keine gültige Buchung für diesen Termin');
+                }
+
+                app(\App\Services\Course\CourseBookingSlotService::class)->checkIn($bookingSlot);
 
                 $this->state = 'success';
                 $this->message = 'Check-in erfolgreich';
