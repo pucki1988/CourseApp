@@ -5,9 +5,7 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Course\CheckinController;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::redirect('/', '/login')->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
