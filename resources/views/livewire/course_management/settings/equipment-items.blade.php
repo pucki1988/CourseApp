@@ -83,7 +83,7 @@ new class extends Component {
     @include('partials.courses-heading')
     <x-courses.layout :heading="__('Ausrüstung')" :subheading="__('Verwalte deine Ausrüstung')">
         <div class="space-y-6">
-            @can('create', Course::class)
+            @can('courses.create')
             <div class="flex justify-end">
                 <flux:modal.trigger name="equipment-form">
                     <flux:button icon="plus">Neue Ausrüstung</flux:button>
@@ -101,12 +101,12 @@ new class extends Component {
                             @endif
                         </div>
                         <div class="flex gap-2">
-                            @can('update', Course::class)
+                            @can('courses.update')
                             <flux:button size="sm" wire:click="edit({{ $equipment->id }})">
                                 Bearbeiten
                             </flux:button>
                             @endcan
-                            @can('delete', Course::class)
+                            @can('courses.delete')
                             <flux:button size="sm" variant="danger" 
                                 wire:click="delete({{ $equipment->id }})" 
                                 onclick="return confirm('Wirklich löschen?')">
