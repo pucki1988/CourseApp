@@ -183,11 +183,10 @@ new class extends Component {
                             <div class="flex justify-center mt-1">
                                 @can('update', $course)
                                 <flux:button size="xs" href="{{ route('course_management.courses.show', $course) }}">Details</flux:button>
-                                @can('delete', $course)
-                                <flux:button size="xs" variant="danger"  wire:click="confirmDelete({{ $course }})">Löschen</flux:button>
                                 @endcan
                                 
-                                
+                                @can('delete', $course)
+                                <flux:button size="xs" variant="danger" class="ms-2"  wire:click="confirmDelete({{ $course }})">Löschen</flux:button>
                                 @endcan
                             </div>
                         </div>

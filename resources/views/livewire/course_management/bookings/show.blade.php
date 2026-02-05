@@ -130,6 +130,9 @@ new class extends Component {
                                 </span>
                             </div>
                             @if($booking->booking_type==='per_slot' && $bookingSlot->status === 'booked')
+                            
+                            @can('coursebookingslots.update')
+                            @can('coursebookings.update')
                             <div class="flex justify-end mt-2">
                             <flux:dropdown>
                                 <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
@@ -137,6 +140,8 @@ new class extends Component {
                                     <flux:menu.item icon="x-mark" wire:click="cancelBookingSlot({{ $booking }} ,{{ $bookingSlot }})">stornieren</flux:menu.item>
                                 </flux:menu>
                             </flux:dropdown>
+                            @endcan
+                            @endcan
                             </div>
                             @endif
 

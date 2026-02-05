@@ -25,7 +25,7 @@ class CourseSlotPolicy
 
     public function update(User $user, CourseSlot $courseSlot)
     {
-        if ($user->hasRole(['manager','admin'])) {
+        if ($user->hasAnyPermission(['courseslots.update'])) {
             return true;
         }
 
@@ -33,9 +33,17 @@ class CourseSlotPolicy
 
     public function reschedule(User $user, CourseSlot $courseSlot)
     {
-        if ($user->hasRole(['manager','admin'])) {
+        if ($user->hasAnyPermission(['courseslots.reschedule'])) {
             return $courseSlot->isCancelable();
         }
+    }
+
+    public function checkin(User $user, CourseSlot $courseSlot)
+    {
+        if ($user->hasAnyPermission(['courseslots.checkin'])) {
+            return true;
+        }
+        return false;
     }
 
     public function cancel(User $user, CourseSlot $slot)
@@ -51,7 +59,7 @@ class CourseSlotPolicy
             }
 
             //  Manager
-            if ($user->hasRole(['manager','admin'])) {
+            if ($user->hasAnyPermission(['courseslots.cancel'])) {
                 return $this->minParticipantsNotReached($slot);
             }
 

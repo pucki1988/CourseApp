@@ -20,7 +20,7 @@ class CoursePolicy
 
     public function viewAny(User $user)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasAnyPermission(permissions: ['courses.view'])) {
             return true;
         }
         return true;
@@ -28,7 +28,7 @@ class CoursePolicy
 
     public function create(User $user)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasAnyPermission(['courses.create'])) {
             return true;
         }
         return false;
@@ -36,7 +36,7 @@ class CoursePolicy
 
     public function update(User $user, Course $course)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasAnyPermission(['courses.update'])) {
             return true;
         }
         return false;
@@ -44,7 +44,7 @@ class CoursePolicy
 
     public function delete(User $user, Course $course)
     {
-        if ($user->hasRole('manager')) {
+        if ($user->hasAnyPermission(['courses.delete'])) {
             // Prüfen: gibt es Buchungen auf Slots?
             foreach ($course->slots as $slot) {
                 if ($slot->bookedSlots->count() > 0) {

@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use App\Services\Course\CoachService;
 use App\Models\Course\Coach;
+use App\Models\Course\Course;
 
 new class extends Component {
 
@@ -105,12 +106,13 @@ new class extends Component {
 
     <x-courses.layout :heading="__('Trainer')" :subheading="__('Verwalte deine Trainer')">
         <div class="space-y-6">
+            @can('create', Course::class)
             <div class="flex justify-end">
                 <flux:modal.trigger name="coach">
                     <flux:button icon="plus">Neuen Trainer</flux:button>
                 </flux:modal.trigger>
             </div>
-
+            @endcan
             <div class="grid gap-4">
                 @forelse($coaches as $coach)
                 <div class="border rounded-lg p-4 bg-white shadow-sm">

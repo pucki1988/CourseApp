@@ -227,9 +227,11 @@ new class extends Component {
     <x-courses.layout :heading="$course->title" :subheading="__('Deine Kurse')">
     
             @if(!$isEditing)
-            <div class="flex justify-end mb-4">
-                <flux:button wire:click="startEditing" icon="pencil">Bearbeiten</flux:button>
-            </div>
+            @can('update', $course)
+                <div class="flex justify-end mb-4">
+                    <flux:button wire:click="startEditing" icon="pencil">Bearbeiten</flux:button>
+                </div>
+            @endcan
             @endif
 
             @if($isEditing)

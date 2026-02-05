@@ -305,18 +305,17 @@ new class extends Component {
                     <flux:badge icon="calendar">{{ $slot->date->format('d.m.Y') }}</flux:badge> 
                     <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
-                    @role(['admin', 'manager'])
+                    @can('checkin', $slot)
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
-                    @endrole
+                    @endcan
 
-                    @unlessrole(['admin', 'manager'])
+                    @cannot('checkin', $slot)
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
-                    @endunlessrole
-
+                    @endcannot
                     
                     
                     
@@ -345,9 +344,9 @@ new class extends Component {
                     @can('cancel', $slot)
                     <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
-                    @if(auth()->user()->canCheckIn())
+                    @can('checkin', $slot)
                     <flux:menu.item icon="qr-code" wire:click="openCheckin({{ $slot->id }})">Check In</flux:menu.item>
-                    @endif
+                     @endcan
                     </flux:menu>
                     </flux:dropdown>
                 </div>

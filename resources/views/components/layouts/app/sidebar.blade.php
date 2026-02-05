@@ -24,7 +24,11 @@
                 
                @can('users.manage')
                 <flux:navlist.group class="grid">
-                    <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
+                    @can('users.view')
+                        <flux:navlist.item icon="user" :href="route('user_management.users.index')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
+                    @elsecan('users.view.requested_membership')
+                        <flux:navlist.item icon="user" :href="route('user_management.users.member_request')" :current="request()->routeIs('user_management.users.index')" wire:navigate>{{ __('Userverwaltung') }}</flux:navlist.item>
+                    @endcan
                 </flux:navlist.group>
                 @endcan
 

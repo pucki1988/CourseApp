@@ -79,10 +79,15 @@ new class extends Component {
                     @foreach($roles as $role)
                         <div>
                             <label class="inline-flex items-center gap-2">
-                                <input type="checkbox" wire:model="rolesSelected" value="{{ $role->name }}" @if($role->name === 'admin' && !auth()->user()->hasRole('admin')) disabled @endif />
+                                <input type="checkbox" wire:model="rolesSelected" value="{{ $role->name }}" @if(
+                                    ($role->name === 'admin' && !auth()->user()->hasRole('admin')) ||
+                                    ($role->name === 'manager' && !auth()->user()->hasRole('manager') && !auth()->user()->hasRole('admin'))
+                                ) disabled @endif />
                                 <span class="ml-2">{{ ucfirst($role->name) }}</span>
                                 @if($role->name === 'admin' && !auth()->user()->hasRole('admin'))
                                     <span class="text-xs text-red-500">(nur Admin)</span>
+                                @elseif($role->name === 'manager' && !auth()->user()->hasRole('manager') && !auth()->user()->hasRole('admin'))
+                                    <span class="text-xs text-red-500">(nur Manager/Admin)</span>
                                 @endif
                             </label>
 
@@ -123,18 +128,29 @@ new class extends Component {
             </div>
 
             <details class="mb-6">
-                <summary class="font-semibold cursor-pointer">Zusätzliche Berechtigungen (direkt)</summary>
-                <div class="mt-2 space-y-2 max-h-64 overflow-auto">
-                    @php
-                        $groupedPermissions = $permissions
-                            ->filter(fn ($permission) => !in_array($permission->name, $roleDerived))
-                            ->groupBy(fn ($permission) => explode('.', $permission->name)[0]);
-                    @endphp
+                @php
+                    $groupedPermissions = $permissions
+                        ->filter(fn ($permission) => !in_array($permission->name, $roleDerived))
+                        ->groupBy(fn ($permission) => explode('.', $permission->name)[0]);
 
+                    $selectedAdditionalTotal = $groupedPermissions
+                        ->flatten()
+                        ->pluck('name')
+                        ->intersect($permissionsSelected)
+                        ->count();
+                @endphp
+                <summary class="font-semibold cursor-pointer">Zusätzliche Berechtigungen (direkt) ({{ $selectedAdditionalTotal }})</summary>
+                <div class="mt-2 space-y-2 max-h-64 overflow-auto">
                     @foreach($groupedPermissions as $group => $groupPermissions)
+                        @php
+                            $selectedInGroup = collect($groupPermissions)
+                                ->pluck('name')
+                                ->intersect($permissionsSelected)
+                                ->count();
+                        @endphp
                         <details class="mt-2">
                             <summary class="text-xs uppercase tracking-wide text-gray-500 mb-1 cursor-pointer">
-                                {{ ucfirst($group) }}
+                                {{ ucfirst($group) }} ({{ $selectedInGroup }})
                             </summary>
                             <div class="space-y-2 mt-1">
                                 @foreach($groupPermissions as $permission)

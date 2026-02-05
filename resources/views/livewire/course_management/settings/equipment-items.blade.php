@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\Course\EquipmentItem;
+use App\Models\Course\Course;
 
 new class extends Component {
     public $equipmentItems;
@@ -82,12 +83,13 @@ new class extends Component {
     @include('partials.courses-heading')
     <x-courses.layout :heading="__('Ausrüstung')" :subheading="__('Verwalte deine Ausrüstung')">
         <div class="space-y-6">
+            @can('create', Course::class)
             <div class="flex justify-end">
                 <flux:modal.trigger name="equipment-form">
                     <flux:button icon="plus">Neue Ausrüstung</flux:button>
                 </flux:modal.trigger>
             </div>
-
+            @endcan
             <div class="grid gap-4">
                 @forelse($equipmentItems as $equipment)
                 <div class="border rounded-lg p-4 bg-white shadow-sm">

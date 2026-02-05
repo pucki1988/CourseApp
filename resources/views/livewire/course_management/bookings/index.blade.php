@@ -130,11 +130,13 @@ new class extends Component {
                                 <span class="text-gray-500">Status</span>
                                 <span><flux:badge size="sm" color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></span>
                             </div>
-
+                             @can('coursebookings.update')
                             <div class="flex justify-center mt-1">
-                                
+                               
                                 <span><flux:button size="xs" href="{{ route('course_management.bookings.show', $booking) }}">Details</flux:button></span>
+                                
                             </div>
+                            @endcan
                         </div>
             </div>
             @empty

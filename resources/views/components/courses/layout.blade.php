@@ -32,7 +32,7 @@
                 </span>
             </flux:navlist.item>
         @endcan
-        @canany(['courses.manage', 'coursebookings.manage'])
+        @canany(['coursebookings.manage'])
             <flux:navlist.item
                 :href="route('course_management.bookings.index')"
                 :current="request()->routeIs('course_management.bookings.index')"

@@ -23,7 +23,9 @@
                     @if($bookedSlot->checked_in_at !== null)
                         <flux:badge icon="check" size="sm">{{ $bookedSlot->checked_in_at->format('d.m.Y | H:i')}}</flux:badge>
                     @else
+                        @can('checkin', $this->showSlot)
                         <flux:button size="xs" wire:click="checkInCourseBookingSlot({{ $bookedSlot }})">Check In</flux:button>
+                        @endcan
                     @endif
                     </div>
                 </div>

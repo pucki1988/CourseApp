@@ -42,6 +42,7 @@ class RoleSeeder extends Seeder
             'courseslots.delete',
             'courseslots.cancel',
             'courseslots.reschedule',
+            'courseslots.checkin',
 
             // Bookings
             'coursebookings.create',
@@ -96,7 +97,7 @@ class RoleSeeder extends Seeder
         // Course manager: manage courses, slots and related bookings
         $coursePerms = Permission::whereIn('name', [
             'courses.manage','courses.create','courses.view','courses.update','courses.update.own','courses.delete',
-            'courseslots.create','courseslots.view','courseslots.update','courseslots.delete','courseslots.cancel','courseslots.reschedule',
+            'courseslots.create','courseslots.view','courseslots.update','courseslots.delete','courseslots.cancel','courseslots.reschedule','courseslots.checkin',
             'coursebookings.view','coursebookings.update','coursebookings.manage',
             'coursebookingslots.view','coursebookingslots.update'
         ])->get();

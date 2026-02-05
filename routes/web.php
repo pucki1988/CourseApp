@@ -43,34 +43,32 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
 
     Route::middleware('permission:courses.manage')->group(function () {
-              
-        Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
-        
 
+        Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
         Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
-
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
-
-        
-        Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
+       
     });
 
-    Route::middleware('permission:coursebookings.manage')->group(function () {
+    Route::middleware(['permission:coursebookings.manage','permission:coursebookings.view'])->group(function () {
         Volt::route('/bookings', 'course_management.bookings.index')->name('course_management.bookings.index');
         Volt::route('/bookings/{booking}', 'course_management.bookings.show')->name('course_management.bookings.show');
     });
     
-    Route::middleware('permission:members.manage')->group(function () {
+    Route::middleware(['permission:members.manage','permission:members.view'])->group(function () {
        Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
     });
 
-    Route::middleware('permission:users.manage')->group(function () {
+    Route::middleware(['permission:users.manage','permission:users.view'])->group(function () {
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
         Volt::route('/users/{user}', 'user_management.users.show')->name('user_management.users.show');
         Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
     });
 
+    Route::middleware(['permission:users.manage','permission:users.view.requested_membership'])->group(function () {
+        Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
+    });
    
 });
