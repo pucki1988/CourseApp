@@ -65,17 +65,17 @@ new class extends Component {
         <form wire:submit.prevent="save">
             <div class="mb-4">
                 <label class="font-semibold">Name</label>
-                <div>{{ $user->name }}</div>
+                <div><flux:badge size="sm">{{ $user->name }}</flux:badge></div>
             </div>
 
             <div class="mb-4">
                 <label class="font-semibold">E-Mail</label>
-                <div>{{ $user->email }}</div>
+                <div><flux:badge size="sm">{{ $user->email }}</flux:badge></div>
             </div>
 
             <div class="mb-4">
-                <label class="font-semibold">Loyalty Points</label>
-                <div>{{ $user->loyalty_points }} Punkte</div>
+                <label class="font-semibold">Treuepunkte</label>
+                <div><flux:badge color="lime" size="sm">{{ $user?->loyaltyAccount?->balance() ?? 0 }} Punkte</flux:badge></div>
             </div>
 
             <div class="mb-6">

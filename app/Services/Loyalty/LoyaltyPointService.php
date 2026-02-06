@@ -2,55 +2,48 @@
 
 namespace App\Services\Loyalty;
 
-use App\Models\LoyaltyPointTransaction;
+use App\Models\Loyalty\LoyaltyPointTransaction;
+use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class LoyaltyPointService
 {
-    public function earn(User $user, int $points, string $type, ?Model $source = null, ?string $description = null): LoyaltyPointTransaction
+    public function earn(LoyaltyAccount $account, int $points, string $type ='earn', string $origin = 'sport', ?Model $source = null, ?string $description = null): LoyaltyPointTransaction
     {
-        return $this->record($user, abs($points), $type, $source, $description);
+        return $this->record($account, abs($points), $type, $origin, $source, $description);
     }
 
-    public function redeem(User $user, int $points, string $type = 'redeem', ?Model $source = null, ?string $description = null): LoyaltyPointTransaction
+    public function redeem(LoyaltyAccount $account, int $points, string $type = 'redeem', string $origin = 'sport', ?Model $source = null, ?string $description = null): LoyaltyPointTransaction
     {
-        return $this->record($user, -abs($points), $type, $source, $description);
+        if ($account->balance() < $points) {
+            throw new \Exception('Nicht genug Punkte');
+        }
+
+        return $this->record($account, -abs($points), $type, $origin,$source, $description);
     }
 
-    public function recalculate(User $user): int
+    protected function record(LoyaltyAccount $account, int $points, string $type,string $origin, ?Model $source, ?string $description): LoyaltyPointTransaction
     {
-        return DB::transaction(function () use ($user) {
-            $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
-
-            $balance = LoyaltyPointTransaction::where('user_id', $lockedUser->id)->sum('points');
-            $lockedUser->loyalty_points = $balance;
-            $lockedUser->save();
-
-            return $balance;
-        });
-    }
-
-    protected function record(User $user, int $points, string $type, ?Model $source, ?string $description): LoyaltyPointTransaction
-    {
-        return DB::transaction(function () use ($user, $points, $type, $source, $description) {
-            $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
+        return DB::transaction(function () use ($origin, $account, $points, $type, $source, $description) {
+            $lockedAccount = LoyaltyAccount::whereKey($account->id)->lockForUpdate()->first();
 
             $transaction = LoyaltyPointTransaction::create([
-                'user_id' => $lockedUser->id,
+                'loyalty_account_id' => $lockedAccount->id,
                 'points' => $points,
                 'type' => $type,
+                'origin' => $origin, 
                 'source_type' => $source ? $source::class : null,
                 'source_id' => $source?->getKey(),
                 'description' => $description,
                 'balance_after' => 0,
             ]);
 
-            $balance = LoyaltyPointTransaction::where('user_id', $lockedUser->id)->sum('points');
+            $balance = LoyaltyPointTransaction::where('loyalty_account_id', $lockedAccount->id)->sum('points');
 
-            $lockedUser->loyalty_points = $balance;
-            $lockedUser->save();
+            #$lockedUser->loyalty_points = $balance;
+            #$lockedUser->save();
             $transaction->update(['balance_after' => $balance]);
 
             return $transaction;

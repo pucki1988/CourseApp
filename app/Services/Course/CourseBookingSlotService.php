@@ -51,9 +51,10 @@ class CourseBookingSlotService
             ]);
 
             $this->loyaltyPointService->earn(
-                $lockedSlot->booking->user,
+                $lockedSlot->booking->user->loyaltyAccount,
                 1,
-                'checkin',
+                'earn',
+                'sport',
                 $lockedSlot,
                 'Course'
             );

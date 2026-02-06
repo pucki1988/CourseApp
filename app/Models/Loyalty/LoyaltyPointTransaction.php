@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Loyalty;
 
 use Illuminate\Database\Eloquent\Model;
 
 class LoyaltyPointTransaction extends Model
 {
     protected $fillable = [
-        'user_id',
+        'loyalty_account_id',
         'points',
         'type',
+        'origin',
         'source_type',
         'source_id',
         'description',
         'balance_after',
     ];
 
-    public function user()
+    public function account()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(LoyaltyAccount::class, 'loyalty_account_id');
     }
 }

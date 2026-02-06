@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Mail\CourseConfirmedMail;
 use Illuminate\Support\Facades\Mail;
 use App\Services\Loyalty\LoyaltyPointService;
+use App\Models\Loyalty\LoyaltyAccount;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -41,28 +42,17 @@ Artisan::command('test:course-mail', function () {
     $this->info('Mail getestet ✅');
 });
 
-Artisan::command('loyalty:recalc {userId?}', function (?int $userId = null) {
-    $service = app(LoyaltyPointService::class);
+Artisan::command('create:missing-loyalty-accounts', function () {
+    $users = User::doesntHave(relation: 'loyaltyAccount')->get();
 
-    if ($userId) {
-        $user = User::find($userId);
+    foreach ($users as $user) {
+        $account = LoyaltyAccount::create(['type' => 'user']);
+        $user->loyalty_account_id = $account->id;
+        $user->save();
 
-        if (! $user) {
-            $this->error("User {$userId} nicht gefunden.");
-            return 1;
-        }
-
-        $balance = $service->recalculate($user);
-        $this->info("User {$userId} neu berechnet: {$balance}");
-        return 0;
+        $this->info("LoyaltyAccount für User {$user->id} erstellt.");
     }
 
-    User::chunkById(200, function ($users) use ($service) {
-        foreach ($users as $user) {
-            $service->recalculate($user);
-        }
-    });
+    $this->info("Fertig!");
 
-    $this->info('Alle User neu berechnet.');
-    return 0;
 });

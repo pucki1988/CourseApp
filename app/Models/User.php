@@ -12,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Course\Coach;
 use App\Models\Member\Member;
-use App\Models\LoyaltyPointTransaction;
+use App\Models\Loyalty\LoyaltyAccount;
 
 class User extends Authenticatable
 {
@@ -33,7 +33,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'member_requested'
+        'member_requested',
+        'loyalty_account_id'
     ];
 
     /**
@@ -57,8 +58,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'loyalty_points' => 'integer',
+            'password' => 'hashed'
         ];
     }
 
@@ -84,10 +84,12 @@ class User extends Authenticatable
         return $this->hasMany(Member::class);
     }
 
-    public function loyaltyPointTransactions()
+
+    public function loyaltyAccount()
     {
-        return $this->hasMany(LoyaltyPointTransaction::class);
+        return $this->belongsTo(LoyaltyAccount::class, 'loyalty_account_id');
     }
+    
 
     public function isCoach(): bool
     {

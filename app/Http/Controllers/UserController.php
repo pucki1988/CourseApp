@@ -13,7 +13,15 @@ class UserController extends Controller
     public function me(Request $request)
     {
         return response()->json([
-            'user' => $request->user()
+            'user' => $request->user(),
+            'loyalty' => [ 
+                'balance' => $request->user()->loyaltyAccount?->balance() ?? 0,
+                'sport' => $request->user()->loyaltyAccount?->balanceByOrigin('sport') ?? 0,
+                'event' => $request->user()->loyaltyAccount?->balanceByOrigin('course') ?? 0,
+                'ticket' => $request->user()->loyaltyAccount?->balanceByOrigin('ticket') ?? 0,
+                'work' => $request->user()->loyaltyAccount?->balanceByOrigin('work') ?? 0,
+                'other' => $request->user()->loyaltyAccount?->balanceByOrigin('other') ?? 0
+            ]
         ]);
     }
 

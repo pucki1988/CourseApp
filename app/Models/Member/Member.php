@@ -5,6 +5,7 @@ namespace App\Models\Member;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
+use App\Models\Loyalty\LoyaltyAccount;
 
 class Member extends Model
 {
@@ -31,5 +32,10 @@ class Member extends Model
     public function user()
     {
         return $this->belongsTo(User::class,'user_id');
+    }
+
+    public function cards()
+    {
+        return $this->hasMany(Card::class);
     }
 }
