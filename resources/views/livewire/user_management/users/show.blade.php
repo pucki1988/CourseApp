@@ -312,14 +312,14 @@ new class extends Component {
     </flux:modal>
 
     <flux:modal name="assignMember">
-        <flux:heading size="lg">Member zuordnen</flux:heading>
-        <flux:text class="mt-2">Bitte Member auswählen.</flux:text>
+        <flux:heading size="lg">Mitglied zuordnen</flux:heading>
+        <flux:text class="mt-2">Bitte Mitglied auswählen.</flux:text>
 
         <div class="mt-4">
-            <flux:select wire:model="memberToAssignId" placeholder="Member auswählen">
+            <flux:select wire:model="memberToAssignId" placeholder="Mitglied auswählen">
                 @foreach ($availableMembers as $member)
                     <flux:select.option :value="$member->id">
-                        {{ $member->last_name }}, {{ $member->first_name }}
+                        {{ $member->last_name }}, {{ $member->first_name }} ({{ $member->birth_date?->format('d.m.Y') }})
                     </flux:select.option>
                 @endforeach
             </flux:select>
