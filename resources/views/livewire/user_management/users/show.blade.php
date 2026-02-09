@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 
 use App\Models\User;
+use App\Models\Member\Member;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -12,6 +13,8 @@ new class extends Component {
     public $roles;
     public $permissions;
     public $transactions = [];
+    public $availableMembers = [];
+    public ?int $memberToAssignId = null;
     public array $rolesSelected = [];
     public array $permissionsSelected = [];
     public array $roleDerived = [];
@@ -35,6 +38,8 @@ new class extends Component {
             ->flatten()
             ->unique()
             ->toArray();
+
+        $this->loadAvailableMembers();
     }
 
     public function save(): void
@@ -54,6 +59,45 @@ new class extends Component {
             ->flatten()
             ->unique()
             ->toArray();
+    }
+
+    public function loadAvailableMembers(): void
+    {
+        $this->availableMembers = Member::whereNull('user_id')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    public function openAssignMember(): void
+    {
+        $this->memberToAssignId = null;
+        $this->loadAvailableMembers();
+        Flux::modal('assignMember')->show();
+    }
+
+    public function assignMember(): void
+    {
+        if (!$this->memberToAssignId) {
+            return;
+        }
+
+        $member = Member::whereNull('user_id')->findOrFail($this->memberToAssignId);
+        $member->update(['user_id' => $this->user->id]);
+
+        $this->user->load('members');
+        $this->memberToAssignId = null;
+        $this->loadAvailableMembers();
+        Flux::modal('assignMember')->close();
+    }
+
+    public function unassignMember(int $memberId): void
+    {
+        $member = Member::where('user_id', $this->user->id)->findOrFail($memberId);
+        $member->update(['user_id' => null]);
+
+        $this->user->load('members');
+        $this->loadAvailableMembers();
     }
 
     public function openTransactions(): void
@@ -97,12 +141,18 @@ new class extends Component {
                 <label class="font-semibold">Zugeordnete Member</label>
                 <div class="mt-1 flex flex-wrap gap-2">
                     @forelse($user->members as $member)
-                        <flux:badge size="sm">
-                            {{ $member->first_name }} {{ $member->last_name }}
-                        </flux:badge>
+                        <div class="flex items-center gap-1">
+                            <flux:badge size="sm">
+                                {{ $member->first_name }} {{ $member->last_name }} <flux:badge.close wire:click="unassignMember({{ $member->id }})" />
+                            </flux:badge>
+                            
+                        </div>
                     @empty
                         <span class="text-sm text-gray-500">Keine</span>
                     @endforelse
+                </div>
+                <div class="mt-2">
+                    <flux:button size="xs" variant="ghost" wire:click="openAssignMember">Member zuordnen</flux:button>
                 </div>
             </div>
 
@@ -258,6 +308,28 @@ new class extends Component {
             <flux:modal.close>
                 <flux:button variant="ghost">Schließen</flux:button>
             </flux:modal.close>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="assignMember">
+        <flux:heading size="lg">Member zuordnen</flux:heading>
+        <flux:text class="mt-2">Bitte Member auswählen.</flux:text>
+
+        <div class="mt-4">
+            <flux:select wire:model="memberToAssignId" placeholder="Member auswählen">
+                @foreach ($availableMembers as $member)
+                    <flux:select.option :value="$member->id">
+                        {{ $member->last_name }}, {{ $member->first_name }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+                <flux:button variant="ghost">Abbrechen</flux:button>
+            </flux:modal.close>
+            <flux:button variant="primary" color="green" wire:click="assignMember">Zuordnen</flux:button>
         </div>
     </flux:modal>
 </section>
