@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Events\UserRegistered;
 use App\Events\MembershipConfirmed;
 use Spatie\Permission\Models\Role;
+use App\Models\Loyalty\LoyaltyAccount;
 
 class UserService
 {
@@ -21,6 +22,11 @@ class UserService
         ]);
 
         $user->assignRole('user');
+
+
+        $account = LoyaltyAccount::create(['type' => 'user']);
+        $user->loyalty_account_id = $account->id;
+        $user->save();
 
         event(new UserRegistered($user));
 
