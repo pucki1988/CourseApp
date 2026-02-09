@@ -115,6 +115,14 @@ new class extends Component {
                                 <span class="text-gray-500">Ort</span>
                                 <span>{{ $member->zip_code }} {{ $member->city }}</span>
                             </div>
+                            <div class="flex justify-between mt-2">
+                                <span class="text-gray-500">Aktionen</span>
+                                <span>
+                                    <a href="{{ route('member_management.members.show', $member->id) }}">
+                                        <flux:button size="xs">Details</flux:button>
+                                    </a>
+                                </span>
+                            </div>
                             
                         </div>
     </div>

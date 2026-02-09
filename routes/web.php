@@ -61,12 +61,14 @@ Route::middleware(['auth'])->group(function () {
     
     Route::middleware(['permission:members.manage','permission:members.view'])->group(function () {
        Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
+         Volt::route('/members/{member}', 'member_management.members.show')->name('member_management.members.show');
     });
 
     Route::middleware(['permission:users.manage','permission:users.view'])->group(function () {
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
         Volt::route('/users/{user}', 'user_management.users.show')->name('user_management.users.show');
         Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
+        Volt::route('/user-cards', 'user_management.users.cards')->name('user_management.users.cards');
     });
 
     Route::middleware(['permission:users.manage','permission:users.view.requested_membership'])->group(function () {

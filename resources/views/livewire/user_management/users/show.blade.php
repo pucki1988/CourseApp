@@ -11,6 +11,7 @@ new class extends Component {
     public User $user;
     public $roles;
     public $permissions;
+    public $transactions = [];
     public array $rolesSelected = [];
     public array $permissionsSelected = [];
     public array $roleDerived = [];
@@ -18,9 +19,9 @@ new class extends Component {
     public function mount($user)
     {
         if ($user instanceof User) {
-            $this->user = $user->load('roles');
+            $this->user = $user->load('roles', 'members');
         } else {
-            $this->user = User::with('roles')->findOrFail($user);
+            $this->user = User::with('roles', 'members')->findOrFail($user);
         }
 
         $this->roles = Role::all();
@@ -55,6 +56,16 @@ new class extends Component {
             ->toArray();
     }
 
+    public function openTransactions(): void
+    {
+        $account = $this->user->loyaltyAccount;
+        $this->transactions = $account
+            ? $account->transactions()->orderByDesc('created_at')->get()
+            : collect();
+
+        Flux::modal('loyaltyTransactions')->show();
+    }
+
 };
 ?>
 
@@ -75,7 +86,24 @@ new class extends Component {
 
             <div class="mb-4">
                 <label class="font-semibold">Treuepunkte</label>
-                <div><flux:badge color="lime" size="sm">{{ $user?->loyaltyAccount?->balance() ?? 0 }} Punkte</flux:badge></div>
+                <div class="flex items-center gap-2">
+                    <flux:badge color="lime" size="sm">{{ $user?->loyaltyAccount?->balance() ?? 0 }} Punkte</flux:badge>
+                    <flux:button size="xs" icon="ellipsis-horizontal" variant="ghost" wire:click="openTransactions">mehr</flux:button>
+                </div>
+            </div>
+
+        
+            <div class="mb-4">
+                <label class="font-semibold">Zugeordnete Member</label>
+                <div class="mt-1 flex flex-wrap gap-2">
+                    @forelse($user->members as $member)
+                        <flux:badge size="sm">
+                            {{ $member->first_name }} {{ $member->last_name }}
+                        </flux:badge>
+                    @empty
+                        <span class="text-sm text-gray-500">Keine</span>
+                    @endforelse
+                </div>
             </div>
 
             <div class="mb-6">
@@ -185,4 +213,51 @@ new class extends Component {
         </form>
 
     </x-users.layout>
+
+    <flux:modal name="loyaltyTransactions">
+        <flux:heading size="lg">Treuepunkte</flux:heading>
+        
+        <div class="text-end my-1">
+        <flux:badge>{{ $this->user->loyaltyAccount->balance() }} Punkte</flux:badge>
+        </div>
+        <div class="mt-4 max-h-80 overflow-auto">
+            @if($transactions && count($transactions))
+                <div class="space-y-2">
+                    @foreach($transactions as $transaction)
+                        <div class="border rounded-lg p-2 bg-white shadow-sm text-sm">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-500">Datum</span>
+                                <span><flux:badge size="sm" color="gray">{{ $transaction->created_at?->format('d.m.Y H:i') }}</flux:badge></span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-500">Punkte</span>
+                                <span>
+                                    <flux:badge size="sm" color="{{ $transaction->type === 'earn' ? 'green' : 'red' }}">
+                                        + {{ $transaction->points }}
+                                    </flux:badge>
+                                </span>
+                            </div>
+                            
+                            <div class="flex justify-between mb-1">
+                                
+                                <span class="text-gray-500">Herkunft</span>
+                                <span><flux:badge size="sm" color="gray">
+                                    {{ ucfirst($transaction->origin) }}
+                                </flux:badge></span>
+                            </div>
+                            
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-sm text-gray-500">Keine Transaktionen vorhanden.</div>
+            @endif
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <flux:modal.close>
+                <flux:button variant="ghost">Schließen</flux:button>
+            </flux:modal.close>
+        </div>
+    </flux:modal>
 </section>

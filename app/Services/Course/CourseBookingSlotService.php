@@ -56,7 +56,7 @@ class CourseBookingSlotService
                 'earn',
                 'sport',
                 $lockedSlot,
-                'Course'
+                'Sportkurs'
             );
         });
     }
