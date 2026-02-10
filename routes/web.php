@@ -15,6 +15,8 @@ Route::get('/checkin/qr/{user}', [CheckinController::class, 'handle'])
     ->name('qr.checkin')
     ->middleware('signed');
 
+Route::view('/card-balance', 'card-balance')->name('public.card-balance');
+
 
 
 
