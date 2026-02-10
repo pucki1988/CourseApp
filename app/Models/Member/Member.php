@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Loyalty\LoyaltyAccount;
+use App\Models\Member\MemberGroup;
+use App\Models\Member\Department;
 
 class Member extends Model
 {
@@ -37,5 +39,15 @@ class Member extends Model
     public function cards()
     {
         return $this->hasMany(Card::class);
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(MemberGroup::class, 'member_group_member');
+    }
+
+    public function departments()
+    {
+        return $this->belongsToMany(Department::class, 'department_member');
     }
 }

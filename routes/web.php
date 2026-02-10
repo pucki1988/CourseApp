@@ -64,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:members.manage','permission:members.view'])->group(function () {
        Volt::route('/members', 'member_management.members.index')->name('member_management.members.index');
          Volt::route('/members/{member}', 'member_management.members.show')->name('member_management.members.show');
+         Volt::route('/member-departments', 'member_management.departments.index')->name('member_management.departments.index');
+         Volt::route('/member-groups', 'member_management.groups.index')->name('member_management.groups.index');
     });
 
     Route::middleware(['permission:users.manage','permission:users.view'])->group(function () {
