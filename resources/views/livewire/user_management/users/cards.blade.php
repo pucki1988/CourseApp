@@ -126,11 +126,26 @@ new class extends Component {
     public function unassignCard(int $cardId): void
     {
         $card = Card::findOrFail($cardId);
+
+
+        $account = $card->loyaltyAccount;
+        if ($account && $account->cards()->count() === 0 && $account->user()->count() === 0) {
+            $account->delete();
+        }
+
         $card->update([
             'member_id' => null,
             'loyalty_account_id' => null,
             'active' => false,
         ]);
+
+        $this->loadCards();
+    }
+
+    public function blockCard(int $cardId): void
+    {
+        $card = Card::findOrFail($cardId);
+        $card->revoke();
 
         $this->loadCards();
     }
@@ -265,6 +280,11 @@ new class extends Component {
                             @if($card->member_id)
                                 <flux:button size="xs" variant="ghost" wire:click="unassignCard({{ $card->id }})">
                                     Zuordnung lösen
+                                </flux:button>
+                            @endif
+                            @if($card->active)
+                                <flux:button size="xs" variant="ghost" wire:click="blockCard({{ $card->id }})">
+                                    Sperren
                                 </flux:button>
                             @endif
                             <flux:button size="xs" variant="danger" wire:click="confirmDelete({{ $card->id }})">
