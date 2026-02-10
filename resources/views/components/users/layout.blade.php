@@ -29,7 +29,7 @@
             </flux:navlist.item>
             @endcan
             @can('users.view')
-            <flux:navlist.item :href="route('user_management.users.cards')" class="h-14" :current="request()->routeIs('user_management.users.cards')" wire:navigate>
+            <flux:navlist.item :href="route('user_management.cards.index')" class="h-14" :current="request()->routeIs('user_management.cards.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
                 <flux:icon.users class="h-5 w-5 md:hidden" />

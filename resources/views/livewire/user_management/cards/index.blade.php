@@ -107,7 +107,9 @@ new class extends Component {
         $accountId = null;
         if ($member->user && $member->user->loyalty_account_id) {
             $accountId = $member->user->loyalty_account_id;
-        } elseif (!$member->user) {
+        }elseif($member->cards()->count() > 0) {
+            $accountId = $member->cards()->first()->loyaltyAccount->id;
+        }elseif (!$member->user && $member->cards()->count() === 0) {
             $accountId = LoyaltyAccount::create(['type' => 'card'])->id;
         }
 
@@ -127,17 +129,22 @@ new class extends Component {
     {
         $card = Card::findOrFail($cardId);
 
-
         $account = $card->loyaltyAccount;
-        if ($account && $account->cards()->count() === 0 && $account->user()->count() === 0) {
-            $account->delete();
+        $clearAccount = false;
+        if ($account && $account->cards()->count() === 1 && $account->user()->count() === 0) {
+            $clearAccount = true;
         }
-
+        
         $card->update([
             'member_id' => null,
             'loyalty_account_id' => null,
             'active' => false,
         ]);
+
+        if ($clearAccount) {
+            $account->delete();
+        }
+
 
         $this->loadCards();
     }

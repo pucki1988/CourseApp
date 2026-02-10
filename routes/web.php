@@ -70,7 +70,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/users', 'user_management.users.index')->name('user_management.users.index');
         Volt::route('/users/{user}', 'user_management.users.show')->name('user_management.users.show');
         Volt::route('/backend_user', 'user_management.users.backend_user')->name('user_management.users.backend_user');
-        Volt::route('/user-cards', 'user_management.users.cards')->name('user_management.users.cards');
+        Volt::route('/cards', 'user_management.cards.index')->name('user_management.cards.index');
     });
 
     Route::middleware(['permission:users.manage','permission:users.view.requested_membership'])->group(function () {
