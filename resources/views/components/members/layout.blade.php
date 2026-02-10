@@ -15,7 +15,7 @@
             </flux:navlist.item>            
             @endcan
 
-            @can('members.manage')
+            @canany(['members.manage','members.view','members.create'])
             <flux:navlist.item :href="route('member_management.departments.index')" class="h-14" :current="request()->routeIs('member_management.departments.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
@@ -23,9 +23,9 @@
                 <span class="md:inline">{{ __(key: 'Sparten') }}</span>
                 </span>
             </flux:navlist.item>
-            @endcan
+            @endcanany
 
-            @can('members.manage')
+            @canany(['members.manage','members.view','members.create'])
             <flux:navlist.item :href="route('member_management.groups.index')" class="h-14" :current="request()->routeIs('member_management.groups.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
@@ -33,7 +33,7 @@
                 <span class="md:inline">{{ __(key: 'Gruppen') }}</span>
                 </span>
             </flux:navlist.item>
-            @endcan
+            @endcanany
             
             
         
