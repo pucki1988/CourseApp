@@ -15,7 +15,7 @@
             </flux:navlist.item>            
             @endcan
 
-            @canany(['members.manage','members.view','members.create'])
+            @canany(['members.create','members.update'])
             <flux:navlist.item :href="route('member_management.departments.index')" class="h-14" :current="request()->routeIs('member_management.departments.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
@@ -25,7 +25,7 @@
             </flux:navlist.item>
             @endcanany
 
-            @canany(['members.manage','members.view','members.create'])
+            @canany(['members.create','members.update'])
             <flux:navlist.item :href="route('member_management.groups.index')" class="h-14" :current="request()->routeIs('member_management.groups.index')" wire:navigate>
             
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
