@@ -300,13 +300,13 @@ new class extends Component {
                     </flux:text>
                     @can('checkin', $slot)
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->bookingSlots()->where('status', 'booked')->count()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
                     @endcan
 
                     @cannot('checkin', $slot)
                     <flux:text class="mt-2">
-                    Zusagen <flux:badge icon="information-circle">{{ $slot->course->capacity-$slot->availableSlots()  }} / {{ $slot->course->capacity }}</flux:badge>
+                    Zusagen <flux:badge icon="information-circle">{{ $slot->bookingSlots()->where('status', 'booked')->count()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
                     @endcannot
                     
