@@ -35,7 +35,7 @@ class MolliePaymentService implements PaymentService
                 "currency" => "EUR",
                 "value" => number_format($booking->total_price, 2, '.', '') // You must send the correct number of decimals, thus we enforce the use of strings
             ],
-            "description" => "Buchung ".$booking->id,
+            "description" => "Sportkurse - Buchung ".$booking->id,
             "redirectUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id.'&success=true',
             "cancelUrl" => 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$booking->id.'&success=false',
             "webhookUrl" => route('webhooks.mollie'),
