@@ -73,7 +73,7 @@ new class extends Component {
                 </div>
             </div>
             <div>
-            <flux:heading size="lg">Benutzer</flux:heading>
+            <flux:heading size="lg">Kunde</flux:heading>
                 <div class="border rounded-lg p-3 bg-white shadow-sm">
                         <div class="text-sm">
                             <div class="flex justify-between mt-1">
@@ -93,6 +93,11 @@ new class extends Component {
                                 <flux:badge size="sm">{{ $role }}</flux:badge>
                                 @endforeach
                                 </span>
+                            </div>
+
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Treuepunkte eingelöst</span>
+                                <span><flux:badge size="sm" color="{{ $booking->points_restored ? 'red' : 'green' }}">{{ $booking->redeemed_points }}</flux:badge></span>
                             </div>
 
                         </div>
