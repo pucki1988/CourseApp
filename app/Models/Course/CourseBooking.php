@@ -5,7 +5,7 @@ use App\Models\User;
 
 class CourseBooking extends Model
 {
-    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type','checkout_url'];
+    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type','checkout_url','redeemed_points','points_restored'];
 
     protected $casts = [
         'total_price' => 'decimal:2',

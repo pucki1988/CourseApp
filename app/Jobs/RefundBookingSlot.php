@@ -11,6 +11,7 @@ use App\Contracts\PaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseBookingService;
+use App\Services\Loyalty\LoyaltyPointService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -58,7 +59,8 @@ class RefundBookingSlot implements ShouldQueue
     public function handle(PaymentService $paymentService,
         BookingRefundService $bookingRefundService,
         CourseBookingSlotService $bookingSlotService,
-        CourseBookingService $courseBookingService): void
+        CourseBookingService $courseBookingService,
+        LoyaltyPointService $loyaltyPointService): void
     {
         $booking = CourseBooking::find($this->bookingId);
         $bookingSlot = CourseBookingSlot::find($this->bookingSlotId);
@@ -81,7 +83,21 @@ class RefundBookingSlot implements ShouldQueue
            
             $courseBookingService
                 ->refreshBookingStatus($booking);
-            
+
+            // 🎁 Restore loyalty points if any were redeemed for this booking (only once!)
+            if ($booking->redeemed_points > 0 && !$booking->points_restored && $booking->user && $booking->user->loyaltyAccount) {
+                $loyaltyPointService->earn(
+                    $booking->user->loyaltyAccount,
+                    $booking->redeemed_points,
+                    'earn',
+                    'sport',
+                    $booking,
+                    'Rückerstattung von Treuepunkten nach Buchungsstornierung'
+                );
+                
+                // Mark points as restored to avoid duplicate refunds
+                $booking->update(['points_restored' => true]);
+            }
 
         } catch (PaymentFailedException $e) {
 

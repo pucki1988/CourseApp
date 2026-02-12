@@ -169,7 +169,8 @@ class CourseBookingService
                 'course_id'   => $course->id,
                 'course_title' => $course->title,
                 'total_price' => $totalPrice,
-                'booking_type' => $course->booking_type
+                'booking_type' => $course->booking_type,
+                'redeemed_points' => $pointsToRedeem
             ]);
 
             if ($pointsToRedeem > 0 && $user && $user->loyaltyAccount) {
