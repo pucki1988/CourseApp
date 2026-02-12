@@ -13,6 +13,7 @@ use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
 
 use App\Exceptions\PaymentFailedException;
+use App\Services\Loyalty\LoyaltyPointService;
 
 class MolliePaymentService implements PaymentService
 {
@@ -21,7 +22,8 @@ class MolliePaymentService implements PaymentService
         protected BookingPaymentService $bookingPaymentService,
         protected BookingRefundService $bookingRefundService,
         protected CourseBookingService $courseBookingService,
-        protected CourseBookingSlotService $courseBookingSlotService
+        protected CourseBookingSlotService $courseBookingSlotService,
+        protected LoyaltyPointService $loyaltyPointService
     ) {}
 
     public function createPayment(CourseBooking $booking): PaymentResult
@@ -133,6 +135,21 @@ class MolliePaymentService implements PaymentService
     private function handleFailed(CourseBooking $booking): void
     {
         $this->bookingPaymentService->markFailed($booking);
+
+        if ($booking->redeemed_points > 0 && !$booking->points_restored && $booking->user && $booking->user->loyaltyAccount) {
+                    $this->loyaltyPointService->earn(
+                        $booking->user->loyaltyAccount,
+                        $booking->redeemed_points,
+                        'earn',
+                        'sport',
+                        $booking,
+                        'Zahlung von Buchung fehlgeschlagen - Rückerstattung von Treuepunkten'
+                    );
+                // Mark points as restored to avoid duplicate refunds
+                $booking->update(['points_restored' => true]);
+                $booking->refresh();
+        }
+
         foreach($booking->bookingSlots as $bookingSlot ){
             $this->courseBookingSlotService->cancel($bookingSlot);
         }
