@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Actions\CourseBooking\UserCancelBookingSlotAction;
+use App\Services\Loyalty\LoyaltyPointService;
 
 class CourseBookingService
 {
@@ -146,6 +147,22 @@ class CourseBookingService
                 $totalPrice += ($slot->price - $discount);  
             }
 
+
+            
+
+            $pointsToRedeem = 0;
+            $pointValueEur = (float) config('loyalty.point_value_eur', 0.01);
+            $use_loyalty = (boolean) $request->input('use_loyalty', false);
+
+            if ($use_loyalty && $user && $user->loyaltyAccount && $pointValueEur > 0) {
+                $account = $user->loyaltyAccount;
+                $maxPointsByPrice = (int) floor($totalPrice / $pointValueEur);
+                
+                $pointsToRedeem = min($account->balance(), $maxPointsByPrice, $account->balance());
+                $discountFromPoints = $pointsToRedeem * $pointValueEur;
+                $totalPrice = max(0, $totalPrice - $discountFromPoints);
+            }
+
             $booking = CourseBooking::create([
                 'user_id'     => auth()->id(),
                 'user_name' => $user->name,
@@ -154,6 +171,18 @@ class CourseBookingService
                 'total_price' => $totalPrice,
                 'booking_type' => $course->booking_type
             ]);
+
+            if ($pointsToRedeem > 0 && $user && $user->loyaltyAccount) {
+                $loyaltyService = app(LoyaltyPointService::class);
+                $loyaltyService->redeem(
+                    $user->loyaltyAccount,
+                    $pointsToRedeem,
+                    'redeem',
+                    'sport',
+                    $booking,
+                    'Einlösung für Kursbuchung'
+                );
+            }
 
             foreach ($createBookingSlots as $slot) {
 

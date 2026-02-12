@@ -20,7 +20,9 @@ class UserController extends Controller
                 'event' => $request->user()->loyaltyAccount?->balanceByOrigin('course') ?? 0,
                 'ticket' => $request->user()->loyaltyAccount?->balanceByOrigin('ticket') ?? 0,
                 'work' => $request->user()->loyaltyAccount?->balanceByOrigin('work') ?? 0,
-                'other' => $request->user()->loyaltyAccount?->balanceByOrigin('other') ?? 0
+                'other' => $request->user()->loyaltyAccount?->balanceByOrigin('other') ?? 0,
+                'point_value_eur' => (float) config('loyalty.point_value_eur', 0.01),
+                'points_to_eur' => $request->user()->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
             ]
         ]);
     }
