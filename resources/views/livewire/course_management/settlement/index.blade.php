@@ -79,10 +79,10 @@ new class extends Component {
                             </div>
                              <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Zahlung an Trainer</span>
-                                @if($slot->bookings_count >= $slot->min_participants)
-                                <span>{{ ($slot->min_participants * ($slot->price - $slot->course->member_discount)) + ((($slot->bookings_count - $slot->min_participants) /2) * ($slot->price -$slot->course->member_discount))  }} €</span>
+                                @if($slot->coach_compensation !== null)
+                                    <span>{{ number_format($slot->coach_compensation, 2, ',', '.') }} €</span>
                                 @else
-                                 <span>{{ ($slot->bookings_count * ($slot->price - $slot->course->member_discount))  }} €</span>
+                                    <span class="text-gray-400">Nicht konfiguriert</span>
                                 @endif
                             </div>
                             <div class="flex justify-between mt-1">

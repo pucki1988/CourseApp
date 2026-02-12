@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['permission:coaches.manage','permission:coaches.view'])->group(function () {
         Volt::route('/coaches', 'course_management.coaches.index')->name('course_management.coaches.index');
+        Volt::route('/coaches/{coach}/edit', 'course_management.coaches.edit')->name('course_management.coaches.edit');
         Volt::route('/coaches/{coach}', '.course_management.coaches.show')->name('course_management.coaches.show');
     });
 

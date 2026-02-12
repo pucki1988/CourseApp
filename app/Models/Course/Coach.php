@@ -36,4 +36,29 @@ class Coach extends Model
     {
         return $this->belongsToMany(Course::class);
     }
+
+    // Abrechnungsstufen
+    public function compensationTiers()
+    {
+        return $this->hasMany(CoachCompensationTier::class)->orderBy('sort_order')->orderBy('min_participants');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helper Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Calculate compensation based on participant count
+     */
+    public function calculateCompensation(int $participantCount): ?float
+    {
+        $tier = $this->compensationTiers()
+            ->where('min_participants', '<=', $participantCount)
+            ->where('max_participants', '>=', $participantCount)
+            ->first();
+
+        return $tier?->compensation;
+    }
 }

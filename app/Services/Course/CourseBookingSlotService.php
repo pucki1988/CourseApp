@@ -99,7 +99,7 @@ class CourseBookingSlotService
 
     public function loadSettlements()
     {
-        $slots = CourseSlot::with(['course.coach'])
+        $slots = CourseSlot::with(['course.coach.compensationTiers'])
         #->whereDate('date', '<', today()) // nur Slots in der Vergangenheit
         ->whereHas('bookingSlots', fn ($q) =>
         $q->where('status', 'booked')
@@ -113,6 +113,22 @@ class CourseBookingSlotService
         ->map(function ($slot) {
             $slot->revenue =  $slot->bookingSlots->where('status', 'booked')->sum('price') ?? 0;
             $slot->checked_in_users= $slot->bookingSlots->where('status', 'booked')->whereNotNull('checked_in_at')->count() ?? 0;
+            
+            // Calculate coach compensation
+            $participantCount = $slot->bookings_count;
+            $coach = $slot->course?->coach;
+            
+            if ($coach && $coach->compensationTiers) {
+                $tier = $coach->compensationTiers
+                    ->where('min_participants', '<=', $participantCount)
+                    ->where('max_participants', '>=', $participantCount)
+                    ->first();
+                    
+                $slot->coach_compensation = $tier?->compensation;
+            } else {
+                $slot->coach_compensation = null;
+            }
+            
             return $slot;
         });
 

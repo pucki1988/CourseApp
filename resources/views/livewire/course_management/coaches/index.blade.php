@@ -55,32 +55,6 @@ new class extends Component {
          $this->loadCoaches($service);
     }
 
-    public function edit(Coach $coach)
-    {
-        $this->editingId = $coach->id;
-        $this->newCoach = [
-            'name' => $coach->name,
-            'active' => $coach->active,
-            'user_id' => $coach->user_id
-        ];
-        Flux::modal('coach')->show();
-    }
-
-    public function updateCoach(CoachService $service)
-    {
-        // Konvertiere leeren String zu null
-        if (empty($this->newCoach['user_id'])) {
-            $this->newCoach['user_id'] = null;
-        }
-        $coach = Coach::find($this->editingId);
-        $service->update($coach, $this->newCoach);
-        
-        Flux::modal('coach')->close();
-        $this->initializeNewCoach();
-        $this->editingId = null;
-        $this->loadCoaches($service);
-    }
-    
     public function deleteCoach(CoachService $service, $coachId)
     {
         $coach = Coach::find($coachId);
@@ -135,7 +109,7 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <flux:button size="sm" wire:click="edit({{ $coach->id }})">
+                            <flux:button size="sm" href="{{ route('course_management.coaches.edit', $coach->id) }}">
                                 Bearbeiten
                             </flux:button>
                             <flux:button size="sm" variant="danger" 
@@ -159,10 +133,10 @@ new class extends Component {
     <flux:modal name="coach" :dismissible="false" flyout>
         <div class="space-y-6">
             <div>
-                <flux:heading size="lg">{{ $editingId ? 'Trainer bearbeiten' : 'Neuen Trainer erstellen' }}</flux:heading>
+                <flux:heading size="lg">Neuen Trainer erstellen</flux:heading>
                 <flux:text class="mt-2"></flux:text>
             </div>
-            <form wire:submit.prevent="{{ $editingId ? 'updateCoach' : 'createCoach' }}" class="space-y-4">
+            <form wire:submit.prevent="createCoach" class="space-y-4">
             <flux:input label="Name" placeholder="Name des Trainers" type="text" wire:model="newCoach.name" />
             <flux:field>
                 <flux:label>User zuweisen</flux:label>
@@ -181,10 +155,9 @@ new class extends Component {
             <div class="flex gap-2">
                 <flux:spacer />
                 <flux:button type="button" variant="ghost" wire:click="cancel">Abbrechen</flux:button>
-                <flux:button type="submit" variant="primary">{{ $editingId ? 'Trainer aktualisieren' : 'Trainer erstellen' }}</flux:button>
+                <flux:button type="submit" variant="primary">Trainer erstellen</flux:button>
             </div>
             </form>
         </div>
     </flux:modal>
-</section>
 </section>
