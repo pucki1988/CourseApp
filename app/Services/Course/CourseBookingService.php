@@ -124,6 +124,8 @@ class CourseBookingService
                 throw new \Exception("Kein Slot ausgewählt");
             }
 
+
+
             $createBookingSlots = [];
             $totalPrice   = 0;
             $user=auth('sanctum')->user();
@@ -140,7 +142,19 @@ class CourseBookingService
                     ->count();
 
                 if ($bookedSlotsCount >= $slot->capacity) {
-                    throw new \Exception("Slot {$slot->id} ist ausgebucht");
+                    throw new \Exception("Termin {$slot->id} ist ausgebucht");
+                }
+
+                // Check if user already booked this slot
+                $userAlreadyBooked = CourseBookingSlot::where('course_slot_id', $slot->id)
+                    ->where('status', 'booked')
+                    ->whereHas('booking', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })
+                    ->exists();
+
+                if ($userAlreadyBooked) {
+                    throw new \Exception("Sie haben diesen Termin bereits gebucht");
                 }
 
                 $createBookingSlots[] = $slot;
