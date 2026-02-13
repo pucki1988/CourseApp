@@ -12,8 +12,8 @@ new class extends Component {
     public $members;
     public $roles;
     public $name = '';
+    public $showExited = 'active'; // 'active', 'exited', 'all'
     public ?string $member_import_message = null;
-    
 
     public function mount(MemberService $memberService,MemberImportService $memberImportService)
     {
@@ -27,10 +27,16 @@ new class extends Component {
         $this->loadMembers($memberService);
     }
 
+    public function updatedShowExited(MemberService $memberService)
+    {
+        $this->loadMembers($memberService);
+    }
+
     private function loadMembers(MemberService $memberService){
 
         $filters = [
-            'name' => $this->name
+            'name' => $this->name,
+            'show_exited' => $this->showExited
         ];
         $this->members=$memberService->getMembers($filters);
     }
@@ -71,7 +77,7 @@ new class extends Component {
         @endif
     
         <!-- FILTERS -->
-    <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
         <!-- Suche -->
 
@@ -80,6 +86,13 @@ new class extends Component {
         placeholder="Suche nach Name..."
         icon="magnifying-glass"
         />
+
+        <!-- Filter für ausgetretene Mitglieder -->
+        <flux:select wire:model.live="showExited">
+            <option value="active">Nur Aktive</option>
+            <option value="exited">Nur Ausgetretene</option>
+            <option value="all">Alle</option>
+        </flux:select>
 
         <div class="text-sm text-gray-500 text-end">
         {{ $this->members->count() }}
@@ -115,6 +128,12 @@ new class extends Component {
                                 <span class="text-gray-500">Ort</span>
                                 <span>{{ $member->zip_code }} {{ $member->city }}</span>
                             </div>
+                            @if($member->left_at)
+                            <div class="flex justify-between mt-1">
+                                <span class="text-gray-500">Ausgetreten am</span>
+                                <span class="text-red-600 font-semibold">{{ $member->left_at->format('d.m.Y') }}</span>
+                            </div>
+                            @endif
                             <div class="flex justify-between mt-2">
                                 <span class="text-gray-500">Aktionen</span>
                                 <span>

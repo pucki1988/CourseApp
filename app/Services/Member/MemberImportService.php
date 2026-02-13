@@ -96,9 +96,16 @@ class MemberImportService
             }
             
             foreach ($newRows as $row) {
-                Member::create(
+                $member = Member::create(
                     $this->transform($row)
                 );
+                
+                // joined Status-Eintrag erstellen
+                $member->statusHistory()->create([
+                    'action' => 'joined',
+                    'action_date' => $member->entry_date,
+                ]);
+                
                 $count++;
             }
         });

@@ -34,6 +34,26 @@
                 </span>
             </flux:navlist.item>
             @endcanany
+
+            @canany(['members.create','members.update'])
+            <flux:navlist.item :href="route('member_management.families.index')" class="h-14" :current="request()->routeIs('member_management.families.index')" wire:navigate>
+
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __(key: 'Familien') }}</span>
+                </span>
+            </flux:navlist.item>
+            @endcanany
+
+            @canany(['members.create','members.update'])
+            <flux:navlist.item :href="route('member_management.membership_types.index')" class="h-14" :current="request()->routeIs('member_management.membership_types.index')" wire:navigate>
+
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.users class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __(key: 'Mitgliedschaftstypen') }}</span>
+                </span>
+            </flux:navlist.item>
+            @endcanany
             
             
         

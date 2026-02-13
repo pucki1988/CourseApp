@@ -31,6 +31,16 @@ class MemberService
             $members->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$name}%"]);
         }
 
+        // Filter für ausgetretene Mitglieder
+        if (isset($filters['show_exited'])) {
+            if ($filters['show_exited'] === 'active') {
+                $members->whereNull('left_at');
+            } elseif ($filters['show_exited'] === 'exited') {
+                $members->whereNotNull('left_at');
+            }
+            // 'all' zeigt alle an (kein zusätzlicher Filter)
+        }
+
         return $members->get();
     }
 }

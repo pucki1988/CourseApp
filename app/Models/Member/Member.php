@@ -18,6 +18,8 @@ class Member extends Model
         'first_name',
         'last_name',
         'entry_date',
+        'left_at',
+        'deceased_at',
         'external_id',
         'city',
         'zip_code',
@@ -28,6 +30,8 @@ class Member extends Model
 
     protected $casts = [
         'entry_date' => 'date',
+        'left_at' => 'date',
+        'deceased_at' => 'date',
         'birth_date' => 'date'
     ];
 
@@ -49,5 +53,30 @@ class Member extends Model
     public function departments()
     {
         return $this->belongsToMany(Department::class, 'department_member');
+    }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(MemberStatusHistory::class)->orderBy('action_date', 'desc');
+    }
+
+    public function families()
+    {
+        return $this->belongsToMany(Family::class, 'family_member')
+            ->withPivot('joined_at', 'left_at')
+            ->withTimestamps()
+            ->whereNull('family_member.left_at');
+    }
+
+    public function memberships()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_member')
+            ->withPivot('role', 'amount_override', 'joined_at', 'left_at')
+            ->withTimestamps();
+    }
+
+    public function payingMemberships()
+    {
+        return $this->hasMany(Membership::class, 'payer_member_id');
     }
 }
