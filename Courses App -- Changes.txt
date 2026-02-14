@@ -48,3 +48,14 @@ e Coach Daten sollen im Response nur teilweise sichtbar sein
 
 Future
 o Raumplan 
+
+
+Mitglieder
++ Beendigung Mitgliedschaft, wenn Payer Mitgliedschaft beendet, wenn Mitglied Mitgliedschaft beendet der in Familie ist die anderen aber nicht.
++ Beenden der Mitgliedschaft eines Mitglied auch wenn nicht Payer. Was passiert mit den anderen. Läuft die neue dann ab wann? 
++ Neuanlage von Mitglieder in der Oberfläche und von extern
++ IBAN Check vor Neuanlage
++ Schwebender Status vor endgültiger Anlage des Mitglieds
++ Bank Account an Member hängen?
++ Gruppen erstellen mit Mitgliederauswahl
++ Einzüge welches Datum damit das eingezogen wird?

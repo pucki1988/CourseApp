@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Member;
 
 use App\Models\Member\Member;
 use App\Models\Member\Membership;
@@ -172,6 +172,36 @@ class MembershipService
             throw new \InvalidArgumentException('Zahler muss Teil der Mitgliedschaft sein');
         }
 
+        // Prevent multiple recurring memberships per member
+        if ($type->billing_mode === 'recurring') {
+            $conflictingMemberIds = Member::whereIn('id', $memberIds)
+                ->whereHas('memberships', function ($query) {
+                    $query->whereNull('membership_member.left_at')
+                        ->where('memberships.status', 'active')
+                        ->whereHas('type', function ($typeQuery) {
+                            $typeQuery->where('billing_mode', 'recurring');
+                        });
+                })
+                ->pluck('id');
+
+            if ($conflictingMemberIds->isNotEmpty()) {
+                $conflictingNames = $members
+                    ->whereIn('id', $conflictingMemberIds)
+                    ->map(function ($member) {
+                        return trim($member->first_name . ' ' . $member->last_name);
+                    })
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->implode(', ');
+
+                $nameSuffix = $conflictingNames !== '' ? " ({$conflictingNames})" : '';
+                throw new \InvalidArgumentException(
+                    'Mitglieder haben bereits eine wiederkehrende Mitgliedschaft' . $nameSuffix
+                );
+            }
+        }
+
         // Determine billing cycle
         $cycle = $type->billing_mode === 'one_time'
             ? 'once'
@@ -201,10 +231,16 @@ class MembershipService
     /**
      * End membership for a specific member
      */
-    public function removeMemberFromMembership(Membership $membership, Member $member): void
+    public function removeMemberFromMembership(
+        Membership $membership,
+        Member $member,
+        ?string $leftAt = null
+    ): void
     {
+        $leftAtDate = $leftAt ?? now()->toDateString();
+
         $member->memberships()->updateExistingPivot($membership->id, [
-            'left_at' => now()->toDateString(),
+            'left_at' => $leftAtDate,
         ]);
 
         // If no active members remain, end the entire membership
@@ -212,9 +248,99 @@ class MembershipService
         if ($activeMembers === 0) {
             $membership->update([
                 'status' => 'ended',
-                'ended_at' => now()->toDateString(),
+                'ended_at' => $leftAtDate,
             ]);
         }
+    }
+
+    /**
+     * End a member's membership status (exit the member)
+     */
+    public function endMemberMembership(Member $member, string $exitDate): void
+    {
+        $activeMemberships = $member->memberships()
+            ->whereNull('membership_member.left_at')
+            ->get();
+
+        foreach ($activeMemberships as $membership) {
+            $this->removeMemberFromMembership($membership, $member, $exitDate);
+        }
+
+        $member->update(['left_at' => $exitDate]);
+
+        $member->statusHistory()->create([
+            'action' => 'exited',
+            'action_date' => $exitDate,
+        ]);
+
+        $member->refresh();
+    }
+
+    /**
+     * Reactivate a member's membership status
+     */
+    public function reactivateMemberMembership(Member $member): void
+    {
+        if ($member->deceased_at) {
+            throw new \InvalidArgumentException('Verstorbene Mitglieder können nicht reaktiviert werden');
+        }
+
+        $member->statusHistory()->create([
+            'action' => 'reactivated',
+            'action_date' => now()->toDateString(),
+        ]);
+
+        $member->update(['left_at' => null]);
+        $member->refresh();
+
+        $hasActiveMembership = $member->memberships()
+            ->whereNull('membership_member.left_at')
+            ->exists();
+
+        if ($hasActiveMembership) {
+            return;
+        }
+
+        $suggestedType = $this->suggestMembershipType($member);
+        if (!$suggestedType) {
+            return;
+        }
+
+        $memberIds = $this->getSuggestedMemberIds($member);
+        $members = Member::whereIn('id', $memberIds)->get();
+        $payer = $this->getSuggestedPayer($members);
+
+        if (!$payer) {
+            return;
+        }
+
+        $billingCycle = $suggestedType->interval === 'yearly' ? 'yearly' : 'monthly';
+
+        $this->assignMembership(
+            $suggestedType,
+            $memberIds,
+            $payer->id,
+            $billingCycle,
+            now()->toDateString()
+        );
+    }
+
+    /**
+     * Mark a member as deceased
+     */
+    public function markMemberDeceased(Member $member, string $deceasedDate): void
+    {
+        $member->update([
+            'deceased_at' => $deceasedDate,
+            'left_at' => $deceasedDate,
+        ]);
+
+        $member->statusHistory()->create([
+            'action' => 'deceased',
+            'action_date' => $deceasedDate,
+        ]);
+
+        $member->refresh();
     }
 
     /**

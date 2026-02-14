@@ -14,6 +14,7 @@ new class extends Component {
     public ?int $familyId = null;
     public string $name = '';
     public array $selectedMemberIds = [];
+    public string $memberSearch = '';
 
     public ?int $deleteId = null;
 
@@ -43,6 +44,7 @@ new class extends Component {
         $this->familyId = null;
         $this->name = '';
         $this->selectedMemberIds = [];
+        $this->memberSearch = '';
     }
 
     public function openCreate(): void
@@ -57,6 +59,7 @@ new class extends Component {
         $this->familyId = $family->id;
         $this->name = $family->name;
         $this->selectedMemberIds = $family->members->pluck('id')->toArray();
+        $this->memberSearch = '';
 
         Flux::modal('editFamily')->show();
     }
@@ -171,7 +174,7 @@ new class extends Component {
                         </div>
                         <div class="mt-2 text-xs text-gray-500 border-t pt-2">
                             @foreach($family->members as $member)
-                                <div>{{ $member->first_name }} {{ $member->last_name }}</div>
+                                <div>{{ $member->first_name }} {{ $member->last_name }} | {{ $member->birth_date?->format('d.m.Y') ?? '-' }}</div>
                             @endforeach
                         </div>
                         <div class="flex justify-end mt-2 gap-2">
@@ -191,15 +194,29 @@ new class extends Component {
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
 
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
             <div class="space-y-2">
                 <div class="text-sm font-semibold">Mitglieder auswählen</div>
                 <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
-                    @foreach($members as $member)
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
                         <label class="flex items-center gap-2">
                             <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
                             <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
                         </label>
-                    @endforeach
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -219,15 +236,29 @@ new class extends Component {
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
 
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
             <div class="space-y-2">
                 <div class="text-sm font-semibold">Mitglieder auswählen</div>
                 <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
-                    @foreach($members as $member)
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
                         <label class="flex items-center gap-2">
                             <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
                             <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
                         </label>
-                    @endforeach
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
                 </div>
             </div>
         </div>
