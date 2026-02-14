@@ -533,7 +533,7 @@ new class extends Component {
         </div>
         </div>
         <div>
-        <flux:heading size="lg" class="my-2">Mitgliedschaften</flux:heading>
+        <flux:heading size="lg" class="my-2">Verträge</flux:heading>
         <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
             <div class="flex justify-end mb-3">
                 <div class="flex gap-2">
