@@ -56,6 +56,7 @@ Mitglieder
 + Neuanlage von Mitglieder in der Oberfläche und von extern
 + IBAN Check vor Neuanlage
 + Schwebender Status vor endgültiger Anlage des Mitglieds
-+ Bank Account an Member hängen?
+e Bank Account an Member hängen
+e Bank Account an Transaktion
 + Gruppen erstellen mit Mitgliederauswahl
 + Einzüge welches Datum damit das eingezogen wird?

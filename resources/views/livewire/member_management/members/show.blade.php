@@ -6,7 +6,9 @@ use App\Models\Member\Member;
 use App\Models\Member\MemberGroup;
 use App\Models\Member\Membership;
 use App\Models\Member\MembershipType;
+use App\Models\Member\BankAccount;
 use App\Services\Member\MembershipService;
+use App\Services\Member\BankAccountService;
 use Flux\Flux;
 
 new class extends Component {
@@ -26,11 +28,31 @@ new class extends Component {
     public ?string $editBillingCycle = 'monthly';
     public ?int $editPayerMemberId = null;
     public ?string $editStartDate = null;
+    public $editMembershipPayments = [];
+    public ?int $paymentHistoryMembershipId = null;
+    public ?string $paymentHistoryStartDate = null;
+    public ?string $paymentHistoryEndDate = null;
+    public string $paymentHistoryStatus = '';
     public ?int $assignMembershipTypeId = null;
     public ?string $assignBillingCycle = 'monthly';
     public ?int $assignPayerMemberId = null;
     public array $assignMemberIds = [];
     public ?string $assignStartDate = null;
+
+    public ?string $bankAccountAccountHolder = null;
+    public ?string $bankAccountIban = null;
+    public ?string $bankAccountBic = null;
+    public ?string $bankAccountMandateReference = null;
+    public ?string $bankAccountMandateSignedAt = null;
+    public bool $bankAccountIsDefault = false;
+
+    public ?int $editingBankAccountId = null;
+    public ?string $editBankAccountAccountHolder = null;
+    public ?string $editBankAccountIban = null;
+    public ?string $editBankAccountBic = null;
+    public ?string $editBankAccountMandateReference = null;
+    public ?string $editBankAccountMandateSignedAt = null;
+    public bool $editBankAccountIsDefault = false;
     
     public $exitDate = '';
     public $deceasedDate = '';
@@ -38,9 +60,9 @@ new class extends Component {
     public function mount($member)
     {
         if ($member instanceof Member) {
-            $this->member = $member->load(['user', 'cards', 'groups', 'departments', 'statusHistory', 'memberships.type', 'memberships.payer', 'families.members']);
+            $this->member = $member->load(['user', 'cards', 'groups', 'departments', 'statusHistory', 'memberships.type', 'memberships.payer', 'families.members', 'bankAccounts.payments']);
         } else {
-            $this->member = Member::with(['user', 'cards', 'groups', 'departments', 'statusHistory', 'memberships.type', 'memberships.payer', 'families.members'])->findOrFail($member);
+            $this->member = Member::with(['user', 'cards', 'groups', 'departments', 'statusHistory', 'memberships.type', 'memberships.payer', 'families.members', 'bankAccounts.payments'])->findOrFail($member);
         }
 
         $this->groups = MemberGroup::all();
@@ -63,7 +85,7 @@ new class extends Component {
             ->orderBy('first_name')
             ->get();
 
-        $this->member->load(['memberships.type', 'memberships.payer']);
+        $this->member->load(['memberships.type', 'memberships.payer', 'bankAccounts.payments']);
     }
 
     public function save(): void
@@ -223,7 +245,7 @@ new class extends Component {
 
     public function openEditMembership(int $membershipId): void
     {
-        $membership = Membership::with('members', 'type', 'payer')->findOrFail($membershipId);
+        $membership = Membership::with('members', 'type', 'payer', 'payments.bankAccount')->findOrFail($membershipId);
 
         if (!$membership->members->pluck('id')->contains($this->member->id)) {
             return;
@@ -303,6 +325,62 @@ new class extends Component {
         $this->editPayerMemberId = null;
         $this->editStartDate = null;
         Flux::modal('edit-membership-modal')->close();
+    }
+
+    public function openPaymentHistory(int $membershipId): void
+    {
+        $membership = Membership::with('payments.bankAccount')->findOrFail($membershipId);
+
+        $this->paymentHistoryMembershipId = $membershipId;
+        $this->paymentHistoryStartDate = now()->subYears(2)->toDateString();
+        $this->paymentHistoryEndDate = now()->toDateString();
+        $this->paymentHistoryStatus = '';
+        $this->editMembershipPayments = $membership->payments
+            ->sortByDesc('due_date')
+            ->values();
+
+        Flux::modal('payment-history-modal')->show();
+    }
+
+    public function closePaymentHistory(): void
+    {
+        $this->paymentHistoryMembershipId = null;
+        $this->editMembershipPayments = [];
+        $this->paymentHistoryStartDate = null;
+        $this->paymentHistoryEndDate = null;
+        $this->paymentHistoryStatus = '';
+        Flux::modal('payment-history-modal')->close();
+    }
+
+    public function updatePaymentStatus(int $paymentId, string $status): void
+    {
+        try {
+            $payment = \App\Models\Member\MembershipPayment::findOrFail($paymentId);
+            
+            $validStatuses = ['pending', 'paid', 'cancelled'];
+            if (!in_array($status, $validStatuses)) {
+                Flux::toast('Ungültiger Status', variant: 'danger');
+                return;
+            }
+
+            $payment->update(['status' => $status]);
+            
+            // Reload the payments for this membership
+            $membership = Membership::with('payments.bankAccount')->findOrFail($this->paymentHistoryMembershipId);
+            $this->editMembershipPayments = $membership->payments
+                ->sortByDesc('due_date')
+                ->values();
+
+            $statusLabels = [
+                'pending' => 'Offen',
+                'paid' => 'Bezahlt',
+                'cancelled' => 'Storniert',
+            ];
+            
+            Flux::toast('Status aktualisiert auf: ' . $statusLabels[$status]);
+        } catch (\Exception $e) {
+            Flux::toast('Fehler beim Aktualisieren des Status: ' . $e->getMessage(), variant: 'danger');
+        }
     }
 
     public function removeMembership(int $membershipId): void
@@ -386,6 +464,161 @@ new class extends Component {
     {
         $this->deceasedDate = '';
         Flux::modal('deceased-member-modal')->close();
+    }
+
+    public function openAddBankAccount(): void
+    {
+        
+
+        $this->bankAccountAccountHolder = trim($this->member->first_name . ' ' . $this->member->last_name);
+        $this->bankAccountIban = null;
+        $this->bankAccountBic = null;
+        $this->bankAccountMandateReference = null;
+        $this->bankAccountMandateSignedAt = null;
+        $this->bankAccountIsDefault = $this->member->bankAccounts->isEmpty();
+
+        Flux::modal('add-bank-account-modal')->show();
+    }
+
+    public function createBankAccount(): void
+    {
+        $this->validate([
+            'bankAccountAccountHolder' => 'required|string|max:255',
+            'bankAccountIban' => ['required', 'string', 'max:34', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/i'],
+            'bankAccountBic' => ['nullable', 'string', 'max:11', 'regex:/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i'],
+            'bankAccountMandateReference' => 'nullable|string|max:255',
+            'bankAccountMandateSignedAt' => 'nullable|date',
+        ], [
+            'bankAccountAccountHolder.required' => 'Kontoinhaber ist erforderlich',
+            'bankAccountIban.required' => 'IBAN ist erforderlich',
+            'bankAccountIban.regex' => 'IBAN Format ist ungueltig',
+            'bankAccountBic.regex' => 'BIC Format ist ungueltig',
+        ]);
+
+        $service = app(BankAccountService::class);
+        $service->createForMember($this->member, [
+            'account_holder' => $this->bankAccountAccountHolder,
+            'iban' => $this->bankAccountIban,
+            'bic' => $this->bankAccountBic,
+            'mandate_reference' => $this->bankAccountMandateReference,
+            'mandate_signed_at' => $this->bankAccountMandateSignedAt,
+            'is_default' => $this->bankAccountIsDefault,
+            'status' => 'active',
+        ]);
+
+        $this->member->load('bankAccounts');
+        Flux::modal('add-bank-account-modal')->close();
+        Flux::toast('Bankverbindung hinzugefuegt');
+    }
+
+    public function closeAddBankAccount(): void
+    {
+        $this->bankAccountAccountHolder = null;
+        $this->bankAccountIban = null;
+        $this->bankAccountBic = null;
+        $this->bankAccountMandateReference = null;
+        $this->bankAccountMandateSignedAt = null;
+        $this->bankAccountIsDefault = false;
+        Flux::modal('add-bank-account-modal')->close();
+    }
+
+    public function openEditBankAccount(int $bankAccountId): void
+    {
+    
+        $account = $this->member->bankAccounts->firstWhere('id', $bankAccountId);
+        if (!$account) {
+            return;
+        }
+
+        $this->editingBankAccountId = $account->id;
+        $this->editBankAccountAccountHolder = $account->account_holder;
+        $this->editBankAccountIban = $account->iban;
+        $this->editBankAccountBic = $account->bic;
+        $this->editBankAccountMandateReference = $account->mandate_reference;
+        $this->editBankAccountMandateSignedAt = $account->mandate_signed_at?->format('Y-m-d');
+        $this->editBankAccountIsDefault = (bool) $account->is_default;
+
+        Flux::modal('edit-bank-account-modal')->show();
+    }
+
+    public function updateBankAccount(): void
+    {
+        $this->validate([
+            'editBankAccountAccountHolder' => 'required|string|max:255',
+            'editBankAccountIban' => ['required', 'string', 'max:34', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/i'],
+            'editBankAccountBic' => ['nullable', 'string', 'max:11', 'regex:/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/i'],
+            'editBankAccountMandateReference' => 'nullable|string|max:255',
+            'editBankAccountMandateSignedAt' => 'nullable|date',
+        ], [
+            'editBankAccountAccountHolder.required' => 'Kontoinhaber ist erforderlich',
+            'editBankAccountIban.required' => 'IBAN ist erforderlich',
+            'editBankAccountIban.regex' => 'IBAN Format ist ungueltig',
+            'editBankAccountBic.regex' => 'BIC Format ist ungueltig',
+        ]);
+
+        $account = $this->member->bankAccounts->firstWhere('id', $this->editingBankAccountId);
+        if (!$account) {
+            return;
+        }
+
+        $service = app(BankAccountService::class);
+        $service->updateBankAccount($account, [
+            'account_holder' => $this->editBankAccountAccountHolder,
+            'iban' => $this->editBankAccountIban,
+            'bic' => $this->editBankAccountBic,
+            'mandate_reference' => $this->editBankAccountMandateReference,
+            'mandate_signed_at' => $this->editBankAccountMandateSignedAt,
+            'is_default' => $this->editBankAccountIsDefault,
+        ]);
+
+        $this->member->load('bankAccounts');
+        Flux::modal('edit-bank-account-modal')->close();
+        Flux::toast('Bankverbindung aktualisiert');
+    }
+
+    public function revokeBankAccount(int $bankAccountId): void
+    {
+        $account = $this->member->bankAccounts->firstWhere('id', $bankAccountId);
+        if (!$account) {
+            return;
+        }
+
+        $service = app(BankAccountService::class);
+        $service->revokeBankAccount($account);
+
+        $this->member->load('bankAccounts');
+        Flux::toast('Bankverbindung widerrufen');
+    }
+
+    public function deleteBankAccount(int $bankAccountId): void
+    {
+        $account = $this->member->bankAccounts->firstWhere('id', $bankAccountId);
+        if (!$account) {
+            return;
+        }
+
+        $service = app(BankAccountService::class);
+        $deleted = $service->deleteBankAccount($account);
+
+        if (!$deleted) {
+            Flux::toast('Bankverbindung kann nicht gelöscht werden, da bereits Zahlungen damit verknüpft sind', variant: 'warning');
+            return;
+        }
+
+        $this->member->load('bankAccounts.payments');
+        Flux::toast('Bankverbindung gelöscht');
+    }
+
+    public function closeEditBankAccount(): void
+    {
+        $this->editingBankAccountId = null;
+        $this->editBankAccountAccountHolder = null;
+        $this->editBankAccountIban = null;
+        $this->editBankAccountBic = null;
+        $this->editBankAccountMandateReference = null;
+        $this->editBankAccountMandateSignedAt = null;
+        $this->editBankAccountIsDefault = false;
+        Flux::modal('edit-bank-account-modal')->close();
     }
 
 };
@@ -537,8 +770,8 @@ new class extends Component {
         <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
             <div class="flex justify-end mb-3">
                 <div class="flex gap-2">
-                    <flux:button size="sm" icon="sparkles" wire:click="openAssignMembership">automatisch zuweisen</flux:button>
-                    <flux:button size="sm" icon="plus" variant="ghost" wire:click="openManualAssignMembership">neu zuweisen</flux:button>
+                    <flux:button size="sm" icon="sparkles" wire:click="openAssignMembership">automatisch</flux:button>
+                    <flux:button size="sm" icon="plus" wire:click="openManualAssignMembership">Neu</flux:button>
                 </div>
             </div>
 
@@ -564,7 +797,10 @@ new class extends Component {
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <flux:button size="xs" variant="primary" wire:click="openEditMembership({{ $membership->id }})">Bearbeiten</flux:button>
+                                
+                            <flux:button size="xs" icon="list-bullet" wire:click="openPaymentHistory({{ $membership->id }})"></flux:button>
+                            <flux:button size="xs" variant="primary" wire:click="openEditMembership({{ $membership->id }})">Bearbeiten</flux:button>
+                                
                                 <flux:button size="xs" variant="danger" wire:click="removeMembership({{ $membership->id }})">Beenden</flux:button>
                             </div>
                         </div>
@@ -611,6 +847,62 @@ new class extends Component {
             </div>
         </div>
         @endif
+
+        <flux:heading size="lg" class="mt-2">Bankverbindungen</flux:heading>
+        <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
+            <div class="flex justify-end mb-3">
+                <flux:button size="sm" icon="plus" wire:click="openAddBankAccount">Neu</flux:button>
+            </div>
+
+            @if($member->bankAccounts->isEmpty())
+                <div class="text-sm text-gray-500">Keine Bankverbindungen hinterlegt.</div>
+            @else
+                <div class="space-y-3">
+                    @foreach($member->bankAccounts as $account)
+                        @php
+                            $iban = $account->iban;
+                            $maskedIban = $iban
+                                ? substr($iban, 0, 4) . ' **** **** ' . substr($iban, -4)
+                                : '-';
+                        @endphp
+                        <div class="flex items-center justify-between border-b pb-2 last:border-b-0 last:pb-0">
+                            <div class="text-sm">
+                                <div class="font-semibold">{{ $account->account_holder }}</div>
+                                <div class="text-gray-500">
+                                    {{ $maskedIban }}
+                                    @if($account->bic)
+                                        · BIC: {{ $account->bic }}
+                                    @endif
+                                    @if($account->mandate_reference)
+                                        · Mandat: {{ $account->mandate_reference }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if($account->is_default)
+                                    <flux:badge size="sm" color="green">Standard</flux:badge>
+                                @endif
+                                @if($account->status !== 'active')
+                                    <flux:badge size="sm" color="red">{{ $account->status }}</flux:badge>
+                                @endif
+                                <flux:button size="xs" variant="primary" wire:click="openEditBankAccount({{ $account->id }})">Bearbeiten</flux:button>
+                                @if($account->status === 'active')
+                                    @php
+                                        $hasPayments = $account->payments()->exists();
+                                    @endphp
+                                    @if($hasPayments)
+                                        <flux:button size="xs" variant="danger" wire:click="revokeBankAccount({{ $account->id }})">Widerrufen</flux:button>
+                                    @else
+                                        <flux:button size="xs" variant="danger" wire:click="deleteBankAccount({{ $account->id }})">Löschen</flux:button>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                
+            @endif
+        </div>
 
 
 
@@ -801,6 +1093,218 @@ new class extends Component {
                 <div class="flex gap-2 pt-4">
                     <flux:spacer />
                     <flux:button type="button" variant="ghost" wire:click="closeEditMembership">Abbrechen</flux:button>
+                    <flux:button type="submit" variant="primary">Speichern</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="payment-history-modal" :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Einzugshistorie</flux:heading>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-3">
+                <flux:input
+                    label="Von"
+                    type="date"
+                    wire:model="paymentHistoryStartDate"
+                />
+                <flux:input
+                    label="Bis"
+                    type="date"
+                    wire:model="paymentHistoryEndDate"
+                />
+                <flux:select label="Status" wire:model="paymentHistoryStatus">
+                    <option value="">Alle</option>
+                    <option value="pending">Offen</option>
+                    <option value="paid">Bezahlt</option>
+                    <option value="cancelled">Storniert</option>
+                </flux:select>
+            </div>
+
+            @php
+                $filteredPayments = collect($editMembershipPayments)
+                    ->filter(function ($payment) {
+                        if ($this->paymentHistoryStatus !== '' && $payment->status !== $this->paymentHistoryStatus) {
+                            return false;
+                        }
+
+                        if ($this->paymentHistoryStartDate) {
+                            $startDate = \Illuminate\Support\Carbon::parse($this->paymentHistoryStartDate)->startOfDay();
+                            if ($payment->due_date && $payment->due_date->lt($startDate)) {
+                                return false;
+                            }
+                        }
+
+                        if ($this->paymentHistoryEndDate) {
+                            $endDate = \Illuminate\Support\Carbon::parse($this->paymentHistoryEndDate)->endOfDay();
+                            if ($payment->due_date && $payment->due_date->gt($endDate)) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    })
+                    ->values();
+            @endphp
+
+            @if($filteredPayments->isEmpty())
+                <div class="text-sm text-gray-500">Keine Einzuege vorhanden.</div>
+            @else
+                <div class="space-y-2 max-h-72 overflow-auto border rounded-md p-3">
+                    @foreach($filteredPayments as $payment)
+                        @php
+                            $iban = $payment->bankAccount?->iban;
+                            $maskedIban = $iban
+                                ? substr($iban, 0, 4) . ' **** **** ' . substr($iban, -4)
+                                : '-';
+                        @endphp
+                        <div class="flex items-center justify-between border-b pb-2 last:border-b-0 last:pb-0">
+                            <div class="text-sm flex-1">
+                                <div class="font-semibold">
+                                    {{ $payment->due_date?->format('d.m.Y') ?? '-' }}
+                                    · {{ number_format($payment->amount, 2, ',', '.') }} €
+                                </div>
+                                <div class="text-gray-500">
+                                    {{ $payment->method }} · {{ $payment->status }}
+                                    @if($payment->bankAccount)
+                                        · {{ $maskedIban }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                @if($payment->status === 'paid')
+                                    <flux:badge size="sm" color="green">Bezahlt</flux:badge>
+                                @elseif($payment->status === 'pending')
+                                    <flux:badge size="sm" color="yellow">Offen</flux:badge>
+                                @else
+                                    <flux:badge size="sm" color="red">Storniert</flux:badge>
+                                @endif
+                                <flux:dropdown position="left" align="end">
+                                    <flux:button size="sm" icon="ellipsis-horizontal" variant="subtle" />
+                                    <flux:menu>
+                                        @if($payment->status !== 'paid')
+                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'paid')">
+                                                Als bezahlt 
+                                            </flux:menu.item>
+                                        @endif
+                                        @if($payment->status !== 'cancelled')
+                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'cancelled')">
+                                                Als storniert 
+                                            </flux:menu.item>
+                                        @endif
+                                        @if($payment->status !== 'pending')
+                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'pending')">
+                                                Als offen 
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="flex gap-2 pt-4">
+                <flux:spacer />
+                <flux:button type="button" variant="ghost" wire:click="closePaymentHistory">Schliessen</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="add-bank-account-modal" :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Bankverbindung hinzufuegen</flux:heading>
+                <flux:text class="mt-2">Bitte Bankdaten eingeben.</flux:text>
+            </div>
+
+            <form wire:submit.prevent="createBankAccount" class="space-y-4">
+                <flux:input
+                    label="Kontoinhaber"
+                    wire:model="bankAccountAccountHolder"
+                />
+
+                <flux:input
+                    label="IBAN"
+                    wire:model="bankAccountIban"
+                />
+
+                <flux:input
+                    label="BIC"
+                    wire:model="bankAccountBic"
+                />
+
+                <flux:input
+                    label="Mandatsreferenz"
+                    wire:model="bankAccountMandateReference"
+                />
+
+                <flux:input
+                    label="Mandat unterschrieben am"
+                    type="date"
+                    wire:model="bankAccountMandateSignedAt"
+                />
+
+                <label class="inline-flex items-center gap-2">
+                    <input type="checkbox" wire:model="bankAccountIsDefault" />
+                    <span class="text-sm">Als Standardkonto setzen</span>
+                </label>
+
+                <div class="flex gap-2 pt-4">
+                    <flux:spacer />
+                    <flux:button type="button" variant="ghost" wire:click="closeAddBankAccount">Abbrechen</flux:button>
+                    <flux:button type="submit" variant="primary">Speichern</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="edit-bank-account-modal" :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Bankverbindung bearbeiten</flux:heading>
+                <flux:text class="mt-2">Bitte Bankdaten anpassen.</flux:text>
+            </div>
+
+            <form wire:submit.prevent="updateBankAccount" class="space-y-4">
+                <flux:input
+                    label="Kontoinhaber"
+                    wire:model="editBankAccountAccountHolder"
+                />
+
+                <flux:input
+                    label="IBAN"
+                    wire:model="editBankAccountIban"
+                />
+
+                <flux:input
+                    label="BIC"
+                    wire:model="editBankAccountBic"
+                />
+
+                <flux:input
+                    label="Mandatsreferenz"
+                    wire:model="editBankAccountMandateReference"
+                />
+
+                <flux:input
+                    label="Mandat unterschrieben am"
+                    type="date"
+                    wire:model="editBankAccountMandateSignedAt"
+                />
+
+                <label class="inline-flex items-center gap-2">
+                    <input type="checkbox" wire:model="editBankAccountIsDefault" />
+                    <span class="text-sm">Als Standardkonto setzen</span>
+                </label>
+
+                <div class="flex gap-2 pt-4">
+                    <flux:spacer />
+                    <flux:button type="button" variant="ghost" wire:click="closeEditBankAccount">Abbrechen</flux:button>
                     <flux:button type="submit" variant="primary">Speichern</flux:button>
                 </div>
             </form>

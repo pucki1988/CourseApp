@@ -8,6 +8,7 @@ class MembershipPayment extends Model
 {
     protected $fillable = [
         'membership_id',
+        'bank_account_id',
         'due_date',
         'period_start',
         'period_end',
@@ -27,5 +28,10 @@ class MembershipPayment extends Model
     public function membership()
     {
         return $this->belongsTo(Membership::class);
+    }
+
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 }

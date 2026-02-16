@@ -79,4 +79,9 @@ class Member extends Model
     {
         return $this->hasMany(Membership::class, 'payer_member_id');
     }
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class);
+    }
 }
