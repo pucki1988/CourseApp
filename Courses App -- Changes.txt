@@ -58,7 +58,7 @@ Mitglieder
 + Schwebender Status vor endgültiger Anlage des Mitglieds
 e Bank Account an Member hängen
 e Bank Account an Transaktion
-+ Gruppen erstellen mit Mitgliederauswahl
+e Gruppen erstellen mit Mitgliederauswahl
 + Einzüge welches Datum damit das eingezogen wird?
 + Positionen im Verein
 

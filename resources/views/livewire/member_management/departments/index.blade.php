@@ -2,17 +2,23 @@
 
 use Livewire\Volt\Component;
 use App\Models\Member\Department;
+use App\Models\Member\Member;
+use Illuminate\Database\Eloquent\Collection;
 
 new class extends Component {
 
     public $departments;
+    public Collection $members;
     public string $name = '';
     public ?string $blsvId = null;
     public ?int $departmentId = null;
+    public array $selectedMemberIds = [];
+    public string $memberSearch = '';
 
     public function mount()
     {
         $this->loadDepartments();
+        $this->loadMembers();
     }
 
     private function loadDepartments(): void
@@ -20,20 +26,37 @@ new class extends Component {
         $this->departments = Department::orderBy('name')->get();
     }
 
-    public function openCreate(): void
+    private function loadMembers(): void
     {
+        $this->members = Member::where('deceased_at', null)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    private function resetForm(): void
+    {
+        $this->departmentId = null;
         $this->name = '';
         $this->blsvId = null;
-        $this->departmentId = null;
+        $this->selectedMemberIds = [];
+        $this->memberSearch = '';
+    }
+
+    public function openCreate(): void
+    {
+        $this->resetForm();
         Flux::modal('createDepartment')->show();
     }
 
     public function openEdit(int $departmentId): void
     {
-        $department = Department::findOrFail($departmentId);
+        $department = Department::with('members')->findOrFail($departmentId);
         $this->departmentId = $department->id;
         $this->name = $department->name;
         $this->blsvId = $department->blsv_id;
+        $this->selectedMemberIds = $department->members->pluck('id')->toArray();
+        $this->memberSearch = '';
         Flux::modal('editDepartment')->show();
     }
 
@@ -44,10 +67,12 @@ new class extends Component {
             return;
         }
 
-        Department::create([
+        $department = Department::create([
             'name' => trim($this->name),
             'blsv_id' => $this->blsvId ? trim($this->blsvId) : null,
         ]);
+
+        $department->members()->sync($this->selectedMemberIds ?: []);
 
         $this->loadDepartments();
         Flux::modal('createDepartment')->close();
@@ -69,6 +94,8 @@ new class extends Component {
             'name' => trim($this->name),
             'blsv_id' => $this->blsvId ? trim($this->blsvId) : null,
         ]);
+
+        $department->members()->sync($this->selectedMemberIds ?: []);
 
         $this->loadDepartments();
         Flux::modal('editDepartment')->close();
@@ -110,6 +137,32 @@ new class extends Component {
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
             <flux:input label="VerbandsID" wire:model.live="blsvId" />
+
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
+            <div class="space-y-2">
+                <div class="text-sm font-semibold">Mitglieder auswählen</div>
+                <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
+                            <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
+                        </label>
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -127,6 +180,32 @@ new class extends Component {
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
             <flux:input label="VerbandsID" wire:model.live="blsvId" />
+
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
+            <div class="space-y-2">
+                <div class="text-sm font-semibold">Mitglieder auswählen</div>
+                <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
+                            <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
+                        </label>
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 mt-6">

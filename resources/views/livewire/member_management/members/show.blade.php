@@ -755,7 +755,7 @@ new class extends Component {
             <div>
             <div class="flex items-center justify-between">
                 <flux:heading size="lg" class="my-2">Gruppen</flux:heading>
-                <flux:button size="xs" icon="plus" wire:click="openGroupsModal">Neu</flux:button>
+                <flux:button size="xs" icon="link" wire:click="openGroupsModal">zuordnen</flux:button>
             </div>
             <div class="border rounded-lg p-3 bg-white shadow-sm">
                 @if($member->groups->isEmpty())
@@ -775,7 +775,7 @@ new class extends Component {
             <div>
             <div class="flex items-center justify-between">
                 <flux:heading size="lg" class="my-2">Sparten</flux:heading>
-                <flux:button size="xs" icon="plus" wire:click="openDepartmentsModal">Neu</flux:button>
+                <flux:button size="xs" icon="link" wire:click="openDepartmentsModal">zuordnen</flux:button>
             </div>
             <div class="border rounded-lg p-3 bg-white shadow-sm">
                 @if($member->departments->isEmpty())
@@ -796,7 +796,16 @@ new class extends Component {
 
         <div class="grid auto-rows-min gap-4 xl:grid-cols-2 mb-4">
         <div>
-        <flux:heading size="lg" class="my-2">Familien</flux:heading>
+        <div class="flex items-center justify-between">
+            <flux:heading size="lg" class="my-2">Familien</flux:heading>
+            <div>
+                <flux:button size="xs" icon="users" href="{{ route('member_management.families.index') }}" >
+                                Zur Familie
+                </flux:button>
+               
+            </div>
+            </div>
+        
         <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
             @if($member->families->isEmpty())
                 <div class="text-sm text-gray-500">Keine Familienzugehörigkeit.</div>
@@ -809,9 +818,7 @@ new class extends Component {
                                 <span class="text-gray-500 ml-2">({{ $family->members->count() }} Mitglieder)</span>
                             </div>
                              
-                            <a href="{{ route('member_management.families.index') }}" class="text-blue-600 hover:underline text-xs">
-                                Zur Familie
-                            </a>
+                            
                         </div>
                         @foreach($family->members as $familyMember)
                         <div class="flex items-center justify-between border-b pb-2 last:border-b-0 last:pb-0">       
@@ -831,12 +838,18 @@ new class extends Component {
         </div>
         </div>
         <div>
-        <flux:heading size="lg" class="my-2">Verträge</flux:heading>
-        <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
+        
+        <div class="flex items-center justify-between">
+            <flux:heading size="lg" class="my-2">Verträge</flux:heading>
+            <div>
+                <flux:button size="xs" icon="sparkles" wire:click="openAssignMembership">automatisch</flux:button>
+                <flux:button size="xs" icon="plus" wire:click="openManualAssignMembership">Neu</flux:button>
+            </div>
+            </div>
+                    <div class="border rounded-lg p-3 bg-white shadow-sm mb-4">
             <div class="flex justify-end mb-3">
                 <div class="flex gap-2">
-                    <flux:button size="sm" icon="sparkles" wire:click="openAssignMembership">automatisch</flux:button>
-                    <flux:button size="sm" icon="plus" wire:click="openManualAssignMembership">Neu</flux:button>
+                   
                 </div>
             </div>
 
