@@ -60,3 +60,9 @@ e Bank Account an Member hängen
 e Bank Account an Transaktion
 + Gruppen erstellen mit Mitgliederauswahl
 + Einzüge welches Datum damit das eingezogen wird?
+
+
+Trainer
++ Abrechnungssystem für Trainer
++ Trainer erhalten eine Mail mit der Abrechnung des letzen Monat
++ Zugang für Trainer 
