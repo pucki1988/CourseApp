@@ -1,4 +1,4 @@
-ToDo
+Features 
 
 Kurs / SLot
 e Slot verschieben oder absagen
@@ -60,9 +60,10 @@ e Bank Account an Member hängen
 e Bank Account an Transaktion
 + Gruppen erstellen mit Mitgliederauswahl
 + Einzüge welches Datum damit das eingezogen wird?
++ Positionen im Verein
 
 
 Trainer
 + Abrechnungssystem für Trainer
-+ Trainer erhalten eine Mail mit der Abrechnung des letzen Monat
++ Trainer und Schatzmeister erhalten eine Mail mit der Abrechnung des letzen Monat 
 + Zugang für Trainer 
