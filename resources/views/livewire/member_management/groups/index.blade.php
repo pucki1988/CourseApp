@@ -2,16 +2,22 @@
 
 use Livewire\Volt\Component;
 use App\Models\Member\MemberGroup;
+use App\Models\Member\Member;
+use Illuminate\Database\Eloquent\Collection;
 
 new class extends Component {
 
     public $groups;
+    public Collection $members;
     public string $name = '';
     public ?int $groupId = null;
+    public array $selectedMemberIds = [];
+    public string $memberSearch = '';
 
     public function mount()
     {
         $this->loadGroups();
+        $this->loadMembers();
     }
 
     private function loadGroups(): void
@@ -19,18 +25,35 @@ new class extends Component {
         $this->groups = MemberGroup::orderBy('name')->get();
     }
 
+    private function loadMembers(): void
+    {
+        $this->members = Member::where('deceased_at', null)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    private function resetForm(): void
+    {
+        $this->groupId = null;
+        $this->name = '';
+        $this->selectedMemberIds = [];
+        $this->memberSearch = '';
+    }
+
     public function openCreate(): void
     {
-        $this->name = '';
-        $this->groupId = null;
+        $this->resetForm();
         Flux::modal('createGroup')->show();
     }
 
     public function openEdit(int $groupId): void
     {
-        $group = MemberGroup::findOrFail($groupId);
+        $group = MemberGroup::with('members')->findOrFail($groupId);
         $this->groupId = $group->id;
         $this->name = $group->name;
+        $this->selectedMemberIds = $group->members->pluck('id')->toArray();
+        $this->memberSearch = '';
         Flux::modal('editGroup')->show();
     }
 
@@ -41,9 +64,11 @@ new class extends Component {
             return;
         }
 
-        MemberGroup::create([
+        $group = MemberGroup::create([
             'name' => trim($this->name),
         ]);
+
+        $group->members()->sync($this->selectedMemberIds ?: []);
 
         $this->loadGroups();
         Flux::modal('createGroup')->close();
@@ -64,6 +89,8 @@ new class extends Component {
         $group->update([
             'name' => trim($this->name),
         ]);
+
+        $group->members()->sync($this->selectedMemberIds ?: []);
 
         $this->loadGroups();
         Flux::modal('editGroup')->close();
@@ -103,6 +130,32 @@ new class extends Component {
 
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
+
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
+            <div class="space-y-2">
+                <div class="text-sm font-semibold">Mitglieder auswählen</div>
+                <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
+                            <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
+                        </label>
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -119,6 +172,32 @@ new class extends Component {
 
         <div class="mt-4 space-y-3">
             <flux:input label="Name" wire:model.live="name" />
+
+            <flux:input label="Mitglieder suchen" wire:model.live="memberSearch" />
+
+            <div class="space-y-2">
+                <div class="text-sm font-semibold">Mitglieder auswählen</div>
+                <div class="max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+                    @php
+                        $search = trim(\Illuminate\Support\Str::lower($memberSearch));
+                        $filteredMembers = $search === ''
+                            ? $members
+                            : $members->filter(function ($member) use ($search) {
+                                $fullName = \Illuminate\Support\Str::lower($member->first_name . ' ' . $member->last_name);
+                                return str_contains($fullName, $search);
+                            });
+                    @endphp
+
+                    @forelse($filteredMembers as $member)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}" />
+                            <span>{{ $member->first_name }} {{ $member->last_name }} ({{ $member->birth_date?->age ?? '-' }})</span>
+                        </label>
+                    @empty
+                        <div class="text-sm text-gray-500">Keine Mitglieder gefunden.</div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 mt-6">

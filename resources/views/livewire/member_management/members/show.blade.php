@@ -96,6 +96,62 @@ new class extends Component {
         Flux::toast('Änderungen gespeichert');
     }
 
+    public function openGroupsModal(): void
+    {
+        $this->groupsSelected = $this->member->groups->pluck('id')->toArray();
+        Flux::modal('assign-groups-modal')->show();
+    }
+
+    public function closeGroupsModal(): void
+    {
+        $this->groupsSelected = $this->member->groups->pluck('id')->toArray();
+        Flux::modal('assign-groups-modal')->close();
+    }
+
+    public function saveGroups(): void
+    {
+        $this->member->groups()->sync($this->groupsSelected ?: []);
+        $this->member->refresh();
+        Flux::modal('assign-groups-modal')->close();
+        Flux::toast('Gruppen aktualisiert');
+    }
+
+    public function removeGroup(int $groupId): void
+    {
+        $this->member->groups()->detach($groupId);
+        $this->member->refresh();
+        $this->groupsSelected = $this->member->groups->pluck('id')->toArray();
+        Flux::toast('Gruppe entfernt');
+    }
+
+    public function openDepartmentsModal(): void
+    {
+        $this->departmentsSelected = $this->member->departments->pluck('id')->toArray();
+        Flux::modal('assign-departments-modal')->show();
+    }
+
+    public function closeDepartmentsModal(): void
+    {
+        $this->departmentsSelected = $this->member->departments->pluck('id')->toArray();
+        Flux::modal('assign-departments-modal')->close();
+    }
+
+    public function saveDepartments(): void
+    {
+        $this->member->departments()->sync($this->departmentsSelected ?: []);
+        $this->member->refresh();
+        Flux::modal('assign-departments-modal')->close();
+        Flux::toast('Sparten aktualisiert');
+    }
+
+    public function removeDepartment(int $departmentId): void
+    {
+        $this->member->departments()->detach($departmentId);
+        $this->member->refresh();
+        $this->departmentsSelected = $this->member->departments->pluck('id')->toArray();
+        Flux::toast('Sparte entfernt');
+    }
+
     public function openAssignMembership(): void
     {
         try {
@@ -697,34 +753,43 @@ new class extends Component {
 
         <div class="grid auto-rows-min gap-4 xl:grid-cols-2 mb-4">
             <div>
-            <flux:heading size="lg" class="my-2">Gruppen</flux:heading>
+            <div class="flex items-center justify-between">
+                <flux:heading size="lg" class="my-2">Gruppen</flux:heading>
+                <flux:button size="xs" icon="plus" wire:click="openGroupsModal">Neu</flux:button>
+            </div>
             <div class="border rounded-lg p-3 bg-white shadow-sm">
-                
-                <div class="mt-2 space-y-2">
-                    @foreach($groups as $group)
-                        <label class="inline-flex items-center gap-2">
-                            <input type="checkbox" wire:model="groupsSelected" value="{{ $group->id }}" />
-                            <span class="ml-2">{{ $group->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
+                @if($member->groups->isEmpty())
+                    <div class="text-sm text-gray-500">Keine Gruppen zugeordnet.</div>
+                @else
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($member->groups as $group)
+                            <flux:badge size="sm">
+                                {{ $group->name }}
+                                <flux:badge.close wire:click="removeGroup({{ $group->id }})" />
+                            </flux:badge>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             </div>
             <div>
-            <flux:heading size="lg" class="my-2">Sparten</flux:heading>
+            <div class="flex items-center justify-between">
+                <flux:heading size="lg" class="my-2">Sparten</flux:heading>
+                <flux:button size="xs" icon="plus" wire:click="openDepartmentsModal">Neu</flux:button>
+            </div>
             <div class="border rounded-lg p-3 bg-white shadow-sm">
-                
-                <div class="mt-2 space-y-2">
-                    @foreach($departments as $department)
-                        <label class="inline-flex items-center gap-2">
-                            <input type="checkbox" wire:model="departmentsSelected" value="{{ $department->id }}" />
-                            <span class="ml-2">{{ $department->name }}</span>
-                            @if($department->blsv_id)
-                                <span class="text-xs text-gray-500">({{ $department->blsv_id }})</span>
-                            @endif
-                        </label>
-                    @endforeach
-                </div>
+                @if($member->departments->isEmpty())
+                    <div class="text-sm text-gray-500">Keine Sparten zugeordnet.</div>
+                @else
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($member->departments as $department)
+                            <flux:badge size="sm">
+                                {{ $department->name }}
+                                <flux:badge.close wire:click="removeDepartment({{ $department->id }})" />
+                            </flux:badge>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             </div>
         </div>
@@ -952,6 +1017,58 @@ new class extends Component {
         </form>
 
     </x-members.layout>
+
+    <flux:modal name="assign-groups-modal" :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Gruppen zuordnen</flux:heading>
+                <flux:text class="mt-2">Wählen Sie die Gruppen, die dem Mitglied zugeordnet sein sollen.</flux:text>
+            </div>
+
+            <form wire:submit.prevent="saveGroups" class="space-y-4">
+                <div class="space-y-2 max-h-64 overflow-auto border rounded-md p-3">
+                    @foreach($groups as $group)
+                        <label class="inline-flex items-center gap-2">
+                            <input type="checkbox" wire:model="groupsSelected" value="{{ $group->id }}" />
+                            <span class="ml-2">{{ $group->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <flux:spacer />
+                    <flux:button type="button" variant="ghost" wire:click="closeGroupsModal">Abbrechen</flux:button>
+                    <flux:button type="submit" variant="primary">Speichern</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+
+    <flux:modal name="assign-departments-modal" :dismissible="false">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Sparten zuordnen</flux:heading>
+                <flux:text class="mt-2">Wählen Sie die Sparten, die dem Mitglied zugeordnet sein sollen.</flux:text>
+            </div>
+
+            <form wire:submit.prevent="saveDepartments" class="space-y-4">
+                <div class="space-y-2 max-h-64 overflow-auto border rounded-md p-3">
+                    @foreach($departments as $department)
+                        <label class="inline-flex items-center gap-2">
+                            <input type="checkbox" wire:model="departmentsSelected" value="{{ $department->id }}" />
+                            <span class="ml-2">{{ $department->name }}@if($department->blsv_id) ({{ $department->blsv_id }})@endif</span>
+                        </label>
+                    @endforeach
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <flux:spacer />
+                    <flux:button type="button" variant="ghost" wire:click="closeDepartmentsModal">Abbrechen</flux:button>
+                    <flux:button type="submit" variant="primary">Speichern</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
 
     <flux:modal name="exit-member-modal" :dismissible="false">
         <div class="space-y-6">
