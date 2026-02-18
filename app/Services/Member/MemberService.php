@@ -2,15 +2,16 @@
 namespace App\Services\Member;
 
 use App\Models\Member\Member;
-use App\Models\User;
 
 class MemberService
 {
     public function getMembers(array $filters = [])
     {
+        $perPage = (int) ($filters['per_page'] ?? 12);
+
         $user = auth()->user();
         if (!$user) {
-            return collect();
+            return Member::query()->whereRaw('1 = 0')->paginate($perPage);
         }
 
         $members = Member::with('user')
@@ -23,7 +24,7 @@ class MemberService
         } elseif ($user->can('members.view.own')) {
             $members->where('user_id', $user->id);
         } else {
-            return collect();
+            return Member::query()->whereRaw('1 = 0')->paginate($perPage);
         }
 
         if (!empty($filters['name'])) {
@@ -41,6 +42,6 @@ class MemberService
             // 'all' zeigt alle an (kein zusätzlicher Filter)
         }
 
-        return $members->get();
+        return $members->paginate($perPage);
     }
 }

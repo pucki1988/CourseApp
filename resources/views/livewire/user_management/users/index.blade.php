@@ -1,58 +1,58 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
 use App\Models\User;
 use App\Services\User\UserService;
+use Flux\Flux;
 
 
 new class extends Component {
 
-    public $users;
+    use WithPagination;
+
     public $roles;
     public $username = '';
+    public int $perPage = 12;
     public int $userId;
-    
 
-    public function mount(UserService $userService)
+    public function updatedUsername()
     {
-        $this->loadUsers($userService);
-        
+        $this->resetPage();
     }
 
-    public function updatedUsername(UserService $userService)
+    public function updatedPerPage()
     {
-        
-        $this->loadUsers($userService);
+        $this->resetPage();
     }
 
-    private function loadUsers(UserService $userService){
+    public function getUsersProperty(){
 
         $filters = [
-            'username' => $this->username
+            'username' => $this->username,
+            'per_page' => $this->perPage,
         ];
-        $this->users=$userService->usersWithFrontendAccess($filters);
+
+        return app(UserService::class)->usersWithFrontendAccess($filters);
     }
 
    
     public function setAsMember(UserService $userService): void
     {
         $userService->approveMember($this->userId);
-        $this->loadUsers($userService);
         Flux::modal('setMember')->close();
     }
 
     public function setAsManager(UserService $userService): void
     {
         $userService->approveManager($this->userId);
-        $this->loadUsers($userService);
         Flux::modal('setManager')->close();
     }
 
     public function unsetAsMember(UserService $userService): void
     {
         $userService->unsetMember($this->userId);
-        $this->loadUsers($userService);
         Flux::modal('unsetMember')->close();
     }
 
@@ -83,7 +83,7 @@ new class extends Component {
     <x-users.layout :heading="__('User')" :subheading="__('Deine User')">
 
         <!-- FILTERS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 
         <!-- Suche -->
 
@@ -93,10 +93,22 @@ new class extends Component {
         icon="magnifying-glass"
         />
 
+        <flux:select wire:model.live="perPage">
+            <option value="12">12 pro Seite</option>
+            <option value="24">24 pro Seite</option>
+            <option value="48">48 pro Seite</option>
+        </flux:select>
+
+        <div class="text-sm text-gray-500 text-end">
+        {{ $this->users->total() }}
+        {{ $this->users->total() === 1 ? 'Ergebnis' : 'Ergebnisse' }}
+        </div>
+
     
 
     </div>
 
+    @php($users = $this->users)
     <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
      @foreach ($users as $user)
     <div class="border rounded-lg p-3 bg-white shadow-sm">
@@ -127,6 +139,9 @@ new class extends Component {
                         </div>
     </div>
     @endforeach
+    </div>
+    <div class="mt-4">
+        {{ $users->links() }}
     </div>
     </x-users.layout>
 <flux:modal name="setMember" >

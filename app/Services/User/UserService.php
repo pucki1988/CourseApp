@@ -35,6 +35,8 @@ class UserService
 
     public function usersWithFrontendAccess(array $filters = [])
     {
+        $perPage = (int) ($filters['per_page'] ?? 12);
+
         $users = User::with('roles')
             ->where(function ($query) {
                 $query->whereHas('roles', function ($q) {
@@ -51,7 +53,7 @@ class UserService
         }
 
 
-        return $users->get();
+        return $users->paginate($perPage);
     }
 
     public function usersWithBackendAccess(array $filters = [])

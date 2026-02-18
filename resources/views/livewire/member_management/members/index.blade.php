@@ -1,44 +1,46 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
-use App\Models\User;
 use App\Services\Member\MemberService;
 use App\Services\Member\MemberImportService;
 
 
 new class extends Component {
 
-    public $members;
+    use WithPagination;
+
     public $roles;
     public $name = '';
     public $showExited = 'active'; // 'active', 'exited', 'all'
+    public int $perPage = 12;
     public ?string $member_import_message = null;
 
-    public function mount(MemberService $memberService,MemberImportService $memberImportService)
+    public function updatedName()
     {
-        $this->loadMembers($memberService);
-        
+        $this->resetPage();
     }
 
-    public function updatedName(MemberService $memberService)
+    public function updatedShowExited()
     {
-        
-        $this->loadMembers($memberService);
+        $this->resetPage();
     }
 
-    public function updatedShowExited(MemberService $memberService)
+    public function updatedPerPage()
     {
-        $this->loadMembers($memberService);
+        $this->resetPage();
     }
 
-    private function loadMembers(MemberService $memberService){
+    public function getMembersProperty(){
 
         $filters = [
             'name' => $this->name,
-            'show_exited' => $this->showExited
+            'show_exited' => $this->showExited,
+            'per_page' => $this->perPage,
         ];
-        $this->members=$memberService->getMembers($filters);
+
+        return app(MemberService::class)->getMembers($filters);
     }
 
     public function import(MemberImportService $service)
@@ -77,7 +79,7 @@ new class extends Component {
         @endif
     
         <!-- FILTERS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 
         <!-- Suche -->
 
@@ -94,14 +96,21 @@ new class extends Component {
             <option value="all">Alle</option>
         </flux:select>
 
+        <flux:select wire:model.live="perPage">
+            <option value="12">12 pro Seite</option>
+            <option value="24">24 pro Seite</option>
+            <option value="48">48 pro Seite</option>
+        </flux:select>
+
         <div class="text-sm text-gray-500 text-end">
-        {{ $this->members->count() }}
-        {{ $this->members->count() === 1 ? 'Ergebnis' : 'Ergebnisse' }}
+        {{ $this->members->total() }}
+        {{ $this->members->total() === 1 ? 'Ergebnis' : 'Ergebnisse' }}
         </div>
     
 
     </div>
 
+    @php($members = $this->members)
     <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
      @foreach ($members as $member)
     <div class="border rounded-lg p-3 bg-white shadow-sm">
@@ -146,6 +155,10 @@ new class extends Component {
                         </div>
     </div>
     @endforeach
+    </div>
+
+    <div class="mt-4">
+        {{ $members->links() }}
     </div>
     </x-members.layout>
 
