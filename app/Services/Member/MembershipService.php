@@ -239,9 +239,17 @@ class MembershipService
     {
         $leftAtDate = $leftAt ?? now()->toDateString();
 
+        if ($membership->payer_member_id === $member->id) {
+            $this->transferPayerForMembership($membership, $member);
+        }
+
         $member->memberships()->updateExistingPivot($membership->id, [
             'left_at' => $leftAtDate,
         ]);
+
+        if ($this->handleFamilyMembershipAfterRemoval($membership, $leftAtDate)) {
+            return;
+        }
 
         // If no active members remain, end the entire membership
         $activeMembers = $membership->members()->whereNull('membership_member.left_at')->count();
@@ -253,11 +261,162 @@ class MembershipService
         }
     }
 
+    private function handleFamilyMembershipAfterRemoval(
+        Membership $membership,
+        string $leftAtDate
+    ): bool
+    {
+        $membership->loadMissing('type');
+
+        if (!$membership->type || $membership->type->slug !== 'family') {
+            return false;
+        }
+
+        if ($membership->status === 'ended') {
+            return false;
+        }
+
+        $activeMembers = $membership->members()
+            ->whereNull('membership_member.left_at')
+            ->whereNull('members.deceased_at')
+            ->get();
+
+        $validation = $this->validateMembershipConditions($membership->type, $activeMembers);
+        if ($validation['valid']) {
+            return false;
+        }
+
+        if ($activeMembers->isEmpty()) {
+            $membership->update([
+                'status' => 'ended',
+                'ended_at' => $leftAtDate,
+            ]);
+            return true;
+        }
+
+        foreach ($activeMembers as $activeMember) {
+            $membership->members()->updateExistingPivot($activeMember->id, [
+                'left_at' => $leftAtDate,
+            ]);
+        }
+
+        $membership->update([
+            'status' => 'ended',
+            'ended_at' => $leftAtDate,
+        ]);
+
+        $this->reassignMembershipsForMembers($activeMembers, $leftAtDate);
+
+        return true;
+    }
+
+    private function reassignMembershipsForMembers(
+        Collection $members,
+        string $startDate
+    ): void
+    {
+        $assignedMemberIds = [];
+        $eligibleMembers = $members->filter(
+            fn (Member $member) => !$member->deceased_at && !$member->left_at
+        );
+        $eligibleMemberIds = $eligibleMembers->pluck('id')->all();
+
+        foreach ($eligibleMembers as $member) {
+            if (in_array($member->id, $assignedMemberIds, true)) {
+                continue;
+            }
+
+            $hasActiveMembership = $member->memberships()
+                ->whereNull('membership_member.left_at')
+                ->exists();
+
+            if ($hasActiveMembership) {
+                continue;
+            }
+
+            $suggestedType = $this->suggestMembershipType($member);
+            if (!$suggestedType) {
+                continue;
+            }
+
+            $memberIds = array_values(array_intersect(
+                $this->getSuggestedMemberIds($member),
+                $eligibleMemberIds
+            ));
+
+            if ($memberIds === []) {
+                $memberIds = [$member->id];
+            }
+
+            $membersForMembership = Member::whereIn('id', $memberIds)->get();
+            $payer = $this->getSuggestedPayer($membersForMembership);
+
+            if (!$payer) {
+                continue;
+            }
+
+            try {
+                $this->assignMembership(
+                    $suggestedType,
+                    $memberIds,
+                    $payer->id,
+                    null,
+                    $startDate
+                );
+                $assignedMemberIds = array_merge($assignedMemberIds, $memberIds);
+            } catch (\InvalidArgumentException $e) {
+                continue;
+            }
+        }
+    }
+
+    private function transferPayerForMembership(Membership $membership, Member $exitingMember): void
+    {
+        $activeMembers = $membership->members()
+            ->whereNull('membership_member.left_at')
+            ->whereNull('members.deceased_at')
+            ->get()
+            ->reject(fn (Member $candidate) => $candidate->id === $exitingMember->id);
+
+        if ($activeMembers->isEmpty()) {
+            return;
+        }
+
+        $familyMemberIds = $exitingMember->families()
+            ->with('members')
+            ->get()
+            ->pluck('members')
+            ->flatten()
+            ->pluck('id')
+            ->unique();
+
+        $familyCandidates = $activeMembers->whereIn('id', $familyMemberIds)->values();
+        $candidates = $familyCandidates->isNotEmpty() ? $familyCandidates : $activeMembers;
+
+        $replacement = $candidates
+            ->sortBy(function (Member $candidate) {
+                return $candidate->birth_date?->format('Y-m-d') ?? '9999-12-31';
+            })
+            ->first();
+
+        if (!$replacement) {
+            return;
+        }
+
+        $membership->update(['payer_member_id' => $replacement->id]);
+        $membership->members()->updateExistingPivot($replacement->id, [
+            'role' => 'payer',
+        ]);
+        $this->assignBankAccountForPayerChange($membership, $replacement, $exitingMember);
+    }
+
     /**
      * End a member's membership status (exit the member)
      */
     public function endMemberMembership(Member $member, string $exitDate): void
     {
+        $this->transferPayerForExitingMember($member);
+
         $activeMemberships = $member->memberships()
             ->whereNull('membership_member.left_at')
             ->get();
@@ -274,6 +433,98 @@ class MembershipService
         ]);
 
         $member->refresh();
+    }
+
+    private function transferPayerForExitingMember(Member $member): void
+    {
+        $payerMemberships = Membership::where('payer_member_id', $member->id)
+            ->where('status', '!=', 'ended')
+            ->get();
+
+        if ($payerMemberships->isEmpty()) {
+            return;
+        }
+
+        $familyMemberIds = $member->families()
+            ->with('members')
+            ->get()
+            ->pluck('members')
+            ->flatten()
+            ->pluck('id')
+            ->unique();
+
+        foreach ($payerMemberships as $membership) {
+            $activeMembers = $membership->members()
+                ->whereNull('membership_member.left_at')
+                ->whereNull('members.deceased_at')
+                ->get()
+                ->reject(fn (Member $candidate) => $candidate->id === $member->id);
+
+            if ($activeMembers->isEmpty()) {
+                continue;
+            }
+
+            $familyCandidates = $activeMembers->whereIn('id', $familyMemberIds)->values();
+            $candidates = $familyCandidates->isNotEmpty() ? $familyCandidates : $activeMembers;
+
+            $replacement = $candidates
+                ->sortBy(function (Member $candidate) {
+                    return $candidate->birth_date?->format('Y-m-d') ?? '9999-12-31';
+                })
+                ->first();
+
+            if ($replacement) {
+                $membership->update(['payer_member_id' => $replacement->id]);
+                $this->assignBankAccountForPayerChange($membership, $replacement, $member);
+            }
+        }
+    }
+
+    private function assignBankAccountForPayerChange(
+        Membership $membership,
+        Member $newPayer,
+        Member $oldPayer
+    ): void
+    {
+        $account = $newPayer->bankAccounts()
+            ->where('status', 'active')
+            ->orderByDesc('is_default')
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$account) {
+            $oldAccount = $oldPayer->bankAccounts()
+                ->where('status', 'active')
+                ->orderByDesc('is_default')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($oldAccount) {
+                $newPayer->bankAccounts()->update(['is_default' => false]);
+                $account = $newPayer->bankAccounts()->create([
+                    'iban' => $oldAccount->iban,
+                    'bic' => $oldAccount->bic,
+                    'account_holder' => $oldAccount->account_holder,
+                    'mandate_reference' => $oldAccount->mandate_reference,
+                    'mandate_signed_at' => $oldAccount->mandate_signed_at,
+                    'is_default' => true,
+                    'status' => $oldAccount->status ?? 'active',
+                ]);
+            }
+        }
+
+        if (!$account) {
+            return;
+        }
+
+        if (!$account->is_default) {
+            $newPayer->bankAccounts()->update(['is_default' => false]);
+            $account->update(['is_default' => true]);
+        }
+
+        $membership->payments()
+            ->where('status', 'pending')
+            ->update(['bank_account_id' => $account->id]);
     }
 
     /**
@@ -330,6 +581,8 @@ class MembershipService
      */
     public function markMemberDeceased(Member $member, string $deceasedDate): void
     {
+        $this->transferPayerForExitingMember($member);
+
         $member->update([
             'deceased_at' => $deceasedDate,
             'left_at' => $deceasedDate,
