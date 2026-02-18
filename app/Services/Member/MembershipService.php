@@ -12,12 +12,12 @@ class MembershipService
     /**
      * Suggest the best membership type for a member based on their data and family status
      */
-    public function suggestMembershipType(Member $member): ?MembershipType
+    public function suggestMembershipType(Member $member, bool $allowFamily = true): ?MembershipType
     {
         $age = $member->birth_date?->age;
         
         // Check if member is in a family
-        if ($member->families->isNotEmpty()) {
+        if ($allowFamily && $member->families->isNotEmpty()) {
             $family = $member->families->first();
             $familyMembers = $family->members;
             
@@ -42,7 +42,11 @@ class MembershipService
         
         // Suggest individual membership based on age
         if ($age === null) {
-            return MembershipType::where('active', true)->orderBy('sort_order')->first();
+            $query = MembershipType::where('active', true)->orderBy('sort_order');
+            if (!$allowFamily) {
+                $query->where('slug', '!=', 'family');
+            }
+            return $query->first();
         }
         
         return MembershipType::where('active', true)
@@ -159,7 +163,28 @@ class MembershipService
         ?string $billingCycle = null,
         ?string $startDate = null
     ): Membership {
+        $memberIds = array_values(array_unique($memberIds));
         $members = Member::whereIn('id', $memberIds)->get();
+
+        $existingFamilyMembership = null;
+        if ($type->slug === 'family') {
+            $existingFamilyMembership = Membership::where('membership_type_id', $type->id)
+                ->where('status', 'active')
+                ->whereHas('members', function ($query) use ($memberIds) {
+                    $query->whereIn('members.id', $memberIds)
+                        ->whereNull('membership_member.left_at');
+                })
+                ->first();
+
+            if ($existingFamilyMembership) {
+                $existingMemberIds = $existingFamilyMembership->members()
+                    ->whereNull('membership_member.left_at')
+                    ->pluck('members.id')
+                    ->all();
+                $memberIds = array_values(array_unique(array_merge($memberIds, $existingMemberIds)));
+                $members = Member::whereIn('id', $memberIds)->get();
+            }
+        }
 
         // Validate conditions
         $validation = $this->validateMembershipConditions($type, $members);
@@ -170,6 +195,75 @@ class MembershipService
         // Validate payer is part of membership
         if (!in_array($payerId, $memberIds, true)) {
             throw new \InvalidArgumentException('Zahler muss Teil der Mitgliedschaft sein');
+        }
+
+        // For family memberships, end other recurring memberships first
+        if ($type->slug === 'family') {
+            $membersById = $members->keyBy('id');
+            $membershipsToEnd = Membership::where('status', 'active')
+                ->whereHas('type', function ($query) {
+                    $query->where('billing_mode', 'recurring')
+                        ->where('slug', '!=', 'family');
+                })
+                ->whereHas('members', function ($query) use ($memberIds) {
+                    $query->whereIn('members.id', $memberIds)
+                        ->whereNull('membership_member.left_at');
+                })
+                ->get();
+
+            foreach ($membershipsToEnd as $membership) {
+                $activeMemberIds = $membership->members()
+                    ->whereNull('membership_member.left_at')
+                    ->pluck('members.id')
+                    ->all();
+
+                $affectedIds = array_intersect($memberIds, $activeMemberIds);
+                foreach ($affectedIds as $memberId) {
+                    $member = $membersById->get($memberId);
+                    if (!$member) {
+                        continue;
+                    }
+                    $this->removeMemberFromMembership($membership, $member, $startDate ?? now()->toDateString());
+                }
+            }
+        }
+
+        if ($existingFamilyMembership) {
+            $missingIds = array_diff(
+                $memberIds,
+                $existingFamilyMembership->members()
+                    ->whereNull('membership_member.left_at')
+                    ->pluck('members.id')
+                    ->all()
+            );
+
+            foreach ($missingIds as $memberId) {
+                $existingFamilyMembership->members()->attach($memberId, [
+                    'role' => 'participant',
+                    'joined_at' => $startDate ?? now()->toDateString(),
+                ]);
+            }
+
+            $payer = $this->getSuggestedPayer($members);
+            if ($payer && $existingFamilyMembership->payer_member_id !== $payer->id) {
+                $oldPayer = $existingFamilyMembership->payer_member_id
+                    ? Member::find($existingFamilyMembership->payer_member_id)
+                    : null;
+
+                $existingFamilyMembership->update(['payer_member_id' => $payer->id]);
+                $existingFamilyMembership->members()->updateExistingPivot($payer->id, [
+                    'role' => 'payer',
+                ]);
+
+                if ($oldPayer) {
+                    $existingFamilyMembership->members()->updateExistingPivot($oldPayer->id, [
+                        'role' => 'participant',
+                    ]);
+                    $this->assignBankAccountForPayerChange($existingFamilyMembership, $payer, $oldPayer);
+                }
+            }
+
+            return $existingFamilyMembership;
         }
 
         // Prevent multiple recurring memberships per member
@@ -305,14 +399,15 @@ class MembershipService
             'ended_at' => $leftAtDate,
         ]);
 
-        $this->reassignMembershipsForMembers($activeMembers, $leftAtDate);
+        $this->reassignMembershipsForMembers($activeMembers, $leftAtDate, true);
 
         return true;
     }
 
     private function reassignMembershipsForMembers(
         Collection $members,
-        string $startDate
+        string $startDate,
+        bool $forceIndividual = false
     ): void
     {
         $assignedMemberIds = [];
@@ -334,18 +429,22 @@ class MembershipService
                 continue;
             }
 
-            $suggestedType = $this->suggestMembershipType($member);
+            $suggestedType = $this->suggestMembershipType($member, !$forceIndividual);
             if (!$suggestedType) {
                 continue;
             }
 
-            $memberIds = array_values(array_intersect(
-                $this->getSuggestedMemberIds($member),
-                $eligibleMemberIds
-            ));
-
-            if ($memberIds === []) {
+            if ($forceIndividual) {
                 $memberIds = [$member->id];
+            } else {
+                $memberIds = array_values(array_intersect(
+                    $this->getSuggestedMemberIds($member),
+                    $eligibleMemberIds
+                ));
+
+                if ($memberIds === []) {
+                    $memberIds = [$member->id];
+                }
             }
 
             $membersForMembership = Member::whereIn('id', $memberIds)->get();
@@ -597,6 +696,57 @@ class MembershipService
     }
 
     /**
+     * Remove member from family memberships when they are no longer in the family.
+     */
+    public function syncFamilyMembershipForMember(Member $member, ?string $effectiveDate = null): void
+    {
+        $date = $effectiveDate ?? now()->toDateString();
+
+        $member->loadMissing('families.members');
+
+        $familyMemberships = $member->memberships()
+            ->whereNull('membership_member.left_at')
+            ->whereHas('type', function ($query) {
+                $query->where('slug', 'family');
+            })
+            ->get();
+
+        if ($familyMemberships->isEmpty()) {
+            return;
+        }
+
+        foreach ($familyMemberships as $membership) {
+            $membershipMemberIds = $membership->members()
+                ->whereNull('membership_member.left_at')
+                ->pluck('members.id')
+                ->all();
+
+            $belongsToFamily = false;
+            foreach ($member->families as $family) {
+                $familyMemberIds = $family->members->pluck('id')->all();
+                if (array_diff($membershipMemberIds, $familyMemberIds) === []) {
+                    $belongsToFamily = true;
+                    break;
+                }
+            }
+
+            if ($belongsToFamily) {
+                continue;
+            }
+
+            $this->removeMemberFromMembership($membership, $member, $date);
+
+            $hasActiveMembership = $member->memberships()
+                ->whereNull('membership_member.left_at')
+                ->exists();
+
+            if (!$hasActiveMembership) {
+                $this->reassignMembershipsForMembers(collect([$member]), $date, true);
+            }
+        }
+    }
+
+    /**
      * Process memberships for all members on a specific date
      * Used for automated membership assignment/renewal
      */
@@ -618,6 +768,8 @@ class MembershipService
 
         foreach ($members as $member) {
             $results['processed']++;
+
+            $this->syncFamilyMembershipForMember($member, $date);
 
             try {
                 // Skip if member already has active membership

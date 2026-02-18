@@ -157,6 +157,11 @@ new class extends Component {
         try {
             $service = app(MembershipService::class);
             
+            // First, sync family memberships to remove member from families they no longer belong to
+            $service->syncFamilyMembershipForMember($this->member);
+            
+            $this->member->refresh();
+            
             $suggestedType = $service->suggestMembershipType($this->member);
             
             if (!$suggestedType) {
