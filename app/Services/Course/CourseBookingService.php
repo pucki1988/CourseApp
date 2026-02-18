@@ -218,7 +218,7 @@ class CourseBookingService
     /**
      * Liste der Buchungen
      */
-    public function listBookings(array $filters = [])
+    public function listBookings(array $filters = [], int $perPage = 10)
     {
         $query=CourseBooking::with(['course','bookingSlots.slot','user']);
 
@@ -253,7 +253,7 @@ class CourseBookingService
         $query->orderByDesc('created_at');
 
 
-        return $query->get();
+        return $query->paginate($perPage);
     }
 
     public function listBookingsFrontend()

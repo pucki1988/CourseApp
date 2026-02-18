@@ -1,61 +1,48 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 use App\Services\Course\CourseBookingService;
-use App\Models\Course\CourseBooking;
-use App\Models\User;
 
 new class extends Component {
 
-    public $bookings;
+    use WithPagination;
+
     public string $statusFilter = ''; // '' = alle
     public ?int $bookingId =null;
     public string $username='';
     public array $allowedStatuses = ['pending','paid','partially_refunded','refunded'];
-    public $perPage = 10;
+    public int $perPage = 10;
 
-    public function mount(CourseBookingService $service)
+    public function updatedBookingId()
     {
-        #$this->authorize('viewAny', CourseBooking::class);
-        $this->loadBookings($service);
+        $this->resetPage();
     }
 
-    /*public function updated($property, CourseBookingService $service)
+    public function updatedStatusFilter()
     {
-        $this->loadCloadBookingsourses($service);
-    }*/
-
-    public function updatedBookingId(CourseBookingService $service)
-    {
-        
-        $this->applyFilters($service);
+        $this->resetPage();
     }
 
-    public function updatedStatusFilter(CourseBookingService $service)
+    public function updatedUsername()
     {
-        $this->applyFilters($service);
+        $this->resetPage();
     }
 
-    public function updatedUsername(CourseBookingService $service)
+    public function updatedPerPage()
     {
-        $this->applyFilters($service);
+        $this->resetPage();
     }
 
-    private function applyFilters(CourseBookingService $service)
+    public function getBookingsProperty()
     {
-        
         $filters = array_filter([
         'bookingId' => $this->bookingId !== null ? $this->bookingId : null,
         'status'    => $this->statusFilter,
         'username'  => $this->username,
         ], fn ($value) => $value !== null);
 
-        $this->bookings = $service->listBookings($filters);
-    }
-
-    public function loadBookings(CourseBookingService $service)
-    {
-        $this->bookings = $service->listBookings();
+        return app(CourseBookingService::class)->listBookings($filters, $this->perPage);
     }
 
 };
@@ -67,7 +54,7 @@ new class extends Component {
     <x-courses.layout :heading="__('Buchungen')" :subheading="__('Deine Buchungen')">
         
     <!-- FILTERS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 
         <!-- Suche -->
             <flux:field class="mb-4">
@@ -100,6 +87,15 @@ new class extends Component {
                 @endforeach
             </flux:select>
         </flux:field>
+
+        <flux:field class="mb-4">
+            <flux:label>Pro Seite</flux:label>
+            <flux:select wire:model.live="perPage">
+                <flux:select.option value="10">10</flux:select.option>
+                <flux:select.option value="25">25</flux:select.option>
+                <flux:select.option value="50">50</flux:select.option>
+            </flux:select>
+        </flux:field>
         
         
        
@@ -108,6 +104,7 @@ new class extends Component {
         
 
     </div>
+    @php($bookings = $this->bookings)
     <div class=" grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
             @forelse($bookings as $booking)
             <div class="border rounded-lg p-3 bg-white shadow-sm">
@@ -147,7 +144,7 @@ new class extends Component {
 
     <!-- Pagination -->
     <div class="mt-4">
-        
+        {{ $bookings->links() }}
     </div>    
         
     </x-courses.layout>
