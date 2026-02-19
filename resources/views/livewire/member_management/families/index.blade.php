@@ -73,12 +73,12 @@ new class extends Component {
     public function create(): void
     {
         if (trim($this->name) === '') {
-            Flux::toast('Name ist erforderlich');
+            session()->flash('error', 'Name ist erforderlich');
             return;
         }
 
         if (empty($this->selectedMemberIds)) {
-            Flux::toast('Bitte mindestens ein Mitglied auswählen');
+            session()->flash('error', 'Bitte mindestens ein Mitglied auswählen');
             return;
         }
 
@@ -103,12 +103,12 @@ new class extends Component {
         }
 
         if (trim($this->name) === '') {
-            Flux::toast('Name ist erforderlich');
+            session()->flash('error', 'Name ist erforderlich');
             return;
         }
 
         if (empty($this->selectedMemberIds)) {
-            Flux::toast('Bitte mindestens ein Mitglied auswählen');
+            session()->flash('error', 'Bitte mindestens ein Mitglied auswählen');
             return;
         }
 
@@ -121,16 +121,36 @@ new class extends Component {
         $toRemove = array_diff($currentMemberIds, $this->selectedMemberIds);
         $toAdd = array_diff($this->selectedMemberIds, $currentMemberIds);
 
+        // Entfernte Mitglieder: left_at setzen (History behalten)
         foreach ($toRemove as $memberId) {
             $family->members()->updateExistingPivot($memberId, [
                 'left_at' => now()->toDateString(),
             ]);
         }
 
+        // Neue Mitglieder: Prüfen ob inaktiver Datensatz existiert und reaktivieren
         foreach ($toAdd as $memberId) {
-            $family->members()->attach($memberId, [
-                'joined_at' => now()->toDateString(),
-            ]);
+            $existingPivot = \DB::table('family_member')
+                ->where('family_id', $family->id)
+                ->where('member_id', $memberId)
+                ->first();
+
+            if ($existingPivot) {
+                // Reaktivieren: left_at auf null setzen
+                \DB::table('family_member')
+                    ->where('family_id', $family->id)
+                    ->where('member_id', $memberId)
+                    ->update([
+                        'left_at' => null,
+                        'joined_at' => now()->toDateString(),
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                // Neu hinzufügen
+                $family->members()->attach($memberId, [
+                    'joined_at' => now()->toDateString(),
+                ]);
+            }
         }
 
         $this->loadFamilies();
@@ -154,6 +174,24 @@ new class extends Component {
 
 <section>
     @include('partials.members-heading')
+
+    @if (session('success'))
+        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+            {{ session('warning') }}
+        </div>
+    @endif
 
     <x-members.layout :heading="__('Familien')" :subheading="__('Übersicht')">
         <div class="flex md:justify-end mb-3">

@@ -93,7 +93,7 @@ new class extends Component {
         $this->member->groups()->sync($this->groupsSelected ?: []);
         $this->member->departments()->sync($this->departmentsSelected ?: []);
         $this->member->refresh();
-        Flux::toast('Änderungen gespeichert');
+        session()->flash('success', 'Änderungen gespeichert');
     }
 
     public function openGroupsModal(): void
@@ -113,7 +113,7 @@ new class extends Component {
         $this->member->groups()->sync($this->groupsSelected ?: []);
         $this->member->refresh();
         Flux::modal('assign-groups-modal')->close();
-        Flux::toast('Gruppen aktualisiert');
+        session()->flash('success', 'Gruppen aktualisiert');
     }
 
     public function removeGroup(int $groupId): void
@@ -121,7 +121,7 @@ new class extends Component {
         $this->member->groups()->detach($groupId);
         $this->member->refresh();
         $this->groupsSelected = $this->member->groups->pluck('id')->toArray();
-        Flux::toast('Gruppe entfernt');
+        session()->flash('success', 'Gruppe entfernt');
     }
 
     public function openDepartmentsModal(): void
@@ -141,7 +141,7 @@ new class extends Component {
         $this->member->departments()->sync($this->departmentsSelected ?: []);
         $this->member->refresh();
         Flux::modal('assign-departments-modal')->close();
-        Flux::toast('Sparten aktualisiert');
+        session()->flash('success', 'Sparten aktualisiert');
     }
 
     public function removeDepartment(int $departmentId): void
@@ -149,7 +149,7 @@ new class extends Component {
         $this->member->departments()->detach($departmentId);
         $this->member->refresh();
         $this->departmentsSelected = $this->member->departments->pluck('id')->toArray();
-        Flux::toast('Sparte entfernt');
+        session()->flash('success', 'Sparte entfernt');
     }
 
     public function openAssignMembership(): void
@@ -165,7 +165,7 @@ new class extends Component {
             $suggestedType = $service->suggestMembershipType($this->member);
             
             if (!$suggestedType) {
-                Flux::toast('Keine passende Mitgliedschaft für dieses Mitglied gefunden', variant: 'warning');
+                session()->flash('warning', 'Keine passende Mitgliedschaft für dieses Mitglied gefunden');
                 return;
             }
 
@@ -174,7 +174,7 @@ new class extends Component {
             $suggestedPayer = $service->getSuggestedPayer($members);
             
             if (!$suggestedPayer) {
-                Flux::toast('Konnte keinen Zahler bestimmen', variant: 'warning');
+                session()->flash('warning', 'Konnte keinen Zahler bestimmen');
                 return;
             }
 
@@ -190,11 +190,11 @@ new class extends Component {
             );
 
             $this->loadMembershipData();
-            Flux::toast('Mitgliedschaft erfolgreich zugewiesen: ' . $suggestedType->name);
+            session()->flash('success', 'Mitgliedschaft erfolgreich zugewiesen: ' . $suggestedType->name);
         } catch (\InvalidArgumentException $e) {
-            Flux::toast($e->getMessage(), variant: 'danger');
+            session()->flash('error', $e->getMessage());
         } catch (\Throwable $e) {
-            Flux::toast('Fehler beim Zuweisen der Mitgliedschaft: ' . $e->getMessage(), variant: 'danger');
+            session()->flash('error', 'Fehler beim Zuweisen der Mitgliedschaft: ' . $e->getMessage());
         }
     }
 
@@ -253,11 +253,11 @@ new class extends Component {
 
             $this->loadMembershipData();
             Flux::modal('assign-membership-modal')->close();
-            Flux::toast('Mitgliedschaft erfolgreich zugewiesen');
+            session()->flash('success', 'Mitgliedschaft erfolgreich zugewiesen');
         } catch (\InvalidArgumentException $e) {
-            Flux::toast($e->getMessage(), variant: 'danger');
+            session()->flash('error', $e->getMessage());
         } catch (\Exception $e) {
-            Flux::toast('Fehler beim Zuweisen der Mitgliedschaft: ' . $e->getMessage(), variant: 'danger');
+            session()->flash('error', 'Fehler beim Zuweisen der Mitgliedschaft: ' . $e->getMessage());
         }
     }
 
@@ -372,9 +372,9 @@ new class extends Component {
 
             $this->loadMembershipData();
             Flux::modal('edit-membership-modal')->close();
-            Flux::toast('Mitgliedschaft erfolgreich aktualisiert');
+            session()->flash('success', 'Mitgliedschaft erfolgreich aktualisiert');
         } catch (\Exception $e) {
-            Flux::toast('Fehler beim Aktualisieren: ' . $e->getMessage(), variant: 'danger');
+            session()->flash('error', 'Fehler beim Aktualisieren: ' . $e->getMessage());
         }
     }
 
@@ -420,7 +420,7 @@ new class extends Component {
             
             $validStatuses = ['pending', 'paid', 'cancelled'];
             if (!in_array($status, $validStatuses)) {
-                Flux::toast('Ungültiger Status', variant: 'danger');
+                session()->flash('error', 'Ungültiger Status');
                 return;
             }
 
@@ -438,9 +438,9 @@ new class extends Component {
                 'cancelled' => 'Storniert',
             ];
             
-            Flux::toast('Status aktualisiert auf: ' . $statusLabels[$status]);
+            session()->flash('success', 'Status aktualisiert auf: ' . $statusLabels[$status]);
         } catch (\Exception $e) {
-            Flux::toast('Fehler beim Aktualisieren des Status: ' . $e->getMessage(), variant: 'danger');
+            session()->flash('error', 'Fehler beim Aktualisieren des Status: ' . $e->getMessage());
         }
     }
 
@@ -456,7 +456,7 @@ new class extends Component {
         $service->removeMemberFromMembership($membership, $this->member);
 
         $this->loadMembershipData();
-        Flux::toast('Mitgliedschaft beendet');
+        session()->flash('success', 'Mitgliedschaft beendet');
     }
 
     public function openExitModal()
@@ -483,7 +483,7 @@ new class extends Component {
         $service = app(MembershipService::class);
         $service->endMemberMembership($this->member, $this->exitDate);
 
-        Flux::toast('Mitglied wurde ausgetragen');
+        session()->flash('success', 'Mitglied wurde ausgetragen');
         $this->closeExitModal();
     }
 
@@ -493,9 +493,9 @@ new class extends Component {
 
         try {
             $service->reactivateMemberMembership($this->member);
-            Flux::toast('Mitgliedschaft wurde reaktiviert');
+            session()->flash('success', 'Mitgliedschaft wurde reaktiviert');
         } catch (\InvalidArgumentException $e) {
-            Flux::toast($e->getMessage(), variant: 'danger');
+            session()->flash('error', $e->getMessage());
         }
     }
 
@@ -511,7 +511,7 @@ new class extends Component {
         $service = app(MembershipService::class);
         $service->markMemberDeceased($this->member, $this->deceasedDate);
 
-        Flux::toast('Mitglied wurde als verstorben markiert');
+        session()->flash('success', 'Mitglied wurde als verstorben markiert');
         $this->closeDeceasedModal();
     }
 
@@ -569,7 +569,7 @@ new class extends Component {
 
         $this->member->load('bankAccounts');
         Flux::modal('add-bank-account-modal')->close();
-        Flux::toast('Bankverbindung hinzugefuegt');
+        session()->flash('success', 'Bankverbindung hinzugefuegt');
     }
 
     public function closeAddBankAccount(): void
@@ -634,7 +634,7 @@ new class extends Component {
 
         $this->member->load('bankAccounts');
         Flux::modal('edit-bank-account-modal')->close();
-        Flux::toast('Bankverbindung aktualisiert');
+        session()->flash('success', 'Bankverbindung aktualisiert');
     }
 
     public function revokeBankAccount(int $bankAccountId): void
@@ -648,7 +648,7 @@ new class extends Component {
         $service->revokeBankAccount($account);
 
         $this->member->load('bankAccounts');
-        Flux::toast('Bankverbindung widerrufen');
+        session()->flash('success', 'Bankverbindung widerrufen');
     }
 
     public function deleteBankAccount(int $bankAccountId): void
@@ -662,12 +662,12 @@ new class extends Component {
         $deleted = $service->deleteBankAccount($account);
 
         if (!$deleted) {
-            Flux::toast('Bankverbindung kann nicht gelöscht werden, da bereits Zahlungen damit verknüpft sind', variant: 'warning');
+            session()->flash('warning', 'Bankverbindung kann nicht gelöscht werden, da bereits Zahlungen damit verknüpft sind');
             return;
         }
 
         $this->member->load('bankAccounts.payments');
-        Flux::toast('Bankverbindung gelöscht');
+        session()->flash('success', 'Bankverbindung gelöscht');
     }
 
     public function closeEditBankAccount(): void
@@ -688,8 +688,26 @@ new class extends Component {
 <section class="w-full">
     @include('partials.members-heading')
 
-    <x-members.layout :heading="__('Mitglied: ') . ($member->first_name . ' ' . $member->last_name)">
+   
 
+    <x-members.layout :heading="__('Mitglied: ') . ($member->first_name . ' ' . $member->last_name)">
+         @if (session('success'))
+        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded text-center">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded text-center">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-center">
+            {{ session('warning') }}
+        </div>
+    @endif
         <form wire:submit.prevent="save">
 
         <div class="grid auto-rows-min gap-4 xl:grid-cols-2 mb-4">

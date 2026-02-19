@@ -16,6 +16,7 @@ new class extends Component {
     public ?string $interval = 'monthly';
     public string $conditionsJson = '';
     public bool $active = true;
+    public bool $isClubMembership = false;
     public int $sortOrder = 0;
 
     public function mount()
@@ -40,6 +41,7 @@ new class extends Component {
         $this->interval = 'monthly';
         $this->conditionsJson = '';
         $this->active = true;
+        $this->isClubMembership = false;
         $this->sortOrder = 0;
     }
 
@@ -61,6 +63,7 @@ new class extends Component {
         $this->interval = $type->interval;
         $this->conditionsJson = $type->conditions ? json_encode($type->conditions, JSON_UNESCAPED_UNICODE) : '';
         $this->active = (bool) $type->active;
+        $this->isClubMembership = (bool) $type->is_club_membership;
         $this->sortOrder = (int) $type->sort_order;
 
         Flux::modal('editMembershipType')->show();
@@ -99,6 +102,7 @@ new class extends Component {
             'interval' => $interval,
             'sort_order' => $this->sortOrder,
             'active' => $this->active,
+            'is_club_membership' => $this->isClubMembership,
         ], [
             'name' => 'required|string',
             'slug' => 'required|alpha_dash|unique:membership_types,slug' . ($ignoreId ? ',' . $ignoreId : ''),
@@ -107,6 +111,7 @@ new class extends Component {
             'interval' => 'nullable|in:monthly,yearly',
             'sort_order' => 'nullable|integer|min:0',
             'active' => 'boolean',
+            'is_club_membership' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -138,6 +143,7 @@ new class extends Component {
             'interval' => $interval,
             'conditions' => $conditions,
             'active' => $this->active,
+            'is_club_membership' => $this->isClubMembership,
             'sort_order' => $this->sortOrder,
         ]);
 
@@ -171,6 +177,7 @@ new class extends Component {
             'interval' => $interval,
             'conditions' => $conditions,
             'active' => $this->active,
+            'is_club_membership' => $this->isClubMembership,
             'sort_order' => $this->sortOrder,
         ]);
 
@@ -235,6 +242,10 @@ new class extends Component {
                             <span>{{ $type->active ? 'Ja' : 'Nein' }}</span>
                         </div>
                         <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Vereinsmitgliedschaft</span>
+                            <span>{{ $type->is_club_membership ? 'Ja' : 'Nein' }}</span>
+                        </div>
+                        <div class="flex justify-between mt-1">
                             <span class="text-gray-500">Sortierung</span>
                             <span>{{ $type->sort_order }}</span>
                         </div>
@@ -267,6 +278,7 @@ new class extends Component {
             <flux:textarea label="Bedingungen (JSON)" wire:model.live="conditionsJson" rows="3" />
             <flux:input label="Sortierung" wire:model.live="sortOrder" type="number" />
             <flux:checkbox wire:model="active" :label="__('Aktiv')" />
+            <flux:checkbox wire:model="isClubMembership" :label="__('Vereinsmitgliedschaft')" />
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -296,6 +308,7 @@ new class extends Component {
             <flux:textarea label="Bedingungen (JSON)" wire:model.live="conditionsJson" rows="3" />
             <flux:input label="Sortierung" wire:model.live="sortOrder" type="number" />
             <flux:checkbox wire:model="active" :label="__('Aktiv')" />
+            <flux:checkbox wire:model="isClubMembership" :label="__('Vereinsmitgliedschaft')" />
         </div>
 
         <div class="flex justify-end gap-3 mt-6">

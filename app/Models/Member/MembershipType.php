@@ -14,6 +14,7 @@ class MembershipType extends Model
         'interval',
         'conditions',
         'active',
+        'is_club_membership',
         'sort_order',
     ];
 
@@ -21,6 +22,7 @@ class MembershipType extends Model
         'base_amount' => 'decimal:2',
         'conditions' => 'array',
         'active' => 'boolean',
+        'is_club_membership' => 'boolean',
     ];
 
     public function memberships()
