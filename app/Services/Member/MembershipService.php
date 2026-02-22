@@ -281,7 +281,7 @@ class MembershipService
             return;
         }
 
-        $billingCycle = $suggestedType->interval === 'yearly' ? 'yearly' : 'monthly';
+        $billingCycle = $suggestedType->interval === 'annual' ? 'annual' : 'monthly';
 
         $this->assignMembership(
             $suggestedType,
@@ -700,9 +700,7 @@ class MembershipService
         ?string $billingCycle,
         ?string $startDate
     ): Membership {
-        $cycle = $type->billing_mode === 'one_time'
-            ? 'once'
-            : ($billingCycle ?? $type->interval ?? 'monthly');
+        // Note: billing_cycle parameter is deprecated, billing interval is now inherited from type
 
         $membership = Membership::create([
             'membership_type_id' => $type->id,
@@ -710,7 +708,6 @@ class MembershipService
             'status' => 'active',
             'payer_member_id' => $payerId,
             'calculated_amount' => $type->base_amount,
-            'billing_cycle' => $cycle,
         ]);
 
         foreach ($members as $member) {

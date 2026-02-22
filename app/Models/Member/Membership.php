@@ -13,7 +13,6 @@ class Membership extends Model
         'status',
         'payer_member_id',
         'calculated_amount',
-        'billing_cycle',
     ];
 
     protected $casts = [
@@ -42,5 +41,29 @@ class Membership extends Model
     public function payments()
     {
         return $this->hasMany(MembershipPayment::class);
+    }
+
+    /**
+     * Get billing interval from type
+     */
+    public function getBillingIntervalAttribute(): string
+    {
+        return $this->type->billing_interval ?? 'monthly';
+    }
+
+    /**
+     * Get billing mode from type
+     */
+    public function getBillingModeAttribute(): string
+    {
+        return $this->type->billing_mode ?? 'recurring';
+    }
+
+    /**
+     * Get human-readable billing interval label
+     */
+    public function getBillingIntervalLabelAttribute(): string
+    {
+        return $this->type->billing_interval_label ?? 'Unbekannt';
     }
 }

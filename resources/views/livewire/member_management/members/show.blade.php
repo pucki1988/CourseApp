@@ -25,7 +25,6 @@ new class extends Component {
     public $assignAvailablePayers = [];
     public ?int $editingMembershipId = null;
     public ?int $editMembershipTypeId = null;
-    public ?string $editBillingCycle = 'monthly';
     public ?int $editPayerMemberId = null;
     public ?string $editStartDate = null;
     public $editMembershipPayments = [];
@@ -179,7 +178,7 @@ new class extends Component {
             }
 
             $payerId = $suggestedPayer->id;
-            $billingCycle = $suggestedType->interval === 'yearly' ? 'yearly' : 'monthly';
+            $billingCycle = $suggestedType->interval === 'annual' ? 'annual' : 'monthly';
 
             // Automatically assign without showing modal
             $service->assignMembership(
@@ -282,10 +281,7 @@ new class extends Component {
         if (!$type) {
             return;
         }
-
-        if ($type->billing_mode === 'one_time') {
-            $this->editBillingCycle = 'once';
-        }
+        // Billing cycle is now automatically inherited from type
     }
 
     public function updatedAssignMembershipTypeId(): void
@@ -336,7 +332,6 @@ new class extends Component {
 
         $this->editingMembershipId = $membershipId;
         $this->editMembershipTypeId = $membership->membership_type_id;
-        $this->editBillingCycle = $membership->billing_cycle;
         $this->editPayerMemberId = $membership->payer_member_id !== null
             ? (int) $membership->payer_member_id
             : null;
@@ -349,7 +344,6 @@ new class extends Component {
     {
         $this->validate([
             'editMembershipTypeId' => 'required|exists:membership_types,id',
-            'editBillingCycle' => 'nullable|in:monthly,yearly,once',
             'editPayerMemberId' => 'required|exists:members,id',
             'editStartDate' => 'required|date',
         ], [
@@ -364,7 +358,6 @@ new class extends Component {
 
             $membership->update([
                 'membership_type_id' => $this->editMembershipTypeId,
-                'billing_cycle' => $this->editBillingCycle,
                 'payer_member_id' => $this->editPayerMemberId,
                 'calculated_amount' => $type->base_amount,
                 'started_at' => $this->editStartDate,
@@ -382,7 +375,6 @@ new class extends Component {
     {
         $this->editingMembershipId = null;
         $this->editMembershipTypeId = null;
-        $this->editBillingCycle = 'monthly';
         $this->editPayerMemberId = null;
         $this->editStartDate = null;
         Flux::modal('edit-membership-modal')->close();
@@ -891,7 +883,7 @@ new class extends Component {
                             <div class="text-sm">
                                 <div class="font-semibold">{{ $membership->type?->name ?? '-' }}</div>
                                 <div class="text-gray-500">
-                                    {{ $membership->billing_cycle }} · {{ number_format($membership->calculated_amount ?? $membership->type?->base_amount ?? 0, 2, ',', '.') }} €
+                                    {{ $membership->billing_interval_label }} · {{ number_format($membership->calculated_amount ?? $membership->type?->base_amount ?? 0, 2, ',', '.') }} €
                                     @if($membership->payer)
                                         · Zahler: {{ $membership->payer->first_name }} {{ $membership->payer->last_name }}
                                     @endif
@@ -1222,11 +1214,10 @@ new class extends Component {
                     @endforeach
                 </flux:select>
 
-                <flux:select label="Abrechnungszyklus" wire:model.live="editBillingCycle">
-                    <option value="monthly">Monatlich</option>
-                    <option value="yearly">Jährlich</option>
-                    <option value="once">Einmalig</option>
-                </flux:select>
+                <flux:field>
+                    <flux:label>Abrechnungszyklus</flux:label>
+                    <flux:description>Wird vom Mitgliedschaftstyp übernommen ({{ $membershipTypes->firstWhere('id', $editMembershipTypeId)?->billing_interval_label ?? '-' }})</flux:description>
+                </flux:field>
 
                 <flux:input
                     label="Startdatum"

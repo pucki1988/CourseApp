@@ -13,7 +13,7 @@ new class extends Component {
     public string $slug = '';
     public string $baseAmount = '';
     public string $billingMode = 'recurring';
-    public ?string $interval = 'monthly';
+    public ?string $billingInterval = 'monthly';
     public string $conditionsJson = '';
     public bool $active = true;
     public bool $isClubMembership = false;
@@ -38,7 +38,7 @@ new class extends Component {
         $this->slug = '';
         $this->baseAmount = '';
         $this->billingMode = 'recurring';
-        $this->interval = 'monthly';
+        $this->billingInterval = 'monthly';
         $this->conditionsJson = '';
         $this->active = true;
         $this->isClubMembership = false;
@@ -60,7 +60,7 @@ new class extends Component {
         $this->slug = $type->slug;
         $this->baseAmount = (string) $type->base_amount;
         $this->billingMode = $type->billing_mode;
-        $this->interval = $type->interval;
+        $this->billingInterval = $type->billing_interval;
         $this->conditionsJson = $type->conditions ? json_encode($type->conditions, JSON_UNESCAPED_UNICODE) : '';
         $this->active = (bool) $type->active;
         $this->isClubMembership = (bool) $type->is_club_membership;
@@ -92,14 +92,14 @@ new class extends Component {
 
     private function validateInput(?int $ignoreId = null): bool
     {
-        $interval = $this->billingMode === 'one_time' ? null : $this->interval;
+        $billingInterval = $this->billingMode === 'one_time' ? null : $this->billingInterval;
 
         $validator = Validator::make([
             'name' => $this->name,
             'slug' => $this->slug,
             'base_amount' => $this->baseAmount,
             'billing_mode' => $this->billingMode,
-            'interval' => $interval,
+            'billing_interval' => $billingInterval,
             'sort_order' => $this->sortOrder,
             'active' => $this->active,
             'is_club_membership' => $this->isClubMembership,
@@ -108,7 +108,7 @@ new class extends Component {
             'slug' => 'required|alpha_dash|unique:membership_types,slug' . ($ignoreId ? ',' . $ignoreId : ''),
             'base_amount' => 'required|numeric|min:0',
             'billing_mode' => 'required|in:recurring,one_time',
-            'interval' => 'nullable|in:monthly,yearly',
+            'billing_interval' => 'nullable|in:monthly,quarterly,semi_annual,annual',
             'sort_order' => 'nullable|integer|min:0',
             'active' => 'boolean',
             'is_club_membership' => 'boolean',
@@ -133,14 +133,14 @@ new class extends Component {
             return;
         }
 
-        $interval = $this->billingMode === 'one_time' ? null : $this->interval;
+        $billingInterval = $this->billingMode === 'one_time' ? null : $this->billingInterval;
 
         MembershipType::create([
             'name' => trim($this->name),
             'slug' => trim($this->slug),
             'base_amount' => $this->baseAmount,
             'billing_mode' => $this->billingMode,
-            'interval' => $interval,
+            'billing_interval' => $billingInterval,
             'conditions' => $conditions,
             'active' => $this->active,
             'is_club_membership' => $this->isClubMembership,
@@ -166,7 +166,7 @@ new class extends Component {
             return;
         }
 
-        $interval = $this->billingMode === 'one_time' ? null : $this->interval;
+        $billingInterval = $this->billingMode === 'one_time' ? null : $this->billingInterval;
 
         $type = MembershipType::findOrFail($this->membershipTypeId);
         $type->update([
@@ -174,7 +174,7 @@ new class extends Component {
             'slug' => trim($this->slug),
             'base_amount' => $this->baseAmount,
             'billing_mode' => $this->billingMode,
-            'interval' => $interval,
+            'billing_interval' => $billingInterval,
             'conditions' => $conditions,
             'active' => $this->active,
             'is_club_membership' => $this->isClubMembership,
@@ -235,7 +235,7 @@ new class extends Component {
                         </div>
                         <div class="flex justify-between mt-1">
                             <span class="text-gray-500">Intervall</span>
-                            <span>{{ $type->interval ?? '-' }}</span>
+                            <span>{{ $type->billing_interval_label ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between mt-1">
                             <span class="text-gray-500">Aktiv</span>
@@ -271,9 +271,11 @@ new class extends Component {
                 <option value="recurring">Wiederkehrend</option>
                 <option value="one_time">Einmalig</option>
             </flux:select>
-            <flux:select label="Intervall" wire:model.live="interval">
+            <flux:select label="Intervall" wire:model.live="billingInterval">
                 <option value="monthly">Monatlich</option>
-                <option value="yearly">Jährlich</option>
+                <option value="quarterly">Vierteljährlich</option>
+                <option value="semi_annual">Halbjährlich</option>
+                <option value="annual">Jährlich</option>
             </flux:select>
             <flux:textarea label="Bedingungen (JSON)" wire:model.live="conditionsJson" rows="3" />
             <flux:input label="Sortierung" wire:model.live="sortOrder" type="number" />
@@ -301,9 +303,11 @@ new class extends Component {
                 <option value="recurring">Wiederkehrend</option>
                 <option value="one_time">Einmalig</option>
             </flux:select>
-            <flux:select label="Intervall" wire:model.live="interval">
+            <flux:select label="Intervall" wire:model.live="billingInterval">
                 <option value="monthly">Monatlich</option>
-                <option value="yearly">Jährlich</option>
+                <option value="quarterly">Vierteljährlich</option>
+                <option value="semi_annual">Halbjährlich</option>
+                <option value="annual">Jährlich</option>
             </flux:select>
             <flux:textarea label="Bedingungen (JSON)" wire:model.live="conditionsJson" rows="3" />
             <flux:input label="Sortierung" wire:model.live="sortOrder" type="number" />
