@@ -54,8 +54,9 @@
 </head>
 <body>
     <h1>Monatsabrechnung {{ $billingData['month_name'] }}</h1>
+    <div class="muted">Verein: DJK SG Schönbrunn am Lusen</div>
     <div class="muted">Trainer: {{ $billingData['coach']->name }}</div>
-
+    
     <div class="summary">
         <div class="summary-row">Zeitraum: <strong>{{ $billingData['month_name'] }}</strong></div>
         <div class="summary-row">Anzahl Termine: <strong>{{ $billingData['total_slots'] }}</strong></div>

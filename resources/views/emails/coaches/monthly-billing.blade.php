@@ -12,7 +12,7 @@
         .header {
             margin-bottom: 30px;
         }
-        .header h1 {
+        .header h2 {
             color: #262626;
             margin-bottom: 5px;
         }
@@ -52,7 +52,6 @@
         .total-row {
             background-color: #f3f4f6;
             font-weight: bold;
-            font-size: 1.1rem;
         }
         .amount {
             text-align: right;
@@ -76,23 +75,23 @@
 </head>
 <body>
     <div class="header">
-        <h1>Monatsabrechnung {{ $billingData['month_name'] }}</h1>
+        <h2>Monatsabrechnung {{ $billingData['month_name'] }}</h2>
         <p>Hallo {{ $billingData['coach']->name }},</p>
         <p>hier ist deine Abrechnung für {{ $billingData['month_name'] }}.</p>
     </div>
 
     <div class="summary">
         <div class="summary-item">
-            <span>Zeitraum: </span>
-            <strong>{{ $billingData['month_name'] }}</strong>
+            <span>Zeitraum:</span>
+            <strong> {{ $billingData['month_name'] }}</strong>
         </div>
         <div class="summary-item">
-            <span>Anzahl Termine: </span>
-            <strong>{{ $billingData['total_slots'] }}</strong>
+            <span>Anzahl Termine:</span>
+            <strong> {{ $billingData['total_slots'] }}</strong>
         </div>
         <div class="summary-item">
             <span>Gesamtvergütung: </span>
-            <strong style="color: #f9fafb; font-size: 1.2rem;">€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
+            <strong style="color: #f9fafb;">€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
         </div>
     </div>
 
