@@ -25,5 +25,9 @@ class ScheduleServiceProvider extends ServiceProvider
             ->everyMinute()
             ->withoutOverlapping()
             ->runInBackground();
+
+        /*$schedule->command('coaches:generate-billing')
+            ->monthlyOn(3,'21:00')
+            ->runInBackground();*/
     }
 }

@@ -9,6 +9,7 @@ use App\Mail\CourseConfirmedMail;
 use Illuminate\Support\Facades\Mail;
 use App\Services\Loyalty\LoyaltyPointService;
 use App\Models\Loyalty\LoyaltyAccount;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -56,3 +57,6 @@ Artisan::command('create:missing-loyalty-accounts', function () {
     $this->info("Fertig!");
 
 });
+
+Schedule::command('coaches:generate-billing')
+    ->monthlyOn(3, '21:00');
