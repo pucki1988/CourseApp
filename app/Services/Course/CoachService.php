@@ -61,5 +61,62 @@ class CoachService
         return true;
     }
 
+    /**
+     * Calculate monthly billing for a coach
+     * 
+     * @param Coach $coach
+     * @param int $year
+     * @param int $month
+     * @return array
+     */
+    public function calculateMonthlyBilling(Coach $coach, int $year, int $month): array
+    {
+        $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        // Get all course slots for this coach in the specified month
+        $slots = \App\Models\Course\CourseSlot::whereHas('course', function ($query) use ($coach) {
+            $query->where('coach_id', $coach->id);
+        })
+        ->whereBetween('date', [$startDate, $endDate])
+        ->whereIn('status', ['active'])
+        ->with(['course', 'bookingSlots' => function ($query) {
+            $query->where('status', 'booked')
+                  ->whereNotNull('checked_in_at');
+        }])
+        ->orderBy('date')
+        ->orderBy('start_time')
+        ->get();
+
+        $billingItems = [];
+        $totalCompensation = 0;
+
+        foreach ($slots as $slot) {
+            $participantCount = $slot->bookingSlots->count();
+            $compensation = $coach->calculateCompensation($participantCount) ?? 0;
+
+            $billingItems[] = [
+                'date' => $slot->date,
+                'course_title' => $slot->course->title,
+                'start_time' => $slot->start_time,
+                'end_time' => $slot->end_time,
+                'participant_count' => $participantCount,
+                'compensation' => $compensation,
+            ];
+
+            $totalCompensation += $compensation;
+        }
+
+        return [
+            'coach' => $coach,
+            'year' => $year,
+            'month' => $month,
+            'month_name' => $startDate->translatedFormat('F Y'),
+            'billing_items' => $billingItems,
+            'total_compensation' => $totalCompensation,
+            'total_slots' => count($billingItems),
+        ];
+    }
+
 
 }
