@@ -116,7 +116,7 @@ class GenerateCoachBilling extends Command
             }
 
             // Send email
-            if (!$dryRun) {
+            if (!$dryRun && $billingData['total_compensation'] > 0) {
                 try {
                     Mail::to($coach->user->email)
                         ->send(new CoachMonthlyBillingMail($billingData));
