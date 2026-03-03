@@ -3,6 +3,7 @@
 namespace App\Services\Course;
 
 use App\Models\Course\Coach;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 
@@ -71,7 +72,7 @@ class CoachService
      */
     public function calculateMonthlyBilling(Coach $coach, int $year, int $month): array
     {
-        $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
         // Get all course slots for this coach in the specified month
@@ -111,7 +112,7 @@ class CoachService
             'coach' => $coach,
             'year' => $year,
             'month' => $month,
-            'month_name' => $startDate->translatedFormat('F Y'),
+            'month_name' => $startDate->copy()->locale('de')->translatedFormat('F Y'),
             'billing_items' => $billingItems,
             'total_compensation' => $totalCompensation,
             'total_slots' => count($billingItems),

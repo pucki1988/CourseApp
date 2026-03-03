@@ -13,7 +13,7 @@
             margin-bottom: 30px;
         }
         .header h1 {
-            color: #2563eb;
+            color: #262626;
             margin-bottom: 5px;
         }
         .summary {
@@ -36,7 +36,7 @@
             margin-bottom: 30px;
         }
         th {
-            background-color: #2563eb;
+            background-color: #262626;
             color: white;
             padding: 12px;
             text-align: left;
@@ -83,16 +83,16 @@
 
     <div class="summary">
         <div class="summary-item">
-            <span>Zeitraum:</span>
+            <span>Zeitraum: </span>
             <strong>{{ $billingData['month_name'] }}</strong>
         </div>
         <div class="summary-item">
-            <span>Anzahl Termine:</span>
+            <span>Anzahl Termine: </span>
             <strong>{{ $billingData['total_slots'] }}</strong>
         </div>
         <div class="summary-item">
-            <span>Gesamtvergütung:</span>
-            <strong style="color: #2563eb; font-size: 1.2rem;">€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
+            <span>Gesamtvergütung: </span>
+            <strong style="color: #f9fafb; font-size: 1.2rem;">€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
         </div>
     </div>
 

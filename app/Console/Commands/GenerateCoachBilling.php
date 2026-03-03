@@ -59,7 +59,7 @@ class GenerateCoachBilling extends Command
 
         $year = $billingDate->year;
         $month = $billingDate->month;
-        $monthName = $billingDate->translatedFormat('F Y');
+        $monthName = $billingDate->copy()->locale('de')->translatedFormat('F Y');
 
         $dryRun = $this->option('dry-run');
 
