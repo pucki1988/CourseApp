@@ -96,39 +96,25 @@ class CourseSlotService
             });
         })
 
-        // 🔹 Slot muss mind. eine gültige Buchung haben
-        /*
-        ->whereHas('bookingSlots.booking', function ($q) {
-            $q->whereIn('status', ['paid', 'partially_refunded']);
-        })*/
-
-        // 🔹 Mind. ein Slot ist noch nicht eingecheckt
-        /*
-        ->whereHas('bookingSlots', function ($q) {
-            $q->where('status', 'booked')
-            ->whereNull('checked_in_at');
-        })*/
-
-        
-
-
         ->orderBy('date')
         ->orderBy('start_time');
 
 
         $user=auth()->user();
 
-        if ($user->hasAnyRole(['admin', 'manager'])) {
-            return $query->get();
-        }
-            $coachId = $user->coach?->id;
+        $coachId = $user->coach?->id;
 
-            if ($coachId) {
-                $query->whereHas('course', function ($q) use ($coachId) {
-                    $q->where('coach_id', $coachId);
-                });
-            }    
-            return $query->get();
+        if($coachId) {
+
+            if (!$coachId) {
+            return collect(); // kein Coach-Profil => keine Backend-Slots
+            }
+
+            $query->whereHas('course', function ($q) use ($coachId) {
+                $q->where('coach_id', $coachId);
+            });
+        }    
+        return $query->get();
     }
 
 
