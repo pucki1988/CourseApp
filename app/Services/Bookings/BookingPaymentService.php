@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Models\Course\CourseBooking;
 use App\Events\CourseBookingPaid;
+use App\Events\CourseBookingCreate;
 
 class BookingPaymentService
 {
@@ -26,7 +27,8 @@ class BookingPaymentService
             'payment_status' => 'paid'
         ]);
 
-        event(new CourseBookingPaid($booking));
+        #event(new CourseBookingPaid($booking));
+        event(new CourseBookingCreate($booking));   
     }
 
     public function markFailed(CourseBooking $booking): void

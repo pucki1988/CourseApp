@@ -19,7 +19,7 @@ class SendCourseBookingCreateMail  implements ShouldQueue
         //
     }
 
-    public $delay = 600; // Sekunden
+    public $delay = 60; // Sekunden
     /**
      * Handle the event.
      */

@@ -32,11 +32,11 @@ class CreateBookingAction
 
             $data["booking"]=$newBooking->refresh();
         
-            DB::afterCommit(fn () =>
+           /* DB::afterCommit(fn () =>
                 event(new CourseBookingCreate(
                     $newBooking
                 ))
-            );
+            );*/
 
             return $data;
         });
