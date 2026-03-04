@@ -19,7 +19,7 @@ class SendCourseBookingPaidMail implements ShouldQueue
     }
 
 
-    public $delay = 120; // Sekunden
+    public $delay = 660; // Sekunden
     /**
      * Handle the event.
      */
