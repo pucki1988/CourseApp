@@ -85,12 +85,19 @@ class CourseSlotService
     public function listAllBookedSlotsBackend(array $filters = [])
     {
         //Nur Slots wo mindestens 1 Buchung vorhanden ist und mindestens 1 BookingSlot noch nicht eingecheckt
+        
+        if(!empty($filters['own'])) {
+            $daysInPast = 0; // z.B. 5 Tage in der Vergangenheit anzeigen
+        }else{
+            $daysInPast = -5; // z.B. 5 Tage in der Vergangenheit anzeigen
+        }
+        
         $query = CourseSlot::query()
         ->with(['course.coach', 'bookingSlots.booking'])
         ->where('status', 'active')
         // 🔹 Nur zukünftige / laufende Slots
-        ->where(function ($q) {
-            $q->whereDate('date', '>', now()->addDays(-5))
+        ->where(function ($q) use ($daysInPast) {
+            $q->whereDate('date', '>', now()->addDays($daysInPast))
             ->orWhere(function ($q2) {
                 $q2->whereDate('date', now())
                     ->whereTime('start_time', '>=', now()->format('H:i'));
@@ -108,6 +115,13 @@ class CourseSlotService
                 $q->where('user_id', $user->id);
             });
         }
+
+        if(!empty($filters['own']) && $user) {
+                $query->whereHas('bookingSlots.booking', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
+        }
+            
 
         return $query->get();
     }

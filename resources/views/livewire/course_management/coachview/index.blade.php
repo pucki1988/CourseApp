@@ -99,7 +99,8 @@ new class extends Component {
     public function loadSlots(CourseSlotService $service)
     {
         $filters = [
-            'own' => true
+            'limit' => 6,
+            'status' => 'active'
         ];
 
         $this->slots = $service->listAllBookedSlotsBackend($filters);
@@ -268,7 +269,7 @@ new class extends Component {
 <section class="w-full">
     @include('partials.courses-heading')
 
-    <x-courses.layout :heading="__('Deine nächsten Termine')" :subheading="__('Deine Kurse')">
+    <x-courses.layout :heading="__('Die nächsten Termine')" :subheading="__('Deine Kurse')">
         @if($showCallout)
             <flux:callout wire:poll.3000ms="hideCallout" variant="success" icon="check-circle" class="my-2" heading="{{ $calloutHeading }}"/>
         @endif
@@ -350,7 +351,7 @@ new class extends Component {
             </div>
         @empty
             <div class="col-span-3 text-neutral-500">
-                Du hast noch keine Termine gebucht. Schau doch mal in unserem Kursangebot vorbei und melde dich an!
+                Es sind keine bevorstehenden Termine vorhanden.
             </div>
         @endforelse
         </div>

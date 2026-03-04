@@ -16,7 +16,7 @@
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
                 
-                @canany(['courses.manage','coursebookings.manage','courses.coachview'])
+                @canany(['courses.manage','coursebookings.manage','courses.coachview','coursebookingslots.view.own'])
                 <flux:navlist.group class="grid">
                     <flux:navlist.item icon="rocket-launch" :href="route('course_management.home.index')" :current="request()->routeIs('course_management.home.index')" wire:navigate>{{ __('Kursverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>

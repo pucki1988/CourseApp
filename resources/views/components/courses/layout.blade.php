@@ -5,7 +5,7 @@
         pb-safe">
     <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
         
-        @canany(['courses.manage','courses.coachview'])
+        @can('coursebookingslots.view.own')
             <flux:navlist.item
                 :href="route('course_management.home.index')"
                 :current="request()->routeIs('course_management.home.index')"
@@ -15,10 +15,29 @@
             >
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
                 <flux:icon.home class="h-5 w-5 md:hidden" />
-                <span class="md:inline">{{ __('Home') }}</span>
+                <span class="md:inline">{{ __('Meine Termine') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endcan
+        @canany(['courses.manage','courses.coachview'])
+            <flux:navlist.item
+                :href="route('course_management.coachview.index')"
+                :current="request()->routeIs('course_management.coachview.index')"
+                wire:navigate
+                class="h-14"
+                
+            >
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.home class="h-5 w-5 md:hidden" />
+                @can('courses.manage')
+                    <span class="md:inline">{{ __('Alle Termine') }}</span>
+                @elsecan('courses.coachview')
+                    <span class="md:inline">{{ __('Kurstermine (Traineransicht)') }}</span>
+                @endcan
                 </span>
             </flux:navlist.item>
         @endcanany
+
 
         @can(['courses.manage'])
             <flux:navlist.item
