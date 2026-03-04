@@ -59,4 +59,4 @@ Artisan::command('create:missing-loyalty-accounts', function () {
 });
 
 Schedule::command('coaches:generate-billing')
-    ->monthlyOn(3, '21:00');
+    ->monthlyOn(3, '08:00');
