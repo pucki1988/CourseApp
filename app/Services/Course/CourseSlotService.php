@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use App\Models\Course\CourseSlotReminder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -100,20 +101,14 @@ class CourseSlotService
         ->orderBy('start_time');
 
 
-        $user=auth()->user();
+        $user = auth()->user();
 
-        $coachId = $user->coach?->id;
-
-        if($coachId) {
-
-            if (!$coachId) {
-            return collect(); // kein Coach-Profil => keine Backend-Slots
-            }
-
-            $query->whereHas('course', function ($q) use ($coachId) {
-                $q->where('coach_id', $coachId);
+        if ($user && $user->coach) {
+            $query->whereHas('course.coach', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
             });
-        }    
+        }
+
         return $query->get();
     }
 
