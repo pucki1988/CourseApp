@@ -32,7 +32,7 @@
                 @can('courses.manage')
                     <span class="md:inline">{{ __('Alle Termine') }}</span>
                 @elsecan('courses.coachview')
-                    <span class="md:inline">{{ __('Kurstermine (Traineransicht)') }}</span>
+                    <span class="md:inline">{{ __('Traineransicht') }}</span>
                 @endcan
                 </span>
             </flux:navlist.item>
