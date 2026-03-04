@@ -35,6 +35,7 @@ class RoleSeeder extends Seeder
             'courses.update',
             'courses.delete',
             'courses.settlement',
+            'courses.coachview',
 
             // Slots
             'courseslots.create',

@@ -298,13 +298,13 @@ new class extends Component {
                     <flux:badge icon="calendar">{{ $slot->date->format('d.m.Y') }}</flux:badge> 
                     <flux:badge class="ms-1" icon="clock">{{ $slot->start_time->format('H:i') }} – {{ $slot->end_time->format('H:i') }}</flux:badge> 
                     </flux:text>
-                    @can('checkin', $slot)
+                    @can('update', $slot)
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle" wire:click="showBookings({{ $slot }})">{{ $slot->bookingSlots()->where('status', 'booked')->count()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>
                     @endcan
 
-                    @cannot('checkin', $slot)
+                    @cannot('update', $slot)
                     <flux:text class="mt-2">
                     Zusagen <flux:badge icon="information-circle">{{ $slot->bookingSlots()->where('status', 'booked')->count()  }} / {{ $slot->course->capacity }}</flux:badge>
                     </flux:text>

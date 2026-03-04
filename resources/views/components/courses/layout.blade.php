@@ -4,7 +4,8 @@
         md:static md:z-auto md:w-[220px] md:border-0 md:bg-transparent
         pb-safe">
     <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
-        @can('courses.manage')
+        
+        @canany(['courses.manage','courses.coachview'])
             <flux:navlist.item
                 :href="route('course_management.home.index')"
                 :current="request()->routeIs('course_management.home.index')"
@@ -17,7 +18,7 @@
                 <span class="md:inline">{{ __('Home') }}</span>
                 </span>
             </flux:navlist.item>
-        @endcan
+        @endcanany
 
         @can(['courses.manage'])
             <flux:navlist.item
