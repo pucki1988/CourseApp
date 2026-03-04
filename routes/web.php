@@ -50,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
         Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
     });
-    Route::middleware(['permission:courses.manage','permission:courses.coachview'])->group(function () {
+    Route::middleware(['permission:courses.manage|courses.coachview'])->group(function () {
         Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
     });
 
