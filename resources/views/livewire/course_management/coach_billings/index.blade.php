@@ -88,7 +88,9 @@ new class extends Component {
                             <div>
                                 <flux:heading size="lg">{{ $this->formatPeriod($billing) }}</flux:heading>
                                 <div class="mt-2 text-sm text-gray-600 space-y-1">
+                                    <div>Trainer: <strong>{{ $billing->coach->name }}</strong></div>
                                     <div>Termine: <strong>{{ $billing->total_slots }}</strong></div>
+
                                     <div>Gesamtauszahlung: <strong>{{ number_format($billing->total_compensation, 2, ',', '.') }} €</strong></div>
                                     @if($billing->mail_sent_at)
                                         <div>Versendet am: {{ $billing->mail_sent_at->format('d.m.Y H:i') }}</div>
