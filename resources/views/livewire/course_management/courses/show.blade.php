@@ -519,13 +519,13 @@ new class extends Component {
                     <flux:dropdown position="top">
                         <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
                     <flux:menu>
-                    @can('courseslots.reschedule', $slot)
+                    @can('reschedule', $slot)
                     <flux:menu.item icon="chevron-double-right" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:menu.item>
                     @endcan
-                    @can('courseslots.cancel', $slot)
+                    @can('cancel', $slot)
                     <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
-                    @can('courseslots.delete', $slot)
+                    @can('delete', $slot)
                     <flux:menu.item icon="trash" wire:click="confirmDelete({{ $slot }})">Löschen</flux:menu.item>
                     @endcan
                     @can('courses.manage')
