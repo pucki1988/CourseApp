@@ -3,23 +3,39 @@
 use Livewire\Volt\Component;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use App\Models\Course\CoachMonthlyBilling;
 
 new class extends Component {
     public $billings;
     public $coachProfile;
     public ?int $activeBillingId = null;
+    public string $billingMonth = '';
+    public bool $runDryRun = false;
+    public bool $runForce = false;
+    public ?string $runOutput = null;
+    public string $runState = 'idle';
 
     public function mount(): void
     {
         $this->coachProfile = Auth::user()?->coach;
+        $this->billingMonth = now()->subMonth()->format('Y-m');
 
-        if (!$this->coachProfile && !Auth::user()->can('courses.manage')) {
+        $this->loadBillings();
+    }
+
+    public function loadBillings(): void
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        $this->coachProfile = $user?->coach;
+
+        if (!$this->coachProfile && !$user?->can('courses.manage')) {
             $this->billings = collect();
             return;
         }
 
-        $query=CoachMonthlyBilling::with('items')
+        $query=CoachMonthlyBilling::with(['items', 'coach'])
             ->orderByDesc('year')
             ->orderByDesc('month');
 
@@ -30,6 +46,79 @@ new class extends Component {
             
 
         $this->billings = $query->get();
+    }
+
+    public function runBilling(): void
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        abort_unless($user?->can('courses.manage'), 403);
+
+        $this->validate([
+            'billingMonth' => ['required', 'date_format:Y-m'],
+        ]);
+
+        try {
+            $args = [
+                '--month' => $this->billingMonth,
+            ];
+
+            if ($this->runDryRun) {
+                $args['--dry-run'] = true;
+            }
+
+            if ($this->runForce) {
+                $args['--force'] = true;
+            }
+
+            Artisan::call('coaches:generate-billing', $args);
+
+            $this->runOutput = trim(Artisan::output());
+            $this->runState = 'success';
+            $this->loadBillings();
+        } catch (\Throwable $e) {
+            $this->runState = 'error';
+            $this->runOutput = $e->getMessage();
+        }
+    }
+
+    public function deleteBilling(int $billingId): void
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        abort_unless($user?->can('courses.manage'), 403);
+
+        $billing = CoachMonthlyBilling::findOrFail($billingId);
+        $billing->delete();
+
+        $this->runState = 'success';
+        $this->runOutput = 'Abrechnung wurde gelöscht.';
+        $this->loadBillings();
+    }
+
+    public function rerunBillingForce(int $billingId): void
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        abort_unless($user?->can('courses.manage'), 403);
+
+        $billing = CoachMonthlyBilling::findOrFail($billingId);
+        $month = sprintf('%04d-%02d', $billing->year, $billing->month);
+
+        try {
+            Artisan::call('coaches:generate-billing', [
+                '--month' => $month,
+                '--coach' => $billing->coach_id,
+                '--force' => true,
+            ]);
+
+            $this->runOutput = trim(Artisan::output());
+            $this->runState = 'success';
+            $this->loadBillings();
+        } catch (\Throwable $e) {
+            $this->runState = 'error';
+            $this->runOutput = $e->getMessage();
+        }
     }
 
     public function toggleDetails(int $billingId): void
@@ -72,6 +161,33 @@ new class extends Component {
     @include('partials.courses-heading')
 
     <x-courses.layout :heading="__('Meine Abrechnungen')" :subheading="__('Monatliche Trainerauszahlungen')">
+        @can('courses.manage')
+            <div class="border rounded-lg p-4 bg-white shadow-sm mb-4">
+                <form wire:submit="runBilling" class="flex flex-col md:flex-row md:items-end gap-3">
+                    <flux:input type="month" label="Abrechnungsmonat" wire:model="billingMonth" />
+                    <flux:field variant="inline">
+                        <flux:checkbox wire:model="runDryRun" />
+                        <flux:label>Testlauf</flux:label>
+                    </flux:field>
+                    <flux:field variant="inline">
+                        <flux:checkbox wire:model="runForce" />
+                        <flux:label>Force (bestehende ersetzen)</flux:label>
+                    </flux:field>
+                    <flux:button type="submit" variant="primary" icon="play">Abrechnung starten</flux:button>
+                </form>
+
+                @if($runState === 'success')
+                    <flux:callout variant="success" icon="check-circle" class="mt-3" heading="Abrechnung wurde gestartet" />
+                @elseif($runState === 'error')
+                    <flux:callout variant="danger" icon="exclamation-circle" class="mt-3" heading="Abrechnung konnte nicht gestartet werden" />
+                @endif
+
+                @if($runOutput)
+                    <div class="mt-3 text-xs text-gray-600 whitespace-pre-line">{{ $runOutput }}</div>
+                @endif
+            </div>
+        @endcan
+
         @if(!$coachProfile && !Auth::user()->can('courses.manage'))
             <div class="border rounded-lg p-4 bg-white shadow-sm text-sm text-gray-600">
                 Für deinen Benutzer ist kein Trainerprofil verknüpft. Bitte wende dich an die Verwaltung.
@@ -104,6 +220,24 @@ new class extends Component {
                                 <flux:button size="sm" wire:click="toggleDetails({{ $billing->id }})">
                                     {{ $activeBillingId === $billing->id ? 'Details ausblenden' : 'Details anzeigen' }}
                                 </flux:button>
+                                @can('courses.manage')
+                                    <flux:button
+                                        size="sm"
+                                        variant="primary"
+                                        wire:click="rerunBillingForce({{ $billing->id }})"
+                                        onclick="return confirm('Abrechnung für diesen Monat und Trainer per Force neu berechnen?')"
+                                    >
+                                        Neu berechnen (Force)
+                                    </flux:button>
+                                    <flux:button
+                                        size="sm"
+                                        variant="danger"
+                                        wire:click="deleteBilling({{ $billing->id }})"
+                                        onclick="return confirm('Abrechnung wirklich löschen?')"
+                                    >
+                                        Löschen
+                                    </flux:button>
+                                @endcan
                             </div>
                         </div>
 

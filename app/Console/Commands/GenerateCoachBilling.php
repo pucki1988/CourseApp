@@ -104,6 +104,7 @@ class GenerateCoachBilling extends Command
         foreach ($coaches as $coach) {
             /** @var Coach $coach */
             $totalProcessed++;
+            $overwriteExistingBilling = false;
 
             if ($this->coachService->hasMonthlyBilling($coach, $year, $month)) {
                 if (!$force) {
@@ -115,10 +116,7 @@ class GenerateCoachBilling extends Command
                 }
 
                 if (!$dryRun) {
-                    $this->coachService->deleteMonthlyBilling($coach, $year, $month);
-                    $this->warn("Coach: {$coach->name}");
-                    $this->warn('  ⚠ Vorhandene Monatsabrechnung wurde per FORCE gelöscht und wird neu erstellt.');
-                    $this->newLine();
+                    $overwriteExistingBilling = true;
                 }
             }
 
@@ -132,6 +130,18 @@ class GenerateCoachBilling extends Command
             $this->line("Coach: <fg=cyan>{$coach->name}</>");
             $this->line("  Slots: {$billingData['total_slots']}");
             $this->line("  Compensation: € " . number_format($billingData['total_compensation'], 2, ',', '.'));
+
+            if (($billingData['total_slots'] ?? 0) === 0) {
+                $this->warn('  ⚠ Keine stattgefundenen Kurse im Zeitraum - kein Eintrag und keine E-Mail.');
+                $totalSkipped++;
+                $this->newLine();
+                continue;
+            }
+
+            if ($overwriteExistingBilling) {
+                $this->coachService->deleteMonthlyBilling($coach, $year, $month);
+                $this->warn('  ⚠ Vorhandene Monatsabrechnung wurde per FORCE gelöscht und wird neu erstellt.');
+            }
 
             $grandTotal += $billingData['total_compensation'];
 
