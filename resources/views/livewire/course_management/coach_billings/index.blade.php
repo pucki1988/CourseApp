@@ -301,6 +301,10 @@ new class extends Component {
                                     >
                                     @if($billing->status === 'dry_run')
                                         Produktiv berechnen
+                                    @elseif($billing->status === 'skipped_no_email')
+                                        E-Mail eintragen und neu berechnen
+                                    @elseif($billing->status === 'email_failed')
+                                        E-Mail erneut senden und neu berechnen
                                     @else
                                         Neu berechnen
                                     @endif
