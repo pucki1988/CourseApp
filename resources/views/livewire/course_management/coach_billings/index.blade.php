@@ -222,10 +222,7 @@ new class extends Component {
                         <flux:checkbox wire:model="runDryRun" />
                         <flux:label>Testlauf</flux:label>
                     </flux:field>
-                    <flux:field variant="inline">
-                        <flux:checkbox wire:model="runForce" />
-                        <flux:label>Force (bestehende ersetzen)</flux:label>
-                    </flux:field>
+                    
                     <flux:button type="submit" variant="primary" icon="play">Abrechnung starten</flux:button>
                 </form>
 
@@ -302,7 +299,11 @@ new class extends Component {
                                         wire:click="rerunBillingForce({{ $billing->id }})"
                                         onclick="return confirm('Abrechnung für diesen Monat und Trainer per Force neu berechnen?')"
                                     >
-                                        Neu berechnen (Force)
+                                    @if($billing->status === 'dry_run')
+                                        Produktiv berechnen
+                                    @else
+                                        Neu berechnen
+                                    @endif
                                     </flux:button>
                                     <flux:button
                                         size="sm"
