@@ -14,16 +14,22 @@ new class extends Component {
     {
         $this->coachProfile = Auth::user()?->coach;
 
-        if (!$this->coachProfile) {
+        if (!$this->coachProfile && !Auth::user()->can('courses.manage')) {
             $this->billings = collect();
             return;
         }
 
-        $this->billings = CoachMonthlyBilling::with('items')
-            ->where('coach_id', $this->coachProfile->id)
+        $query=CoachMonthlyBilling::with('items')
             ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->get();
+            ->orderByDesc('month');
+
+
+        if($this->coachProfile) {
+            $query->where('coach_id', $this->coachProfile->id);
+        }
+            
+
+        $this->billings = $query->get();
     }
 
     public function toggleDetails(int $billingId): void
@@ -66,7 +72,7 @@ new class extends Component {
     @include('partials.courses-heading')
 
     <x-courses.layout :heading="__('Meine Abrechnungen')" :subheading="__('Monatliche Trainerauszahlungen')">
-        @if(!$coachProfile)
+        @if(!$coachProfile && !Auth::user()->can('courses.manage'))
             <div class="border rounded-lg p-4 bg-white shadow-sm text-sm text-gray-600">
                 Für deinen Benutzer ist kein Trainerprofil verknüpft. Bitte wende dich an die Verwaltung.
             </div>
