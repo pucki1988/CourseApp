@@ -11,11 +11,14 @@ use App\Actions\Course\CancelCourseSlotAction;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Flux\Flux;
 
 new class extends Component {
 
     public $slots;
+    public bool $isTrainerView = false;
     public $search = '';
     public $coachId = null;
     public $perPage = 10;
@@ -39,6 +42,8 @@ new class extends Component {
 
     public function mount(CourseSlotService $courseSlotService)
     {
+        $this->isTrainerView = request()->routeIs('course_management.coachview.trainer');
+
         #$this->authorize('viewAny', CourseSlot::class);
         $this->loadSlots($courseSlotService);
     }
@@ -98,10 +103,11 @@ new class extends Component {
 
     public function loadSlots(CourseSlotService $service)
     {
-        $filters = [
-            'limit' => 6,
-            'status' => 'active'
-        ];
+        $filters = [];
+
+        if ($this->isTrainerView) {
+            $filters['coach_user_id'] = Auth::id();
+        }
 
         $this->slots = $service->listAllBookedSlotsBackend($filters);
     }
@@ -160,13 +166,13 @@ new class extends Component {
                 throw new \Exception('Kein Slot aktiv');
             }
 
-            $request = Request::create($this->scanValue);
+            $request = \Illuminate\Http\Request::create($this->scanValue);
 
-            if (!URL::hasValidSignature($request)) {
+            if (!\Illuminate\Support\Facades\URL::hasValidSignature($request)) {
                 throw new \Exception('QR-Code ungültig');
             }
             
-            $userId = Route::getRoutes()->match($request)->parameter('user');
+            $userId = \Illuminate\Support\Facades\Route::getRoutes()->match($request)->parameter('user');
             if (!$userId) {
                 throw new \Exception('User nicht erkannt');
             }
@@ -269,7 +275,10 @@ new class extends Component {
 <section class="w-full">
     @include('partials.courses-heading')
 
-    <x-courses.layout :heading="__('Die nächsten Termine')" :subheading="__('Deine Kurse')">
+    <x-courses.layout
+        :heading="$isTrainerView ? __('Trainertermine') : __('Alle Termine')"
+        :subheading="$isTrainerView ? __('Deine zugewiesenen Kurse') : __('Alle gebuchten Kurstermine')"
+    >
         @if($showCallout)
             <flux:callout wire:poll.3000ms="hideCallout" variant="success" icon="check-circle" class="my-2" heading="{{ $calloutHeading }}"/>
         @endif
@@ -312,6 +321,7 @@ new class extends Component {
                     
                     
                     
+                    @if(!$isTrainerView)
                     <flux:text class="mt-2">
                     Coach<flux:badge>
                     @if($slot->course?->coach === null)
@@ -321,6 +331,7 @@ new class extends Component {
                     @endif
                     </flux:badge>
                     </flux:text>
+                    @endif
                     
                     </div>
                 </div>

@@ -6,6 +6,7 @@ use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use App\Models\Course\CourseSlotReminder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -70,7 +71,8 @@ class CourseSlotService
             $query->limit($filters['limit'] ?? 3);
         }
        
-        $user=auth()->user();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
 
         if ($user->hasAnyRole(['user', 'member'])) {
             $query->whereHas('bookings', function ($q) use ($user) {
@@ -86,11 +88,9 @@ class CourseSlotService
     {
         //Nur Slots wo mindestens 1 Buchung vorhanden ist und mindestens 1 BookingSlot noch nicht eingecheckt
         
-        if(!empty($filters['own'])) {
-            $daysInPast = 0; // z.B. 5 Tage in der Vergangenheit anzeigen
-        }else{
-            $daysInPast = -5; // z.B. 5 Tage in der Vergangenheit anzeigen
-        }
+        
+        $daysInPast = -5; // z.B. 5 Tage in der Vergangenheit anzeigen
+        
         
         $query = CourseSlot::query()
         ->with(['course.coach', 'bookingSlots.booking'])
@@ -108,20 +108,15 @@ class CourseSlotService
         ->orderBy('start_time');
 
 
-        $user = auth()->user();
+        if (!empty($filters['coach_user_id'])) {
+            $coachUserId = (int) $filters['coach_user_id'];
 
-        if ($user && $user->coach) {
-            $query->whereHas('course.coach', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+            $query->whereHas('course.coach', function ($q) use ($coachUserId) {
+                $q->where('user_id', $coachUserId);
             });
         }
 
-        if(!empty($filters['own']) && $user) {
-                $query->whereHas('bookingSlots.booking', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
-        }
-            
+        
 
         return $query->get();
     }

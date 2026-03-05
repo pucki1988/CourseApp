@@ -19,7 +19,7 @@
                 </span>
             </flux:navlist.item>
         @endcan
-        @canany(['courses.manage','courses.coachview'])
+        @can('courses.manage')
             <flux:navlist.item
                 :href="route('course_management.coachview.index')"
                 :current="request()->routeIs('course_management.coachview.index')"
@@ -29,14 +29,24 @@
             >
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
                 <flux:icon.home class="h-5 w-5 md:hidden" />
-                @can('courses.manage')
-                    <span class="md:inline">{{ __('Alle Termine') }}</span>
-                @elsecan('courses.coachview')
-                    <span class="md:inline">{{ __('Trainertermine') }}</span>
-                @endcan
+                <span class="md:inline">{{ __('Alle Termine') }}</span>
                 </span>
             </flux:navlist.item>
-        @endcanany
+        @endcan
+
+        @if(Auth::user()?->coach)
+            <flux:navlist.item
+                :href="route('course_management.coachview.trainer')"
+                :current="request()->routeIs('course_management.coachview.trainer')"
+                wire:navigate
+                class="h-14"
+            >
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.home class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Trainertermine') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endif
 
         @canany(['courses.manage','courses.coachview'])
             <flux:navlist.item
@@ -50,7 +60,9 @@
                 @can('courses.manage')
                 <span class="md:inline">{{ __('Trainerabrechnungen') }}</span>
                 @elsecan('courses.coachview')
+                @if(Auth::user()?->coach)
                 <span class="md:inline">{{ __('Meine Abrechnungen') }}</span>
+                @endif
                 @endcan
                 </span>
             </flux:navlist.item>
