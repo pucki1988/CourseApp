@@ -515,17 +515,17 @@ new class extends Component {
                 @if($slot->status ==='active')
                  <div class="flex gap-2">
                     <flux:spacer />
-                    @canany(['reschedule', 'cancel', 'delete'], $slot)
+                    @canany(['courseslots.reschedule', 'courseslots.cancel', 'courseslots.delete','courses.manage'], $slot)
                     <flux:dropdown position="top">
                         <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
                     <flux:menu>
-                    @can('reschedule', $slot)
+                    @can('courseslots.reschedule', $slot)
                     <flux:menu.item icon="chevron-double-right" wire:click="confirmReschedule({{ $slot }})">Verschieben</flux:menu.item>
                     @endcan
-                    @can('cancel', $slot)
+                    @can('courseslots.cancel', $slot)
                     <flux:menu.item icon="x-mark" wire:click="confirmCancel({{ $slot }})">Absagen</flux:menu.item>
                     @endcan
-                    @can('delete', $slot)
+                    @can('courseslots.delete', $slot)
                     <flux:menu.item icon="trash" wire:click="confirmDelete({{ $slot }})">Löschen</flux:menu.item>
                     @endcan
                     @can('courses.manage')
