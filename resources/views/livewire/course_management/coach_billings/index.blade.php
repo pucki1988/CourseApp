@@ -4,13 +4,18 @@ use Livewire\Volt\Component;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
+use App\Models\Course\Coach;
 use App\Models\Course\CoachMonthlyBilling;
 
 new class extends Component {
     public $billings;
+    public $coaches;
     public $coachProfile;
     public ?int $activeBillingId = null;
     public string $billingMonth = '';
+    public ?string $runCoachId = '';
+    public ?string $filterCoachId = '';
+    public ?string $filterMonth = '';
     public bool $runDryRun = false;
     public bool $runForce = false;
     public ?string $runOutput = null;
@@ -18,8 +23,17 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->coachProfile = Auth::user()?->coach;
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        $this->coachProfile = $user?->coach;
         $this->billingMonth = now()->subMonth()->format('Y-m');
+        $this->coaches = collect();
+        $this->filterMonth = '';
+        $this->filterCoachId = '';
+
+        if ($user?->can('courses.manage')) {
+            $this->coaches = Coach::query()->orderBy('name')->get();
+        }
 
         $this->loadBillings();
     }
@@ -42,10 +56,35 @@ new class extends Component {
 
         if($this->coachProfile) {
             $query->where('coach_id', $this->coachProfile->id);
+        } elseif (!empty($this->filterCoachId)) {
+            $query->where('coach_id', (int) $this->filterCoachId);
+        }
+
+        if (!empty($this->filterMonth)) {
+            [$year, $month] = array_map('intval', explode('-', $this->filterMonth));
+            $query->where('year', $year)
+                ->where('month', $month);
         }
             
 
         $this->billings = $query->get();
+    }
+
+    public function applyFilters(): void
+    {
+        $this->validate([
+            'filterCoachId' => ['nullable', 'integer', 'exists:coaches,id'],
+            'filterMonth' => ['nullable', 'date_format:Y-m'],
+        ]);
+
+        $this->loadBillings();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->filterCoachId = '';
+        $this->filterMonth = '';
+        $this->loadBillings();
     }
 
     public function runBilling(): void
@@ -56,12 +95,17 @@ new class extends Component {
 
         $this->validate([
             'billingMonth' => ['required', 'date_format:Y-m'],
+            'runCoachId' => ['nullable', 'integer', 'exists:coaches,id'],
         ]);
 
         try {
             $args = [
                 '--month' => $this->billingMonth,
             ];
+
+            if (!empty($this->runCoachId)) {
+                $args['--coach'] = (int) $this->runCoachId;
+            }
 
             if ($this->runDryRun) {
                 $args['--dry-run'] = true;
@@ -165,6 +209,15 @@ new class extends Component {
             <div class="border rounded-lg p-4 bg-white shadow-sm mb-4">
                 <form wire:submit="runBilling" class="flex flex-col md:flex-row md:items-end gap-3">
                     <flux:input type="month" label="Abrechnungsmonat" wire:model="billingMonth" />
+                    <flux:field>
+                        <flux:label>Trainer</flux:label>
+                        <flux:select wire:model="runCoachId">
+                            <flux:select.option value="">Alle</flux:select.option>
+                            @foreach($coaches as $coach)
+                                <flux:select.option value="{{ $coach->id }}">{{ $coach->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </flux:field>
                     <flux:field variant="inline">
                         <flux:checkbox wire:model="runDryRun" />
                         <flux:label>Testlauf</flux:label>
@@ -192,12 +245,34 @@ new class extends Component {
             <div class="border rounded-lg p-4 bg-white shadow-sm text-sm text-gray-600">
                 Für deinen Benutzer ist kein Trainerprofil verknüpft. Bitte wende dich an die Verwaltung.
             </div>
-        @elseif($billings->isEmpty())
-            <div class="border rounded-lg p-4 bg-white shadow-sm text-sm text-gray-600">
-                Es sind noch keine Monatsabrechnungen vorhanden.
-            </div>
         @else
-            <div class="space-y-4">
+            <div class="border rounded-lg p-4 bg-white shadow-sm mb-4">
+                <form wire:submit="applyFilters" class="flex flex-col md:flex-row md:items-end gap-3">
+                    <flux:input type="month" label="Monat filtern" wire:model="filterMonth" />
+
+                    @can('courses.manage')
+                        <flux:field>
+                            <flux:label>Trainer filtern</flux:label>
+                            <flux:select wire:model="filterCoachId">
+                                <flux:select.option value="">Alle</flux:select.option>
+                                @foreach($coaches as $coach)
+                                    <flux:select.option value="{{ $coach->id }}">{{ $coach->name }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+                    @endcan
+
+                    <flux:button type="submit" variant="primary" icon="funnel">Filter anwenden</flux:button>
+                    <flux:button type="button" variant="ghost" wire:click="resetFilters">Zurücksetzen</flux:button>
+                </form>
+            </div>
+
+            @if($billings->isEmpty())
+                <div class="border rounded-lg p-4 bg-white shadow-sm text-sm text-gray-600">
+                    Es sind noch keine Monatsabrechnungen vorhanden.
+                </div>
+            @else
+                <div class="space-y-4">
                 @foreach($billings as $billing)
                     <div class="border rounded-lg p-4 bg-white shadow-sm">
                         <div class="flex justify-between items-start gap-3">
@@ -267,7 +342,8 @@ new class extends Component {
                         @endif
                     </div>
                 @endforeach
-            </div>
+                </div>
+            @endif
         @endif
     </x-courses.layout>
 </section>
