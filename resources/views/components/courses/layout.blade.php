@@ -38,6 +38,20 @@
             </flux:navlist.item>
         @endcanany
 
+        @canany(['courses.manage','courses.coachview'])
+            <flux:navlist.item
+                :href="route('course_management.coach_billings.index')"
+                :current="request()->routeIs('course_management.coach_billings.index')"
+                wire:navigate
+                class="h-14"
+            >
+            <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.document-currency-euro class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Meine Abrechnungen') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endcanany
+
 
         @can(['courses.manage'])
             <flux:navlist.item

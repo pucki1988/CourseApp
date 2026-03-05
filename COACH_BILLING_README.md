@@ -10,6 +10,8 @@ Das System ermöglicht die automatische Abrechnung von Trainern basierend auf de
 - ✅ Berücksichtigung der Teilnehmerzahl pro Termin
 - ✅ Verwendung der individuellen Vergütungsstufen (CoachCompensationTier)
 - ✅ E-Mail-Versand mit detaillierter Aufstellung
+- ✅ Persistente Monatsabrechnung pro Trainer (nachverfolgbar in der Datenbank)
+- ✅ Trainer-Self-Service: Einsicht in eigene Monatsabrechnungen im Backend
 - ✅ Unterstützung für Test-Modus (Dry-Run)
 - ✅ Einzelne oder alle Trainer abrechnen
 
@@ -174,6 +176,19 @@ Mailable-Klasse für den E-Mail-Versand.
 ### 4. Email-Template (`emails/coaches/monthly-billing.blade.php`)
 
 Blade-Template für die E-Mail mit professionellem Design.
+
+### 5. Persistenz (`coach_monthly_billings`, `coach_monthly_billing_items`)
+
+Jede Ausführung des Commands schreibt/aktualisiert eine Monatsabrechnung pro Trainer und Monat:
+
+- **Kopf-Daten:** Zeitraum, Slots, Gesamtvergütung, Versandstatus
+- **Positionen:** Termin, Kurs, Uhrzeit, Teilnehmerzahl, Vergütung
+
+Damit sind Auszahlungen im Nachgang eindeutig nachvollziehbar.
+
+### 6. Coach-Ansicht im Backend
+
+Über die Seite **Meine Abrechnungen** kann jeder Trainer seine eigenen Monatsabrechnungen inklusive Positionen einsehen.
 
 ## Troubleshooting
 

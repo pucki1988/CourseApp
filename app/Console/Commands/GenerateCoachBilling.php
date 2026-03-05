@@ -96,10 +96,15 @@ class GenerateCoachBilling extends Command
         $grandTotal = 0;
 
         foreach ($coaches as $coach) {
+            /** @var Coach $coach */
             $totalProcessed++;
 
             // Calculate billing
             $billingData = $this->coachService->calculateMonthlyBilling($coach, $year, $month);
+            $status = 'generated';
+            $mailRecipient = $coach->user?->email;
+            $mailSentAt = null;
+            $notes = null;
 
             $this->line("Coach: <fg=cyan>{$coach->name}</>");
             $this->line("  Slots: {$billingData['total_slots']}");
@@ -111,6 +116,16 @@ class GenerateCoachBilling extends Command
             if (!$coach->user || !$coach->user->email) {
                 $this->warn("  ⚠ Skipped: No email address found");
                 $totalSkipped++;
+                $status = 'skipped_no_email';
+                $notes = 'No coach email available';
+
+                $this->coachService->persistMonthlyBilling($billingData, [
+                    'status' => $status,
+                    'mail_recipient' => $mailRecipient,
+                    'mail_sent_at' => $mailSentAt,
+                    'notes' => $notes,
+                ]);
+
                 $this->newLine();
                 continue;
             }
@@ -123,14 +138,30 @@ class GenerateCoachBilling extends Command
                     
                     $this->info("  ✓ Email sent to: {$coach->user->email}");
                     $totalSent++;
+                    $status = 'emailed';
+                    $mailSentAt = now();
                 } catch (\Exception $e) {
                     $this->error("  ✗ Failed to send email: " . $e->getMessage());
                     $totalSkipped++;
+                    $status = 'email_failed';
+                    $notes = $e->getMessage();
                 }
             } else {
                 $this->info("  → Would send email to: {$coach->user->email}");
-                $totalSent++;
+                $status = $dryRun ? 'dry_run' : 'generated';
+                $notes = $dryRun ? 'Dry run: no email sent' : null;
+
+                if ($dryRun) {
+                    $totalSent++;
+                }
             }
+
+            $this->coachService->persistMonthlyBilling($billingData, [
+                'status' => $status,
+                'mail_recipient' => $mailRecipient,
+                'mail_sent_at' => $mailSentAt,
+                'notes' => $notes,
+            ]);
 
             $this->newLine();
         }

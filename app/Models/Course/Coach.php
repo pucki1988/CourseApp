@@ -43,6 +43,11 @@ class Coach extends Model
         return $this->hasMany(CoachCompensationTier::class)->orderBy('sort_order')->orderBy('min_participants');
     }
 
+    public function monthlyBillings()
+    {
+        return $this->hasMany(CoachMonthlyBilling::class)->orderByDesc('year')->orderByDesc('month');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helper Methods

@@ -3,6 +3,7 @@
 namespace App\Services\Course;
 
 use App\Models\Course\Coach;
+use App\Models\Course\CoachMonthlyBilling;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -97,6 +98,7 @@ class CoachService
             $compensation = $coach->calculateCompensation($participantCount) ?? 0;
 
             $billingItems[] = [
+                'course_slot_id' => $slot->id,
                 'date' => $slot->date,
                 'course_title' => $slot->course->title,
                 'start_time' => $slot->start_time,
@@ -117,6 +119,52 @@ class CoachService
             'total_compensation' => $totalCompensation,
             'total_slots' => count($billingItems),
         ];
+    }
+
+    /**
+     * Persist billing data for audit trail and coach self-service.
+     */
+    public function persistMonthlyBilling(array $billingData, array $meta = []): CoachMonthlyBilling
+    {
+        $coach = $billingData['coach'];
+        $startDate = Carbon::create($billingData['year'], $billingData['month'], 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        return DB::transaction(function () use ($coach, $billingData, $startDate, $endDate, $meta) {
+            $billing = CoachMonthlyBilling::updateOrCreate(
+                [
+                    'coach_id' => $coach->id,
+                    'year' => $billingData['year'],
+                    'month' => $billingData['month'],
+                ],
+                [
+                    'period_start' => $startDate->toDateString(),
+                    'period_end' => $endDate->toDateString(),
+                    'total_slots' => $billingData['total_slots'],
+                    'total_compensation' => $billingData['total_compensation'],
+                    'status' => $meta['status'] ?? 'generated',
+                    'mail_recipient' => $meta['mail_recipient'] ?? null,
+                    'mail_sent_at' => $meta['mail_sent_at'] ?? null,
+                    'notes' => $meta['notes'] ?? null,
+                ]
+            );
+
+            $billing->items()->delete();
+
+            foreach ($billingData['billing_items'] as $item) {
+                $billing->items()->create([
+                    'course_slot_id' => $item['course_slot_id'] ?? null,
+                    'date' => $item['date'],
+                    'course_title' => $item['course_title'],
+                    'start_time' => $item['start_time'],
+                    'end_time' => $item['end_time'],
+                    'participant_count' => $item['participant_count'],
+                    'compensation' => $item['compensation'],
+                ]);
+            }
+
+            return $billing;
+        });
     }
 
 
