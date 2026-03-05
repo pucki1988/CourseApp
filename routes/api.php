@@ -64,8 +64,6 @@ Route::get('/courses', [CourseController::class, 'index']);
 
 Route::post('/feedback', [FeedbackController::class, 'send']);
 
-Route::get('/settlement', [CourseBookingSlotController::class, 'settlement']);
-
 Route::post('/password/forgot', function (Request $request) {
     $request->validate(['email' => 'required|email']);
 

@@ -7,6 +7,7 @@ use App\Models\Course\Course;
 use App\Models\Course\CourseSlot;
 use Carbon\Carbon;
 use App\Models\User;
+use Flux\Flux;
 use App\Actions\Course\CancelCourseSlotAction;
 
 new class extends Component {
@@ -19,6 +20,8 @@ new class extends Component {
     public ?CourseSlot $slotToDelete = null;
 
     public ?CourseSlot $showSlot=null;
+    public ?CourseSlot $settlementSlot = null;
+    public array $settlementData = [];
 
     public array $slotToReschedule = [];
 
@@ -213,6 +216,45 @@ new class extends Component {
     public function showReminders(CourseSlot $slot){
         $this->showSlot=$slot;
         Flux::modal('reminders')->show();
+    }
+
+    public function openSettlementDetails(CourseSlot $slot): void
+    {
+        $this->settlementSlot = CourseSlot::with(['course.coach.compensationTiers'])->findOrFail($slot->id);
+
+        $bookingsCount = $this->settlementSlot->bookingSlots()
+            ->where('status', 'booked')
+            ->count();
+
+        $revenue = $this->settlementSlot->bookingSlots()
+            ->where('status', 'booked')
+            ->sum('price');
+
+        $checkedInUsers = $this->settlementSlot->bookingSlots()
+            ->where('status', 'booked')
+            ->whereNotNull('checked_in_at')
+            ->count();
+
+        $coach = $this->settlementSlot->course?->coach;
+        $coachCompensation = $coach?->calculateCompensation($bookingsCount);
+
+        $this->settlementData = [
+            'bookings_count' => $bookingsCount,
+            'revenue' => (float) $revenue,
+            'payment_fees' => $bookingsCount * 0.5,
+            'net_total' => (float) $revenue - ($bookingsCount * 0.5),
+            'checked_in_users' => $checkedInUsers,
+            'coach_compensation' => $coachCompensation,
+        ];
+
+        Flux::modal('slot-settlement')->show();
+    }
+
+    public function closeSettlementDetails(): void
+    {
+        $this->settlementSlot = null;
+        $this->settlementData = [];
+        Flux::modal('slot-settlement')->close();
     }
     
 
@@ -467,12 +509,13 @@ new class extends Component {
                     Reminder <flux:badge icon="clock" wire:click="showReminders({{ $slot }})">{{ $slot->reminders()->count()}}</flux:badge>
                     </flux:text>
                     
+                    
                     </div>
                 </div>
                 @if($slot->status ==='active')
                  <div class="flex gap-2">
                     <flux:spacer />
-                    @if(auth()->user()->can('reschedule', $slot) || auth()->user()->can('cancel', $slot) || auth()->user()->can('delete', $slot))
+                    @canany(['reschedule', 'cancel', 'delete'], $slot)
                     <flux:dropdown position="top">
                         <flux:button size="sm" icon:trailing="ellipsis-vertical"></flux:button>
                     <flux:menu>
@@ -485,15 +528,51 @@ new class extends Component {
                     @can('delete', $slot)
                     <flux:menu.item icon="trash" wire:click="confirmDelete({{ $slot }})">Löschen</flux:menu.item>
                     @endcan
+                    @can('courses.manage')
+                     <flux:menu.item icon="document-currency-euro" wire:click="openSettlementDetails({{ $slot }})">Auslastung</flux:menu.item>
+                    @endcan
                     </flux:menu>
                     </flux:dropdown>
-                    @endif
+                    @endcanany
                 </div>
                 @endif
             </div>
             @empty
             @endforelse
             </div>
+
+            <flux:modal name="slot-settlement">
+                <flux:heading size="lg">Abrechnung Termin</flux:heading>
+
+                @if($settlementSlot)
+                    <div class="text-sm mt-3 space-y-1">
+                        <div class="flex justify-between"><span class="text-gray-500">Kurs</span><span>{{ $settlementSlot->course->title }}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Termin</span><span>{{ $settlementSlot->date->format('d.m.Y') }} | {{ $settlementSlot->start_time->format('H:i') }}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Teilnehmende</span><span>{{ $settlementData['bookings_count'] ?? 0 }}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Min / Max</span><span>{{ $settlementSlot->min_participants }} / {{ $settlementSlot->course->capacity }}</span></div>
+                        @role(['admin', 'manager'])
+                        <div class="flex justify-between"><span class="text-gray-500">Einnahmen</span><span>{{ number_format($settlementData['revenue'] ?? 0, 2, ',', '.') }} €</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Zahlungsgebühren (ca.)</span><span>{{ number_format($settlementData['payment_fees'] ?? 0, 2, ',', '.') }} €</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Gesamt</span><span>{{ number_format($settlementData['net_total'] ?? 0, 2, ',', '.') }} €</span></div>
+                        @endrole
+                        <div class="flex justify-between"><span class="text-gray-500">Eingecheckt</span><span>{{ $settlementData['checked_in_users'] ?? 0 }}</span></div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Zahlung an Trainer</span>
+                            @if(($settlementData['coach_compensation'] ?? null) !== null)
+                                <span>{{ number_format($settlementData['coach_compensation'], 2, ',', '.') }} €</span>
+                            @else
+                                <span class="text-gray-400">Nicht konfiguriert</span>
+                            @endif
+                        </div>
+                        <div class="flex justify-between"><span class="text-gray-500">Trainer</span><span>{{ $settlementSlot->course?->coach?->name }}</span></div>
+                    </div>
+                @endif
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <flux:button variant="ghost" wire:click="closeSettlementDetails">Schließen</flux:button>
+                </div>
+            </flux:modal>
+
             <flux:modal name="assistent" :dismissible="false">
                 <div class="space-y-6">
                     <div>

@@ -48,7 +48,6 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
-        Volt::route('/settlement', 'course_management.settlement.index')->name('course_management.settlement.index');
     });
     Route::middleware(['permission:courses.manage|courses.coachview'])->group(function () {
         Volt::route('/coach-view', 'course_management.coachview.index')->name('course_management.coachview.index');

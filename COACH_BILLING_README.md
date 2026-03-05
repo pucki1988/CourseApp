@@ -12,6 +12,7 @@ Das System ermöglicht die automatische Abrechnung von Trainern basierend auf de
 - ✅ E-Mail-Versand mit detaillierter Aufstellung
 - ✅ Persistente Monatsabrechnung pro Trainer (nachverfolgbar in der Datenbank)
 - ✅ Trainer-Self-Service: Einsicht in eigene Monatsabrechnungen im Backend
+- ✅ Einmal-Schutz pro Monat: Keine erneute Erstellung/Aktualisierung/Versendung für denselben Trainer und Monat
 - ✅ Unterstützung für Test-Modus (Dry-Run)
 - ✅ Einzelne oder alle Trainer abrechnen
 
@@ -60,7 +61,17 @@ php artisan coaches:generate-billing --month=2024-02 --coach=3 --dry-run
 
 # Alle Trainer für einen bestimmten Monat
 php artisan coaches:generate-billing --month=2024-01
+
+# Admin-Override: bestehenden Monat neu erstellen/versenden
+php artisan coaches:generate-billing --month=2024-01 --coach=3 --force
 ```
+
+### Admin-Override (`--force`)
+
+Falls eine Abrechnung in Ausnahmefällen korrigiert werden muss, kann mit `--force` die bestehende Monatsabrechnung eines Trainers überschrieben werden.
+
+- Ohne `--force`: bereits vorhandene Monatsabrechnung wird übersprungen
+- Mit `--force`: vorhandene Monatsabrechnung wird gelöscht und neu erzeugt
 
 ## Abrechnungslogik
 

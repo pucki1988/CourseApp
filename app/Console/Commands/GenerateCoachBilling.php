@@ -19,6 +19,7 @@ class GenerateCoachBilling extends Command
     protected $signature = 'coaches:generate-billing 
                             {--month= : Month to bill (YYYY-MM format, defaults to last month)}
                             {--coach= : Specific coach ID to bill (optional)}
+                            {--force : Override existing monthly billing entry (admin override)}
                             {--dry-run : Show what would be billed without sending emails}';
 
     /**
@@ -62,11 +63,16 @@ class GenerateCoachBilling extends Command
         $monthName = $billingDate->copy()->locale('de')->translatedFormat('F Y');
 
         $dryRun = $this->option('dry-run');
+        $force = $this->option('force');
 
         $this->info("Generating coach billing for {$monthName}...");
         
         if ($dryRun) {
             $this->warn("DRY RUN MODE - No emails will be sent");
+        }
+
+        if ($force) {
+            $this->warn('FORCE MODE - Bestehende Monatsabrechnungen werden für den Zeitraum überschrieben.');
         }
 
         // Get coaches to bill
@@ -98,6 +104,23 @@ class GenerateCoachBilling extends Command
         foreach ($coaches as $coach) {
             /** @var Coach $coach */
             $totalProcessed++;
+
+            if ($this->coachService->hasMonthlyBilling($coach, $year, $month)) {
+                if (!$force) {
+                    $this->warn("Coach: {$coach->name}");
+                    $this->warn('  ⚠ Bereits abgerechnet - wird übersprungen (kein erneutes Erstellen/Aktualisieren/Versenden).');
+                    $totalSkipped++;
+                    $this->newLine();
+                    continue;
+                }
+
+                if (!$dryRun) {
+                    $this->coachService->deleteMonthlyBilling($coach, $year, $month);
+                    $this->warn("Coach: {$coach->name}");
+                    $this->warn('  ⚠ Vorhandene Monatsabrechnung wurde per FORCE gelöscht und wird neu erstellt.');
+                    $this->newLine();
+                }
+            }
 
             // Calculate billing
             $billingData = $this->coachService->calculateMonthlyBilling($coach, $year, $month);

@@ -10,6 +10,35 @@ use Illuminate\Support\Facades\DB;
 
 class CoachService
 {
+    public function hasMonthlyBilling(Coach $coach, int $year, int $month): bool
+    {
+        return CoachMonthlyBilling::where('coach_id', $coach->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->exists();
+    }
+
+    public function getMonthlyBilling(Coach $coach, int $year, int $month): ?CoachMonthlyBilling
+    {
+        return CoachMonthlyBilling::where('coach_id', $coach->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->first();
+    }
+
+    public function deleteMonthlyBilling(Coach $coach, int $year, int $month): bool
+    {
+        $billing = $this->getMonthlyBilling($coach, $year, $month);
+
+        if (!$billing) {
+            return false;
+        }
+
+        $billing->delete();
+
+        return true;
+    }
+
     public function listCoaches(array $filters = [])
     {
         $query = Coach::query();
@@ -131,23 +160,28 @@ class CoachService
         $endDate = $startDate->copy()->endOfMonth();
 
         return DB::transaction(function () use ($coach, $billingData, $startDate, $endDate, $meta) {
-            $billing = CoachMonthlyBilling::updateOrCreate(
-                [
-                    'coach_id' => $coach->id,
-                    'year' => $billingData['year'],
-                    'month' => $billingData['month'],
-                ],
-                [
-                    'period_start' => $startDate->toDateString(),
-                    'period_end' => $endDate->toDateString(),
-                    'total_slots' => $billingData['total_slots'],
-                    'total_compensation' => $billingData['total_compensation'],
-                    'status' => $meta['status'] ?? 'generated',
-                    'mail_recipient' => $meta['mail_recipient'] ?? null,
-                    'mail_sent_at' => $meta['mail_sent_at'] ?? null,
-                    'notes' => $meta['notes'] ?? null,
-                ]
-            );
+            $existingBilling = CoachMonthlyBilling::where('coach_id', $coach->id)
+                ->where('year', $billingData['year'])
+                ->where('month', $billingData['month'])
+                ->first();
+
+            if ($existingBilling) {
+                throw new \InvalidArgumentException('Monatsabrechnung existiert bereits und kann nicht erneut erstellt oder aktualisiert werden.');
+            }
+
+            $billing = CoachMonthlyBilling::create([
+                'coach_id' => $coach->id,
+                'year' => $billingData['year'],
+                'month' => $billingData['month'],
+                'period_start' => $startDate->toDateString(),
+                'period_end' => $endDate->toDateString(),
+                'total_slots' => $billingData['total_slots'],
+                'total_compensation' => $billingData['total_compensation'],
+                'status' => $meta['status'] ?? 'generated',
+                'mail_recipient' => $meta['mail_recipient'] ?? null,
+                'mail_sent_at' => $meta['mail_sent_at'] ?? null,
+                'notes' => $meta['notes'] ?? null,
+            ]);
 
             $billing->items()->delete();
 
