@@ -2,6 +2,7 @@
 
 namespace App\Models\Member;
 
+use App\Models\Payment\Payment;
 use Illuminate\Database\Eloquent\Model;
 
 class BankAccount extends Model
@@ -32,6 +33,6 @@ class BankAccount extends Model
 
     public function payments()
     {
-        return $this->hasMany(MembershipPayment::class);
+        return $this->hasMany(Payment::class);
     }
 }

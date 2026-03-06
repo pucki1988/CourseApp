@@ -5,6 +5,8 @@ namespace App\Services\Member;
 use App\Models\Member\Member;
 use App\Models\Member\Membership;
 use App\Models\Member\MembershipType;
+use App\Models\Payment\MembershipPayment;
+use App\Models\Payment\Payment;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
@@ -1055,8 +1057,19 @@ class MembershipService
 
     private function updatePendingPayments(Membership $membership, $account): void
     {
-        $membership->payments()
+        $membershipPaymentIds = $membership->payments()
             ->where('status', 'pending')
+            ->pluck('id');
+
+        if ($membershipPaymentIds->isEmpty()) {
+            return;
+        }
+
+        Payment::query()
+            ->where('source_type', MembershipPayment::class)
+            ->whereIn('source_id', $membershipPaymentIds)
+            ->where('status', 'pending')
+            ->whereNull('payment_run_id')
             ->update(['bank_account_id' => $account->id]);
     }
 

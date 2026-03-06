@@ -1,28 +1,25 @@
 <?php
 
-namespace App\Models\Member;
+namespace App\Models\Payment;
 
+use App\Models\Member\Membership;
 use Illuminate\Database\Eloquent\Model;
 
 class MembershipPayment extends Model
 {
     protected $fillable = [
         'membership_id',
-        'bank_account_id',
-        'payment_run_id',
-        'due_date',
         'period_start',
         'period_end',
+        'due_date',
         'amount',
         'status',
-        'paid_at',
     ];
 
     protected $casts = [
-        'due_date' => 'date',
         'period_start' => 'date',
         'period_end' => 'date',
-        'paid_at' => 'datetime',
+        'due_date' => 'date',
         'amount' => 'decimal:2',
     ];
 
@@ -31,13 +28,8 @@ class MembershipPayment extends Model
         return $this->belongsTo(Membership::class);
     }
 
-    public function bankAccount()
+    public function payments()
     {
-        return $this->belongsTo(BankAccount::class);
-    }
-
-    public function paymentRun()
-    {
-        return $this->belongsTo(PaymentRun::class);
+        return $this->morphMany(Payment::class, 'source');
     }
 }

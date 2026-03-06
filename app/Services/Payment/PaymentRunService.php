@@ -1,12 +1,15 @@
 <?php
 
-namespace App\Services\Member;
+namespace App\Services\Payment;
 
-use App\Models\Member\JournalEntry;
-use App\Models\Member\MembershipPayment;
-use App\Models\Member\PaymentRun;
+use App\Models\Payment\JournalEntry;
+use App\Models\Payment\MembershipPayment;
+use App\Models\Payment\Payment;
+use App\Models\Payment\PaymentRun;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PaymentRunService
 {
@@ -22,7 +25,7 @@ class PaymentRunService
             'execution_date' => $executionDate,
             'status' => 'draft',
             'notes' => $notes,
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
         ]);
 
         return $paymentRun;
@@ -38,16 +41,40 @@ class PaymentRunService
         }
 
         $query = MembershipPayment::where('status', 'pending')
-            ->whereNull('payment_run_id')
-            ->whereNotNull('bank_account_id'); // Nur Zahlungen mit Bankverbindung
+            ->whereDoesntHave('payments', function ($paymentQuery) {
+                $paymentQuery
+                    ->where('status', 'pending')
+                    ->whereHas('paymentRun', function ($runQuery) {
+                        $runQuery->whereIn('status', ['draft', 'submitted']);
+                    });
+            })
+            ->with(['membership.payer.bankAccounts']);
 
         if ($upToDate) {
             $query->where('due_date', '<=', $upToDate);
         }
 
-        $count = $query->update([
-            'payment_run_id' => $paymentRun->id,
-        ]);
+        $count = 0;
+
+        $query->chunkById(200, function ($membershipPayments) use ($paymentRun, &$count) {
+            foreach ($membershipPayments as $membershipPayment) {
+                $defaultBankAccountId = $membershipPayment->membership?->payer?->bankAccounts
+                    ?->firstWhere('is_default', true)?->id;
+
+                Payment::create([
+                    'amount' => $membershipPayment->amount,
+                    'method' => 'sepa',
+                    'status' => 'pending',
+                    'paid_at' => null,
+                    'source_type' => MembershipPayment::class,
+                    'source_id' => $membershipPayment->id,
+                    'payment_run_id' => $paymentRun->id,
+                    'bank_account_id' => $defaultBankAccountId,
+                    'reference' => 'run-'.$paymentRun->id.'-mp-'.$membershipPayment->id,
+                ]);
+                $count++;
+            }
+        });
 
         $paymentRun->recalculateTotals();
 
@@ -63,7 +90,7 @@ class PaymentRunService
             throw new \InvalidArgumentException('Payment run cannot be edited in current status');
         }
 
-        $count = MembershipPayment::whereIn('id', $paymentIds)
+        $count = Payment::whereIn('id', $paymentIds)
             ->where('payment_run_id', $paymentRun->id)
             ->update(['payment_run_id' => null]);
 
@@ -103,9 +130,18 @@ class PaymentRunService
 
         // Mark all payments as paid
         $paymentRun->payments()->update([
-            'status' => 'paid',
+            'status' => 'collected',
             'paid_at' => now(),
         ]);
+
+        $paymentRun->payments()
+            ->where('source_type', MembershipPayment::class)
+            ->get()
+            ->each(function (Payment $payment) {
+                $payment->source?->update([
+                    'status' => 'collected',
+                ]);
+            });
 
         $paymentRun->update([
             'status' => 'completed',
@@ -124,12 +160,24 @@ class PaymentRunService
             throw new \InvalidArgumentException('Completed payment runs cannot be cancelled');
         }
 
-        // Remove payment run reference from payments
-        $paymentRun->payments()->update(['payment_run_id' => null]);
+        if ($paymentRun->status === 'cancelled') {
+            return $paymentRun;
+        }
 
-        $paymentRun->update([
-            'status' => 'cancelled',
-        ]);
+        DB::transaction(function () use ($paymentRun) {
+            $paymentRun->payments()
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'cancelled',
+                    'paid_at' => null,
+                ]);
+
+            $paymentRun->update([
+                'status' => 'cancelled',
+            ]);
+        });
+
+        $paymentRun->recalculateTotals();
 
         return $paymentRun;
     }
@@ -137,17 +185,23 @@ class PaymentRunService
     /**
      * Mark individual payments as paid/failed within a run
      */
-    public function updatePaymentStatus(MembershipPayment $payment, string $status): MembershipPayment
+    public function updatePaymentStatus(Payment $payment, string $status): Payment
     {
-        $validStatuses = ['paid', 'cancelled'];
+        $validStatuses = ['collected', 'failed', 'cancelled'];
         if (!in_array($status, $validStatuses)) {
             throw new \InvalidArgumentException("Invalid status: {$status}");
         }
 
         $payment->update([
             'status' => $status,
-            'paid_at' => $status === 'paid' ? now() : null,
+            'paid_at' => $status === 'collected' ? now() : null,
         ]);
+
+        if ($payment->source instanceof MembershipPayment) {
+            $payment->source->update([
+                'status' => $status,
+            ]);
+        }
 
         // Recalculate run totals if needed
         if ($payment->paymentRun) {
@@ -171,7 +225,7 @@ class PaymentRunService
     public function getPaymentsByStatus(PaymentRun $paymentRun): Collection
     {
         return $paymentRun->payments()
-            ->with(['membership.type', 'membership.payer', 'bankAccount'])
+            ->with(['source.membership.type', 'source.membership.payer', 'bankAccount'])
             ->get()
             ->groupBy('status');
     }
@@ -182,9 +236,11 @@ class PaymentRunService
     public function getPendingPayments(?Carbon $upToDate = null): Collection
     {
         $query = MembershipPayment::where('status', 'pending')
-            ->whereNull('payment_run_id')
-            ->whereNotNull('bank_account_id')
-            ->with(['membership.type', 'membership.payer', 'bankAccount']);
+            ->whereDoesntHave('payments', function ($paymentQuery) {
+                $paymentQuery->where('status', 'pending')
+                    ->whereNotNull('payment_run_id');
+            })
+            ->with(['membership.type', 'membership.payer']);
 
         if ($upToDate) {
             $query->where('due_date', '<=', $upToDate);

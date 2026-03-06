@@ -1,9 +1,9 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\Member\PaymentRun;
-use App\Models\Member\MembershipPayment;
-use App\Services\Member\PaymentRunService;
+use App\Models\Payment\PaymentRun;
+use App\Models\Payment\MembershipPayment;
+use App\Services\Payment\PaymentRunService;
 use Flux\Flux;
 use Illuminate\Support\Carbon;
 
@@ -118,11 +118,11 @@ new class extends Component {
 
     public function openViewPayments(int $runId): void
     {
-        $run = PaymentRun::with(['payments.membership.type', 'payments.membership.payer', 'payments.bankAccount'])
+        $run = PaymentRun::with(['payments.source.membership.type', 'payments.source.membership.payer', 'payments.bankAccount'])
             ->findOrFail($runId);
             
         $this->viewRunId = $runId;
-        $this->viewRunPayments = $run->payments->sortBy('due_date');
+        $this->viewRunPayments = $run->payments->sortBy(fn ($payment) => $payment->source?->due_date);
         
         Flux::modal('view-payments-modal')->show();
     }
@@ -321,11 +321,11 @@ new class extends Component {
                         <div class="flex items-center justify-between border-b pb-2 last:border-b-0 last:pb-0">
                             <div class="text-sm flex-1">
                                 <div class="font-semibold">
-                                    {{ $payment->membership->payer->first_name ?? '' }} {{ $payment->membership->payer->last_name ?? '' }}
+                                    {{ $payment->source?->membership?->payer?->first_name ?? '' }} {{ $payment->source?->membership?->payer?->last_name ?? '' }}
                                 </div>
                                 <div class="text-gray-500">
-                                    {{ $payment->membership->type->name ?? '-' }} · 
-                                    Fällig: {{ $payment->due_date?->format('d.m.Y') ?? '-' }} · 
+                                    {{ $payment->source?->membership?->type?->name ?? '-' }} · 
+                                    Fällig: {{ $payment->source?->due_date?->format('d.m.Y') ?? '-' }} · 
                                     {{ number_format($payment->amount, 2, ',', '.') }} €
                                 </div>
                                 <div class="text-gray-400 text-xs">
@@ -333,10 +333,12 @@ new class extends Component {
                                 </div>
                             </div>
                             <div>
-                                @if($payment->status === 'paid')
-                                    <flux:badge size="sm" color="green">Bezahlt</flux:badge>
+                                @if($payment->status === 'collected')
+                                    <flux:badge size="sm" color="green">Eingezogen</flux:badge>
                                 @elseif($payment->status === 'pending')
                                     <flux:badge size="sm" color="yellow">Offen</flux:badge>
+                                @elseif($payment->status === 'failed')
+                                    <flux:badge size="sm" color="red">Fehlgeschlagen</flux:badge>
                                 @else
                                     <flux:badge size="sm" color="red">Storniert</flux:badge>
                                 @endif

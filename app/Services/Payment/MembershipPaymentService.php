@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Member;
+namespace App\Services\Payment;
 
 use App\Models\Member\Membership;
-use App\Models\Member\MembershipPayment;
+use App\Models\Payment\MembershipPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -370,11 +370,6 @@ class MembershipPaymentService
             }
         }
 
-        $bankAccountId = $membership->payer?->bankAccounts()
-            ->where('is_default', true)
-            ->where('status', 'active')
-            ->first()?->id;
-
         $paymentData = [
             'membership_id' => $membership->id,
             'due_date' => $period['start']->copy()->day(15),
@@ -382,7 +377,6 @@ class MembershipPaymentService
             'period_end' => $period['end'],
             'amount' => $amount,
             'status' => 'pending',
-            'bank_account_id' => $bankAccountId,
         ];
 
         if ($dryRun) {

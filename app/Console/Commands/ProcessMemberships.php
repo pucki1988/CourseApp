@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\MembershipService;
+use App\Services\Member\MembershipService;
 use Illuminate\Console\Command;
 
 class ProcessMemberships extends Command

@@ -3,6 +3,7 @@
 namespace App\Models\Member;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Payment\MembershipPayment;
 
 class Membership extends Model
 {

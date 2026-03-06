@@ -408,7 +408,7 @@ new class extends Component {
     public function updatePaymentStatus(int $paymentId, string $status): void
     {
         try {
-            $payment = \App\Models\Member\MembershipPayment::findOrFail($paymentId);
+            $payment = \App\Models\Payment\MembershipPayment::findOrFail($paymentId);
             
             $validStatuses = ['pending', 'paid', 'cancelled'];
             if (!in_array($status, $validStatuses)) {

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Member\MembershipPaymentService;
+use App\Services\Payment\MembershipPaymentService;
 use Illuminate\Console\Command;
 
 class GenerateMembershipPayments extends Command

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Member;
+namespace App\Models\Payment;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +31,7 @@ class PaymentRun extends Model
 
     public function payments(): HasMany
     {
-        return $this->hasMany(MembershipPayment::class);
+        return $this->hasMany(Payment::class);
     }
 
     public function journalEntry(): HasOne

@@ -25,12 +25,81 @@ php artisan migrate
 
 ---
 
+## 🛡️ Sichere Migrations-Strategie (Produktion)
+
+Ziel der Umstellung:
+- `membership_payments` enthält nur noch die fachlichen Forderungsdaten
+- Zahlungsdurchführungen liegen in der neuen Tabelle `payments`
+
+### 1) Deploy-Reihenfolge
+
+1. **Code deployen**, der bereits mit neuem Modell umgehen kann (Lesen/Schreiben über `payments`).
+2. **Migrationen ausführen**:
+   - `2026_03_06_120001_create_payments_table.php`
+   - `2026_03_06_120000_update_membership_payments_structure.php`
+3. Queue Worker neu starten:
+
+```bash
+php artisan queue:restart
+```
+
+### 2) Daten-Backfill (falls Altdaten vorhanden)
+
+Vorhandene bezahlte/abgeschlossene `membership_payments` sollten in `payments` gespiegelt werden,
+damit Historie konsistent bleibt. Beispiel über Tinker:
+
+```bash
+php artisan tinker
+```
+
+```php
+use App\Models\Payment\MembershipPayment;
+use App\Models\Payment\Payment;
+
+MembershipPayment::query()
+   ->whereIn('status', ['collected', 'cancelled', 'failed'])
+   ->chunkById(500, function ($rows) {
+      foreach ($rows as $membershipPayment) {
+         Payment::firstOrCreate(
+            [
+               'source_type' => MembershipPayment::class,
+               'source_id' => $membershipPayment->id,
+               'reference' => 'mp-'.$membershipPayment->id,
+            ],
+            [
+               'amount' => $membershipPayment->amount,
+               'method' => 'sepa',
+               'status' => $membershipPayment->status,
+               'paid_at' => null,
+               'payment_run_id' => null,
+               'bank_account_id' => null,
+            ]
+         );
+      }
+   });
+```
+
+### 3) Smoke Checks direkt nach Deployment
+
+- Anzahl Datensätze plausibel: `membership_payments` vs. `payments`
+- Statuswerte nur: `pending | collected | failed | cancelled`
+- Beispiel-Detailansicht eines Mitglieds lädt ohne Fehler
+- Payment-Run-Prozess erzeugt neue Einträge in `payments`
+
+### 4) Rollback-Hinweis
+
+- Die `down()`-Migration stellt alte Spalten in `membership_payments` wieder her.
+- Ein echtes Daten-Rollback aus `payments` zurück in alte Felder ist **nicht automatisch** enthalten.
+- Für Produktion daher vor der Migration ein DB-Backup erstellen.
+
+---
+
 ## 📝 Verwendung
 
 ### 1. Einzugslauf erstellen
 
 ```php
-use App\Services\Member\PaymentRunService;
+use App\Services\Payment\PaymentRunService;
 use Illuminate\Support\Carbon;
 
 $service = app(PaymentRunService::class);
@@ -174,7 +243,7 @@ JournalEntry {
 php artisan tinker
 
 # Test-Einzugslauf erstellen
-$service = app(\App\Services\Member\PaymentRunService::class);
+$service = app(\App\Services\Payment\PaymentRunService::class);
 $run = $service->createPaymentRun(now()->addDays(7));
 $service->addPendingPayments($run);
 
