@@ -302,7 +302,7 @@ new class extends Component {
 
     public function openEditMembership(int $membershipId): void
     {
-        $membership = Membership::with('members', 'type', 'payer', 'payments.bankAccount')->findOrFail($membershipId);
+        $membership = Membership::with('members', 'type', 'payer', 'payments.payments.bankAccount')->findOrFail($membershipId);
 
         if (!$membership->members->pluck('id')->contains($this->member->id)) {
             return;
@@ -382,7 +382,7 @@ new class extends Component {
 
     public function openPaymentHistory(int $membershipId): void
     {
-        $membership = Membership::with('payments.bankAccount')->findOrFail($membershipId);
+        $membership = Membership::with('payments.payments.bankAccount')->findOrFail($membershipId);
 
         $this->paymentHistoryMembershipId = $membershipId;
         $this->paymentHistoryStartDate = now()->subYears(2)->toDateString();
@@ -410,7 +410,7 @@ new class extends Component {
         try {
             $payment = \App\Models\Payment\MembershipPayment::findOrFail($paymentId);
             
-            $validStatuses = ['pending', 'paid', 'cancelled'];
+            $validStatuses = ['pending', 'collected', 'failed', 'cancelled'];
             if (!in_array($status, $validStatuses)) {
                 session()->flash('error', 'Ungültiger Status');
                 return;
@@ -419,14 +419,15 @@ new class extends Component {
             $payment->update(['status' => $status]);
             
             // Reload the payments for this membership
-            $membership = Membership::with('payments.bankAccount')->findOrFail($this->paymentHistoryMembershipId);
+            $membership = Membership::with('payments.payments.bankAccount')->findOrFail($this->paymentHistoryMembershipId);
             $this->editMembershipPayments = $membership->payments
                 ->sortByDesc('due_date')
                 ->values();
 
             $statusLabels = [
                 'pending' => 'Offen',
-                'paid' => 'Bezahlt',
+                'collected' => 'Eingezogen',
+                'failed' => 'Fehlgeschlagen',
                 'cancelled' => 'Storniert',
             ];
             
@@ -1263,7 +1264,8 @@ new class extends Component {
                 <flux:select label="Status" wire:model="paymentHistoryStatus">
                     <option value="">Alle</option>
                     <option value="pending">Offen</option>
-                    <option value="paid">Bezahlt</option>
+                    <option value="collected">Eingezogen</option>
+                    <option value="failed">Fehlgeschlagen</option>
                     <option value="cancelled">Storniert</option>
                 </flux:select>
             </div>
@@ -1300,7 +1302,8 @@ new class extends Component {
                 <div class="space-y-2 max-h-72 overflow-auto border rounded-md p-3">
                     @foreach($filteredPayments as $payment)
                         @php
-                            $iban = $payment->bankAccount?->iban;
+                            $latestPayment = $payment->payments->sortByDesc('id')->first();
+                            $iban = $latestPayment?->bankAccount?->iban;
                             $maskedIban = $iban
                                 ? substr($iban, 0, 4) . ' **** **** ' . substr($iban, -4)
                                 : '-';
@@ -1312,26 +1315,33 @@ new class extends Component {
                                     · {{ number_format($payment->amount, 2, ',', '.') }} €
                                 </div>
                                 <div class="text-gray-500">
-                                    {{ $payment->method }} · {{ $payment->status }}
-                                    @if($payment->bankAccount)
+                                    {{ $latestPayment?->method ?? '-' }} · {{ $payment->status }}
+                                    @if($latestPayment?->bankAccount)
                                         · {{ $maskedIban }}
                                     @endif
                                 </div>
                             </div>
                             <div class="flex gap-2 items-center">
-                                @if($payment->status === 'paid')
-                                    <flux:badge size="sm" color="green">Bezahlt</flux:badge>
+                                @if($payment->status === 'collected')
+                                    <flux:badge size="sm" color="green">Eingezogen</flux:badge>
                                 @elseif($payment->status === 'pending')
                                     <flux:badge size="sm" color="yellow">Offen</flux:badge>
+                                @elseif($payment->status === 'failed')
+                                    <flux:badge size="sm" color="red">Fehlgeschlagen</flux:badge>
                                 @else
                                     <flux:badge size="sm" color="red">Storniert</flux:badge>
                                 @endif
                                 <flux:dropdown position="left" align="end">
                                     <flux:button size="sm" icon="ellipsis-horizontal" variant="subtle" />
                                     <flux:menu>
-                                        @if($payment->status !== 'paid')
-                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'paid')">
-                                                Als bezahlt 
+                                        @if($payment->status !== 'collected')
+                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'collected')">
+                                                Als eingezogen
+                                            </flux:menu.item>
+                                        @endif
+                                        @if($payment->status !== 'failed')
+                                            <flux:menu.item @click="$wire.updatePaymentStatus({{ $payment->id }}, 'failed')">
+                                                Als fehlgeschlagen
                                             </flux:menu.item>
                                         @endif
                                         @if($payment->status !== 'cancelled')
