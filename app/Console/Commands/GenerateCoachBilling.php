@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Mail\CoachMonthlyBillingMail;
-use App\Models\Course\Coach;
-use App\Services\Course\CoachService;
+use App\Models\Coach\Coach;
+use App\Services\Coach\CoachService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;

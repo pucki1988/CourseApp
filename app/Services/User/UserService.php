@@ -21,7 +21,7 @@ class UserService
             'member_requested' => $data['member_requested'] ?? false,
         ]);
 
-        $user->assignRole('user');
+        #$user->assignRole('user');
 
 
         $account = LoyaltyAccount::create(['type' => 'user']);
@@ -63,7 +63,7 @@ class UserService
                 $query->whereHas('roles', function ($q) {
                     $q->whereIn('name', ['admin', 'manager', 'course_manager', 'member_manager']);
                 })
-                ->orWhereDoesntHave('roles');
+                ;
             });
 
         if (!empty($filters['username'])) {
@@ -76,67 +76,13 @@ class UserService
 
     public function usersWithMemberRequest(){
         return User::where('member_requested', true)
-        ->role('user') // noch keine member
+        ->whereDoesntHave('members')
         ->get();
     }
 
     public function getAllRoles()
     {
         return Role::pluck('name');
-    }
-
-    
-
-    public function approveMember(int $userId): void
-    {
-        $user = User::findOrFail($userId);
-
-        // alte Rolle raus, neue rein
-
-        if($user->hasAnyRole(['manager','admin']))
-        {
-            if($user->hasRole('user')){
-                $user->removeRole('user');
-                $user->assignRole('member');
-            }else{
-                $user->assignRole('member');
-            }
-        }else{
-            $user->syncRoles(['member']);
-
-            if($user->member_requested){
-                event(new MembershipConfirmed($user));
-            }
-
-            $user->update([
-                'member_requested' => false,
-            ]);
-        }
-        
-    }
-
-    public function approveManager(int $userId): void
-    {
-        $user = User::findOrFail($userId);
-
-        // alte Rolle raus, neue rein
-        if($user->hasAnyRole(['manager','admin']))
-        {
-            return;
-        }
-        
-        $user->assignRole('manager');
-    }
-
-    public function unsetManager(int $userId): void
-    {
-        $user = User::findOrFail($userId);
-
-        if($user->hasAnyRole(['manager']))
-        {
-            $user->removeRole('manager');
-            
-        }
     }
 
     public function disapproveMember(int $userId): void
@@ -146,25 +92,4 @@ class UserService
             'member_requested' => false,
         ]);
     }
-
-    public function unsetMember(int $userId): void
-    {
-        $user = User::findOrFail($userId);
-
-        if($user->hasAnyRole(['manager','admin']))
-        {
-            $user->removeRole('member');
-            $user->assignRole('user');
-        }else{
-            // alte Rolle raus, neue rein
-            $user->syncRoles(['user']);
-            $user->update([
-                'member_requested' => false,
-            ]);
-        }
-    }
-
-
-
-
 }

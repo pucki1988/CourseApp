@@ -37,42 +37,6 @@ new class extends Component {
         return app(UserService::class)->usersWithFrontendAccess($filters);
     }
 
-   
-    public function setAsMember(UserService $userService): void
-    {
-        $userService->approveMember($this->userId);
-        Flux::modal('setMember')->close();
-    }
-
-    public function setAsManager(UserService $userService): void
-    {
-        $userService->approveManager($this->userId);
-        Flux::modal('setManager')->close();
-    }
-
-    public function unsetAsMember(UserService $userService): void
-    {
-        $userService->unsetMember($this->userId);
-        Flux::modal('unsetMember')->close();
-    }
-
-    public function modalSetAsMember(int $userId)
-    {
-        $this->userId = $userId;
-        Flux::modal('setMember')->show();
-    }
-
-    public function modalUnsetAsMember(int $userId)
-    {
-        $this->userId = $userId;
-        Flux::modal('unsetMember')->show();
-    }
-
-    public function modalSetAsManager(int $userId)
-    {
-        $this->userId = $userId;
-        Flux::modal('setManager')->show();
-    }
 
 };
 ?>
@@ -120,7 +84,7 @@ new class extends Component {
 
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Rolle</span>
-                                <span>@foreach ($user->getRoleNames() as $role)<flux:badge size="sm">{{ $role }}</flux:badge>@endforeach</span>
+                                <span>@if ($user->isMember())<flux:badge size="sm">Vereinsmitglied</flux:badge>@else<flux:badge size="sm">User</flux:badge> @endif</span>
                             </div>
             
 
@@ -144,73 +108,7 @@ new class extends Component {
         {{ $users->links() }}
     </div>
     </x-users.layout>
-<flux:modal name="setMember" >
-        <flux:heading size="lg">Mitgliedschaft</flux:heading>
 
-        <flux:text class="mt-2">
-            Soll der User als Mitglied gesetzt werden?
-        </flux:text>
-
-        <div class="flex justify-end gap-3 mt-6">
-            <flux:modal.close>
-            <flux:button
-                variant="ghost"
-            >
-                Abbrechen
-            </flux:button>
-            </flux:modal.close>
-            <flux:button
-                variant="primary" color="green"
-                wire:click="setAsMember"
-            >
-                Ja
-            </flux:button>
-        </div>
-    </flux:modal>
-    <flux:modal name="unsetMember" >
-        <flux:heading size="lg">Mitgliedschaft</flux:heading>
-
-        <flux:text class="mt-2">
-            Soll die Mitgliedschaft des Users entfernt werden?
-        </flux:text>
-
-        <div class="flex justify-end gap-3 mt-6">
-            <flux:modal.close>
-            <flux:button
-                variant="ghost"
-            >
-                Abbrechen
-            </flux:button>
-            </flux:modal.close>
-            <flux:button
-                variant="danger" 
-                wire:click="unsetAsMember"
-            >
-                Ja
-            </flux:button>
-        </div>
-    </flux:modal>
-    <flux:modal name="setManager" >
-        <flux:heading size="lg">Manager</flux:heading>
-
-        <flux:text class="mt-2">
-            Soll der User als Manager gesetzt werden?
-        </flux:text>
-
-        <div class="flex justify-end gap-3 mt-6">
-            <flux:modal.close>
-            <flux:button
-                variant="ghost"
-            >
-                Abbrechen
-            </flux:button>
-            </flux:modal.close>
-            <flux:button
-                variant="primary" color="green"
-                wire:click="setAsManager"
-            >
-                Ja
-            </flux:button>
-        </div>
-    </flux:modal>
+    
+    
 </section>

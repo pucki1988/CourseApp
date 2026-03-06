@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Course\Coach;
+use App\Models\Coach\Coach;
 use App\Models\Member\Member;
 use App\Models\Loyalty\LoyaltyAccount;
 
@@ -99,5 +99,10 @@ class User extends Authenticatable
     public function canCheckIn(): bool
     {
         return $this->hasRole(['admin', 'manager']) || $this->isCoach();
+    }
+
+    public function isMember(): bool
+    {
+        return $this->members()->exists();
     }
 }

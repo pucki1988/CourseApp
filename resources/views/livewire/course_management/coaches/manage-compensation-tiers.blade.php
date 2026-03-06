@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\Course\Coach;
-use App\Models\Course\CoachCompensationTier;
+use App\Models\Coach\Coach;
+use App\Models\Coach\CoachCompensationTier;
 
 new class extends Component {
     public Coach $coach;

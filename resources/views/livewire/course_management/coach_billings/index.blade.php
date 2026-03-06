@@ -3,9 +3,6 @@
 use Livewire\Volt\Component;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Artisan;
-use App\Models\Course\Coach;
-use App\Models\Course\CoachMonthlyBilling;
 
 new class extends Component {
     public $billings;
@@ -21,7 +18,7 @@ new class extends Component {
     public ?string $runOutput = null;
     public string $runState = 'idle';
 
-    public function mount(): void
+    public function mount(\App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
@@ -32,62 +29,44 @@ new class extends Component {
         $this->filterCoachId = '';
 
         if ($user?->can('courses.manage')) {
-            $this->coaches = Coach::query()->orderBy('name')->get();
+            $this->coaches = $coachBillingService->listCoaches();
         }
 
-        $this->loadBillings();
+        $this->loadBillings($coachBillingService);
     }
 
-    public function loadBillings(): void
+    public function loadBillings(?\App\Services\Coach\CoachBillingService $coachBillingService = null): void
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         $this->coachProfile = $user?->coach;
+        $coachBillingService = $coachBillingService ?? app(\App\Services\Coach\CoachBillingService::class);
 
-        if (!$this->coachProfile && !$user?->can('courses.manage')) {
-            $this->billings = collect();
-            return;
-        }
-
-        $query=CoachMonthlyBilling::with(['items', 'coach'])
-            ->orderByDesc('year')
-            ->orderByDesc('month');
-
-
-        if($this->coachProfile) {
-            $query->where('coach_id', $this->coachProfile->id);
-        } elseif (!empty($this->filterCoachId)) {
-            $query->where('coach_id', (int) $this->filterCoachId);
-        }
-
-        if (!empty($this->filterMonth)) {
-            [$year, $month] = array_map('intval', explode('-', $this->filterMonth));
-            $query->where('year', $year)
-                ->where('month', $month);
-        }
-            
-
-        $this->billings = $query->get();
+        $this->billings = $coachBillingService->listBillingsForUser(
+            $user,
+            $this->filterCoachId,
+            $this->filterMonth
+        );
     }
 
-    public function applyFilters(): void
+    public function applyFilters(\App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         $this->validate([
             'filterCoachId' => ['nullable', 'integer', 'exists:coaches,id'],
             'filterMonth' => ['nullable', 'date_format:Y-m'],
         ]);
 
-        $this->loadBillings();
+        $this->loadBillings($coachBillingService);
     }
 
-    public function resetFilters(): void
+    public function resetFilters(\App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         $this->filterCoachId = '';
         $this->filterMonth = '';
-        $this->loadBillings();
+        $this->loadBillings($coachBillingService);
     }
 
-    public function runBilling(): void
+    public function runBilling(\App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
@@ -99,66 +78,43 @@ new class extends Component {
         ]);
 
         try {
-            $args = [
-                '--month' => $this->billingMonth,
-            ];
-
-            if (!empty($this->runCoachId)) {
-                $args['--coach'] = (int) $this->runCoachId;
-            }
-
-            if ($this->runDryRun) {
-                $args['--dry-run'] = true;
-            }
-
-            if ($this->runForce) {
-                $args['--force'] = true;
-            }
-
-            Artisan::call('coaches:generate-billing', $args);
-
-            $this->runOutput = trim(Artisan::output());
+            $this->runOutput = $coachBillingService->runBilling(
+                $this->billingMonth,
+                !empty($this->runCoachId) ? (int) $this->runCoachId : null,
+                $this->runDryRun,
+                $this->runForce
+            );
             $this->runState = 'success';
-            $this->loadBillings();
+            $this->loadBillings($coachBillingService);
         } catch (\Throwable $e) {
             $this->runState = 'error';
             $this->runOutput = $e->getMessage();
         }
     }
 
-    public function deleteBilling(int $billingId): void
+    public function deleteBilling(int $billingId, \App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         abort_unless($user?->can('courses.manage'), 403);
 
-        $billing = CoachMonthlyBilling::findOrFail($billingId);
-        $billing->delete();
+        $coachBillingService->deleteBilling($billingId);
 
         $this->runState = 'success';
         $this->runOutput = 'Abrechnung wurde gelöscht.';
-        $this->loadBillings();
+        $this->loadBillings($coachBillingService);
     }
 
-    public function rerunBillingForce(int $billingId): void
+    public function rerunBillingForce(int $billingId, \App\Services\Coach\CoachBillingService $coachBillingService): void
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         abort_unless($user?->can('courses.manage'), 403);
 
-        $billing = CoachMonthlyBilling::findOrFail($billingId);
-        $month = sprintf('%04d-%02d', $billing->year, $billing->month);
-
         try {
-            Artisan::call('coaches:generate-billing', [
-                '--month' => $month,
-                '--coach' => $billing->coach_id,
-                '--force' => true,
-            ]);
-
-            $this->runOutput = trim(Artisan::output());
+            $this->runOutput = $coachBillingService->rerunBillingForce($billingId);
             $this->runState = 'success';
-            $this->loadBillings();
+            $this->loadBillings($coachBillingService);
         } catch (\Throwable $e) {
             $this->runState = 'error';
             $this->runOutput = $e->getMessage();

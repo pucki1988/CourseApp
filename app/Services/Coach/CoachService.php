@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Course;
+namespace App\Services\Coach;
 
-use App\Models\Course\Coach;
-use App\Models\Course\CoachMonthlyBilling;
+use App\Models\Coach\Coach;
+use App\Models\Coach\CoachMonthlyBilling;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 

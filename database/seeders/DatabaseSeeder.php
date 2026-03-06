@@ -40,6 +40,6 @@ class DatabaseSeeder extends Seeder
 
         $user->assignRole('admin');
 
-        $user1->assignRole('user');
+        #$user1->assignRole('user');
     }
 }

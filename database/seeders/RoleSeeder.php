@@ -14,14 +14,20 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
+
+    // alte Rollen entfernen
+        Role::whereIn('name', ['member', 'user'])->delete();
+        
         $roles = [
             'admin',
             'manager',
             'course_manager',
             'member_manager',
-            'member',
-            'user',
+            #'member',
+            #'user',
         ];
+
+        
 
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role]);
@@ -95,8 +101,8 @@ class RoleSeeder extends Seeder
         $manager = Role::where('name', 'manager')->first();
         $courseManager = Role::where('name', 'course_manager')->first();
         $memberManager = Role::where('name', 'member_manager')->first();
-        $member = Role::where('name', 'member')->first();
-        $user = Role::where('name', 'user')->first();
+        #$member = Role::where('name', 'member')->first();
+        #$user = Role::where('name', 'user')->first();
 
         // Admin + Manager = alle Permissions
         $admin->syncPermissions(Permission::all());
@@ -124,8 +130,8 @@ class RoleSeeder extends Seeder
             'coursebookingslots.view.own','users.view.own','users.update.own',
         ])->get();
 
-        $member->syncPermissions($ownPerms);
-        $user->syncPermissions($ownPerms);
+        #$member->syncPermissions($ownPerms);
+        #$user->syncPermissions($ownPerms);
 
         
         

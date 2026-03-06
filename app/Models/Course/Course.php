@@ -3,7 +3,7 @@
 namespace App\Models\Course;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
-use App\Models\Course\Coach;
+use App\Models\Coach\Coach;
 
 class Course extends Model
 {

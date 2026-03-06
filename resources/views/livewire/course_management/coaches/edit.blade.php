@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Services\Course\CoachService;
-use App\Models\Course\Coach;
+use App\Services\Coach\CoachService;
+use App\Models\Coach\Coach;
 
 new class extends Component {
     public Coach $coach;

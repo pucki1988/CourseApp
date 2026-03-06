@@ -46,7 +46,7 @@ class CourseService
        
        $user=auth('sanctum')->user();
         
-       $isMember = $user && $user->hasRole('member');
+       $isMember = $user && $user->isMember()
        
        
 

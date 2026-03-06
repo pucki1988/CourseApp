@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Course\Coach;
+use App\Models\Coach\Coach;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 

@@ -41,7 +41,7 @@ class CourseBookingService
      */
     public function loadBooking(CourseBooking $courseBooking)
     {
-        if (! auth()->user()->hasAnyRole('admin', 'manager')
+        if (!auth()->user()->hasAnyRole('admin', 'manager')
         && $courseBooking->user_id !== auth()->id()
         ) {
             abort(403);
@@ -75,7 +75,7 @@ class CourseBookingService
         }
 
             $user=auth('sanctum')->user();
-            $isMember = $user && $user->hasRole('member');
+            $isMember = $user && $user->isMember();
             
             $discount=0;
             if($isMember){
@@ -129,7 +129,7 @@ class CourseBookingService
             $createBookingSlots = [];
             $totalPrice   = 0;
             $user=auth('sanctum')->user();
-            $isMember = $user && $user->hasRole('member');
+            $isMember = $user && $user->isMember();
             
             $discount=0;
             if($isMember){

@@ -2,7 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Services\Course\CourseService;
-use App\Services\Course\CoachService;
+use App\Services\Coach\CoachService;
 use App\Models\Course\Course;
 use App\Models\Course\SportType;
 use App\Models\Course\EquipmentItem;
