@@ -36,6 +36,7 @@ new class extends Component {
 
     
     public ?CourseSlot $slotToCancel = null;
+    public string $cancelReason = "";
     public array $slotToReschedule = [];
     public ?CourseSlot $showSlot=null;
     
@@ -59,11 +60,12 @@ new class extends Component {
     {
         if (!$this->slotToCancel) return;
         $this->authorize('cancel', $this->slotToCancel);
-        $courseSlotAction->execute($this->slotToCancel);
+        $courseSlotAction->execute($this->slotToCancel, $this->cancelReason ?? "");
         
         // Modal schließen
         Flux::modal('confirm')->close();
         $this->slotToCancel = null;
+        $this->cancelReason = "";
 
         // Liste neu laden
         $this->loadSlots($courseSlotService);
@@ -376,6 +378,8 @@ new class extends Component {
         <flux:text class="mt-2">
             Bist du sicher, dass du diesen Termin absagen möchtest?
         </flux:text>
+
+        <flux:input class="mt-2" type="text" label="Grund für die Absage" wire:model="cancelReason" />
 
         <div class="flex justify-end gap-3 mt-6">
             <flux:modal.close>

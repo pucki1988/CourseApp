@@ -33,6 +33,7 @@ new class extends Component {
 
     
     public ?CourseSlot $slotToCancel = null;
+    public string $cancelReason = "";
     public array $slotToReschedule = [];
     public ?CourseSlot $showSlot=null;
     

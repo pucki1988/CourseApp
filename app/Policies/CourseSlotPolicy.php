@@ -48,6 +48,10 @@ class CourseSlotPolicy
 
     public function cancel(User $user, CourseSlot $slot)
     {
+            if ($user->hasRole(['admin'])) {
+                return true;
+            }
+            
             //  Kurse mit Gesamtbuchung nie einzeln stornierbar
             if ($slot->course->booking_type === 'per_course') {
                 return false;
