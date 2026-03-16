@@ -33,26 +33,6 @@ new class extends Component {
         $this->users=$userService->usersWithBackendAccess($filters);
     }
 
-   
-    public function setAsMember(int $userId,UserService $userService): void
-    {
-        $userService->approveMember($userId);
-        $this->loadUsers($userService);
-    }
-
-    public function unsetAsMember(int $userId,UserService $userService): void
-    {
-        $userService->unsetMember($userId);
-        $this->loadUsers($userService);
-    }
-
-    public function unsetAsManager(int $userId,UserService $userService): void
-    {
-        $userService->unsetManager($userId);
-        $this->loadUsers($userService);
-    }
-
-    
 
 };
 ?>
