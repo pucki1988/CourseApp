@@ -167,6 +167,7 @@ class GenerateCoachBilling extends Command
             if (!$dryRun && $billingData['total_compensation'] > 0) {
                 try {
                     Mail::to($coach->user->email)
+                        ->bcc([config('mail.manager_mail'), config('mail.finance_mail')])
                         ->send(new CoachMonthlyBillingMail($billingData));
                     
                     $this->info("  ✓ Email sent to: {$coach->user->email}");

@@ -116,5 +116,6 @@ return [
     ],
 
     'manager_mail' => env('MANAGER_MAIL'),
+    'finance_mail' => env('FINANCE_MAIL'),
 
 ];
