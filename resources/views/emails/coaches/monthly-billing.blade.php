@@ -91,7 +91,7 @@
         </div>
         <div class="summary-item">
             <span>Gesamtvergütung: </span>
-            <strong style="color: #f9fafb;">€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
+            <strong>€ {{ number_format($billingData['total_compensation'], 2, ',', '.') }}</strong>
         </div>
     </div>
 
