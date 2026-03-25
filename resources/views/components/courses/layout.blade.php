@@ -32,7 +32,7 @@
                 <span class="md:inline">{{ __('Alle Termine') }}</span>
                 </span>
             </flux:navlist.item>
-        @
+        @endcanany
 
         @if(Auth::user()?->coach)
             <flux:navlist.item
