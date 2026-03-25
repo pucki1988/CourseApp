@@ -29,7 +29,7 @@
                 
             >
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
-                <flux:icon.home class="h-5 w-5 md:hidden" />
+                <flux:icon.bars-4 class="h-5 w-5 md:hidden" />
                 <span class="md:inline">{{ __('Alle Termine') }}</span>
                 </span>
             </flux:navlist.item>
@@ -43,7 +43,7 @@
                 class="h-14"
             >
             <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
-                <flux:icon.home class="h-5 w-5 md:hidden" />
+                <flux:icon.user-circle class="h-5 w-5 md:hidden" />
                 <span class="md:inline">{{ __('Trainertermine') }}</span>
                 </span>
             </flux:navlist.item>
