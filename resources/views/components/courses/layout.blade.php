@@ -5,7 +5,8 @@
         pb-safe">
     <flux:navlist class="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1 items-center">
         
-        @can('coursebookingslots.view.own')
+        
+        @canany(['courses.manage','courseslots.checkin','coursebookingslots.view.own'])
             <flux:navlist.item
                 :href="route('course_management.home.index')"
                 :current="request()->routeIs('course_management.home.index')"
@@ -18,7 +19,7 @@
                 <span class="md:inline">{{ __('Meine Termine') }}</span>
                 </span>
             </flux:navlist.item>
-        @endcan
+        @endcanany
         @canany(['courses.manage','courseslots.checkin'])
             <flux:navlist.item
                 :href="route('course_management.coachview.index')"
