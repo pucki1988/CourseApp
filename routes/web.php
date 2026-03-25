@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
         
         Volt::route('/courses', 'course_management.courses.index')->name('course_management.courses.index');
         Volt::route('/courses/{course}', 'course_management.courses.show')->name('course_management.courses.show');
-        Volt::route('/coach-view', 'course_management.coachview.index')->name('course_management.coachview.index');
+        
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
     });
@@ -61,6 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['permission:courses.manage|courses.coachview|coursebookingslots.view.own|courseslots.checkin'])->group(function () {
         Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
+        Volt::route('/coach-view', 'course_management.coachview.index')->name('course_management.coachview.index');
     });
 
     Route::middleware(['permission:coaches.manage','permission:coaches.view'])->group(function () {
