@@ -19,7 +19,7 @@
                 </span>
             </flux:navlist.item>
         @endcan
-        @can('courses.manage')
+        @canany(['courses.manage','courseslots.checkin'])
             <flux:navlist.item
                 :href="route('course_management.coachview.index')"
                 :current="request()->routeIs('course_management.coachview.index')"
@@ -32,7 +32,7 @@
                 <span class="md:inline">{{ __('Alle Termine') }}</span>
                 </span>
             </flux:navlist.item>
-        @endcan
+        @
 
         @if(Auth::user()?->coach)
             <flux:navlist.item

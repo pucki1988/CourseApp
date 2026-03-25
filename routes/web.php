@@ -59,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/coach-billings', 'course_management.coach_billings.index')->name('course_management.coach_billings.index');
     });
 
-    Route::middleware(['permission:courses.manage|courses.coachview|coursebookingslots.view.own'])->group(function () {
+    Route::middleware(['permission:courses.manage|courses.coachview|coursebookingslots.view.own|courseslots.checkin'])->group(function () {
         Volt::route('/home', 'course_management.home.index')->name('course_management.home.index');
     });
 
