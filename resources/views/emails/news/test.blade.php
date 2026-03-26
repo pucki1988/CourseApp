@@ -22,8 +22,6 @@
 </p>
 @endif
 
-<p><strong>{{ $title }}</strong></p>
-
 <p>Hallo Test Testerin,</p>
 
 <div>{!! nl2br(e($newsMessage)) !!}</div>

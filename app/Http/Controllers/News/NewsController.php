@@ -17,6 +17,6 @@ class NewsController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        return NewsResource::collection($newsService->paginatePublished($validated));
+        return NewsResource::collection($newsService->paginatePublished($validated))->resolve();
     }
 }
