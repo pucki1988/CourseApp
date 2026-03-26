@@ -37,6 +37,11 @@
                     <flux:navlist.item icon="users" :href="route('member_management.members.index')" :current="request()->routeIs('member_management.members.index')" wire:navigate>{{ __('Mitgliederverwaltung') }}</flux:navlist.item>
                 </flux:navlist.group>
                 @endcan
+                @can('news.manage')
+                <flux:navlist.group class="grid">
+                    <flux:navlist.item icon="newspaper" :href="route('news_management.news.index')" :current="request()->routeIs('news_management.news.*')" wire:navigate>{{ __('Neuigkeiten') }}</flux:navlist.item>
+                </flux:navlist.group>
+                @endcan
             </flux:navlist>
 
 

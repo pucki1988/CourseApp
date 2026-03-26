@@ -95,5 +95,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:users.manage','permission:users.view.requested_membership'])->group(function () {
         Volt::route('/member_request', 'user_management.users.member_request')->name('user_management.users.member_request');
     });
-   
+
+    Route::middleware(['permission:news.manage'])->group(function () {
+        Volt::route('/news', 'news_management.news.index')->name('news_management.news.index');
+        Volt::route('/news/areas', 'news_management.areas.index')->name('news_management.areas.index');
+    });
 });

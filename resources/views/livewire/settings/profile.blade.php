@@ -9,6 +9,7 @@ use Livewire\Volt\Component;
 new class extends Component {
     public string $name = '';
     public string $email = '';
+    public bool $receives_news = true;
 
     /**
      * Mount the component.
@@ -17,6 +18,7 @@ new class extends Component {
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->receives_news = (bool) Auth::user()->receives_news;
     }
 
     /**
@@ -37,6 +39,7 @@ new class extends Component {
                 'max:255',
                 Rule::unique(User::class)->ignore($user->id)
             ],
+            'receives_news' => ['boolean'],
         ]);
 
         $user->fill($validated);
@@ -97,6 +100,8 @@ new class extends Component {
                     </div>
                 @endif
             </div>
+
+            <flux:checkbox wire:model="receives_news" :label="__('Ich möchte News erhalten')" />
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">

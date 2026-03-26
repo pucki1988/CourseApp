@@ -129,6 +129,17 @@ new class extends Component {
             </div>
 
             <div class="mb-4">
+                <label class="font-semibold">News-Empfang</label>
+                <div>
+                    @if ($user->receives_news)
+                        <flux:badge size="sm" color="green">Aktiv</flux:badge>
+                    @else
+                        <flux:badge size="sm" color="zinc">Deaktiviert</flux:badge>
+                    @endif
+                </div>
+            </div>
+
+            <div class="mb-4">
                 <label class="font-semibold">Treuepunkte</label>
                 <div class="flex items-center gap-2">
                     <flux:badge color="lime" size="sm">{{ $user?->loyaltyAccount?->balance() ?? 0 }} Punkte</flux:badge>

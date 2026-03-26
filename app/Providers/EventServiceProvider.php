@@ -20,6 +20,8 @@ use App\Listeners\SendMembershipConfirmedMail;
 use App\Events\MembershipConfirmed;
 use App\Listeners\SendCourseBookingPaidMail;
 use App\Events\CourseBookingPaid;
+use App\Events\NewsItemSaved;
+use App\Listeners\ScheduleNewsDelivery;
 
 
 class EventServiceProvider extends ServiceProvider
@@ -50,6 +52,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         CourseBookingPaid::class => [
             SendCourseBookingPaidMail::class
+        ],
+        NewsItemSaved::class => [
+            ScheduleNewsDelivery::class,
         ]
     ];
 

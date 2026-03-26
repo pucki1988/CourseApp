@@ -88,6 +88,9 @@ class RoleSeeder extends Seeder
             'coaches.create',
             'coaches.update',
             'coaches.delete',
+
+            // News
+            'news.manage',
         ];
 
         foreach ($permissions as $permission) {
@@ -114,13 +117,13 @@ class RoleSeeder extends Seeder
             'courseslots.create','courseslots.view','courseslots.update','courseslots.delete','courseslots.cancel','courseslots.reschedule','courseslots.checkin',
             'coursebookings.view','coursebookings.update','coursebookings.manage',
             'coursebookingslots.view','coursebookingslots.update',
-            'coaches.view','coaches.manage','coaches.create','coaches.update','coaches.delete',
+            'coaches.view','coaches.manage','coaches.create','coaches.update','coaches.delete','news.manage',
         ])->get();
         $courseManager->syncPermissions($coursePerms);
 
         // Member manager: full member management
         $memberManager->syncPermissions(Permission::whereIn('name', [
-            'members.create','members.view','members.update','members.delete','members.manage'
+            'members.create','members.view','members.update','members.delete','members.manage','news.manage',
         ])->get());
 
         // Member & User: frontend-only, only own resources

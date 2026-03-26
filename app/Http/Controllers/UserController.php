@@ -50,4 +50,21 @@ class UserController extends Controller
             'qr_url' => $signedUrl
         ]);
     }
+
+    public function updateReceivesNews(Request $request)
+    {
+        $validated = $request->validate([
+            'receives_news' => ['required', 'boolean'],
+        ]);
+
+        $user = $request->user();
+        $user->receives_news = (bool) $validated['receives_news'];
+        $user->save();
+
+        return response()->json([
+            'message' => 'News-Einstellung aktualisiert',
+            'receives_news' => (bool) $user->receives_news,
+            'user' => $user,
+        ]);
+    }
 }

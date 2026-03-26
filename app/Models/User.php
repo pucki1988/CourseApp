@@ -32,6 +32,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'receives_news',
         'password',
         'member_requested',
         'loyalty_account_id'
@@ -58,6 +59,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'receives_news' => 'boolean',
             'password' => 'hashed'
         ];
     }
