@@ -67,10 +67,14 @@ class RefundBookingSlot implements ShouldQueue
         
         try {
 
-            
+            $discount=0;
+            if($booking->redeemed_points > 0 && !$booking->points_restored){
+                $discount= $booking->bookingSlots()->sum('price') - $booking->total_price;
+            }
+
             $refund = $paymentService->refund(
                 $booking,
-                $bookingSlot->price
+                $bookingSlot->price - $discount // proportionaler Anteil der Punkte auf diesen Slot
             );
 
             $bookingRefundService->createRefund(

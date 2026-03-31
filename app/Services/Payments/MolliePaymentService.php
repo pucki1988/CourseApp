@@ -62,6 +62,7 @@ class MolliePaymentService implements PaymentService
             $booking->payment_transaction_id
         );
 
+
         $refund = $payment->refund([
             'amount' => [
                 'currency' => 'EUR',
