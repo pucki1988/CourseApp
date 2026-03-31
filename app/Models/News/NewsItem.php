@@ -17,6 +17,8 @@ class NewsItem extends Model
         'published_at',
         'sent_at',
         'tags',
+        'show_in_blog',
+        'send_mail',
     ];
 
     protected function casts(): array
@@ -26,6 +28,8 @@ class NewsItem extends Model
             'published_at' => 'datetime',
             'sent_at' => 'datetime',
             'tags' => 'array',
+            'show_in_blog' => 'boolean',
+            'send_mail' => 'boolean',
         ];
     }
 

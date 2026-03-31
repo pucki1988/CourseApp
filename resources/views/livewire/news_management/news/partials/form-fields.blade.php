@@ -33,7 +33,12 @@
 
 <flux:textarea wire:model="message" label="Nachricht" rows="7" />
 
-<flux:checkbox wire:model="is_important" :label="__('Wichtige News an alle User senden')" />
+
+<div class="flex flex-col gap-2 md:flex-row md:gap-6">
+    <flux:checkbox wire:model="is_important" :label="__('Wichtige News an alle User senden')" />
+    <flux:checkbox wire:model="show_in_blog" :label="__('Im Newsblog anzeigen')" />
+    <flux:checkbox wire:model="send_mail" :label="__('Mail an Empfänger senden')" />
+</div>
 
 <flux:input
     wire:model="tags"

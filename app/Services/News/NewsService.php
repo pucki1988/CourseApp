@@ -21,6 +21,7 @@ class NewsService
         return NewsItem::query()
             ->with(['area', 'creator'])
             ->where('published_at', '<=', now())
+            ->where('show_in_blog', true)
             ->whereHas('area', function ($areaQuery) {
                 $areaQuery->where('is_active', true);
             })
@@ -46,6 +47,8 @@ class NewsService
             'title' => $data['title'],
             'message' => $data['message'],
             'is_important' => (bool) ($data['is_important'] ?? false),
+            'show_in_blog' => (bool) ($data['show_in_blog'] ?? true),
+            'send_mail' => (bool) ($data['send_mail'] ?? true),
             'published_at' => $data['published_at'],
             'tags' => $this->normalizeTags($data['tags'] ?? null),
         ]);
@@ -62,6 +65,8 @@ class NewsService
             'title' => $data['title'],
             'message' => $data['message'],
             'is_important' => (bool) ($data['is_important'] ?? false),
+            'show_in_blog' => (bool) ($data['show_in_blog'] ?? true),
+            'send_mail' => (bool) ($data['send_mail'] ?? true),
             'published_at' => $data['published_at'],
             'tags' => $this->normalizeTags($data['tags'] ?? null),
         ]);
@@ -81,6 +86,12 @@ class NewsService
         $newsItem->loadMissing(['area']);
 
         if ($newsItem->sent_at !== null) {
+            return;
+        }
+
+        if (!$newsItem->send_mail) {
+            // Keine Mail versenden, aber sent_at setzen
+            $newsItem->forceFill(['sent_at' => now()])->save();
             return;
         }
 

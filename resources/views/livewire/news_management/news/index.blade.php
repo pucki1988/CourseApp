@@ -18,6 +18,8 @@ new class extends Component {
     public string $title = '';
     public string $message = '';
     public bool $is_important = false;
+    public bool $show_in_blog = true;
+    public bool $send_mail = true;
     public string $published_at = '';
     public string $tags = '';
     public string $test_email = '';
@@ -74,6 +76,8 @@ new class extends Component {
         $this->title = '';
         $this->message = '';
         $this->is_important = false;
+        $this->show_in_blog = true;
+        $this->send_mail = true;
         $this->published_at = now()->format('Y-m-d\TH:i');
         $this->tags = '';
         $this->test_email = '';
@@ -92,6 +96,8 @@ new class extends Component {
         $this->title = $news->title;
         $this->message = $news->message;
         $this->is_important = (bool) $news->is_important;
+        $this->show_in_blog = (bool) $news->show_in_blog;
+        $this->send_mail = (bool) $news->send_mail;
         $this->published_at = optional($news->published_at)->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
         $this->tags = implode(', ', $news->tags ?? []);
         $this->test_email = '';
@@ -106,6 +112,8 @@ new class extends Component {
             'title' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string'],
             'is_important' => ['boolean'],
+            'show_in_blog' => ['boolean'],
+            'send_mail' => ['boolean'],
             'published_at' => ['required', 'date'],
             'tags' => ['nullable', 'string', 'max:1000'],
         ]);
