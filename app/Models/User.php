@@ -3,16 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\CheckinToken;
+use App\Models\Coach\Coach;
+use App\Models\Loyalty\LoyaltyAccount;
+use App\Models\Member\Member;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Coach\Coach;
-use App\Models\Member\Member;
-use App\Models\Loyalty\LoyaltyAccount;
 
 class User extends Authenticatable
 {
@@ -64,6 +68,13 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (self $user) {
+            $user->checkinTokens()->create();
+        });
+    }
+
     /**
      * Get the user's initials
      */
@@ -90,6 +101,35 @@ class User extends Authenticatable
     public function loyaltyAccount()
     {
         return $this->belongsTo(LoyaltyAccount::class, 'loyalty_account_id');
+    }
+
+    public function checkinTokens(): MorphMany
+    {
+        return $this->morphMany(CheckinToken::class, 'tokenable');
+    }
+
+    public function checkinToken(): MorphOne
+    {
+        return $this->morphOne(CheckinToken::class, 'tokenable')
+            ->whereNull('revoked_at')
+            ->latestOfMany();
+    }
+
+    public function issueCheckinToken(bool $revokePrevious = true): CheckinToken
+    {
+        return DB::transaction(function () use ($revokePrevious) {
+            $activeTokens = $this->checkinTokens()->active()->lockForUpdate();
+
+            if (!$revokePrevious && $activeTokens->exists()) {
+                throw new \LogicException('Ein User darf nur einen aktiven Check-in-Token besitzen.');
+            }
+
+            if ($revokePrevious) {
+                $activeTokens->update(['revoked_at' => now()]);
+            }
+
+            return $this->checkinTokens()->create();
+        });
     }
     
 

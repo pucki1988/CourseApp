@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\CheckinToken;
+use App\Models\Member\Card;
 use Flux\Flux;
 
 new class extends Component {
@@ -168,15 +170,28 @@ new class extends Component {
                 throw new \Exception('Kein Slot aktiv');
             }
 
-            $request = \Illuminate\Http\Request::create($this->scanValue);
+            $checkinToken = CheckinToken::query()
+                ->where('token', $this->scanValue)
+                ->whereIn('tokenable_type', [User::class, Card::class])
+                ->whereNull('revoked_at')
+                ->first();
 
-            if (!\Illuminate\Support\Facades\URL::hasValidSignature($request)) {
-                throw new \Exception('QR-Code ungültig');
+            if (!$checkinToken) {
+                throw new \Exception('QR-Code ungültig oder Token nicht aktiv');
             }
-            
-            $userId = \Illuminate\Support\Facades\Route::getRoutes()->match($request)->parameter('user');
-            if (!$userId) {
-                throw new \Exception('User nicht erkannt');
+
+            if ($checkinToken->tokenable_type === User::class) {
+                $userId = $checkinToken->tokenable_id;
+            } else {
+                // Card → Member → User
+                $card = Card::with('member')->find($checkinToken->tokenable_id);
+                if (!$card || !$card->active) {
+                    throw new \Exception('Karte ist gesperrt oder nicht gefunden');
+                }
+                if (!$card->member || !$card->member->user_id) {
+                    throw new \Exception('Karte keinem User zugeordnet');
+                }
+                $userId = $card->member->user_id;
             }
 
             $baseQuery = $this->activeSlot

@@ -2,19 +2,30 @@
 
 namespace App\Models\Member;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\User;
+use App\Models\CheckinToken;
 use App\Models\Loyalty\LoyaltyAccount;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Card extends Model
 {
-    protected $fillable = ['uuid', 'member_id','active', 'revoked_at', 'loyalty_account_id'];
+    protected $fillable = ['member_id', 'active', 'revoked_at', 'loyalty_account_id'];
 
     protected $casts = [
         'active' => 'boolean',
         'revoked_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $card) {
+            $card->issueCheckinToken();
+        });
+
+        static::deleting(function (self $card) {
+            $card->checkinToken()->delete();
+        });
+    }
 
     public function loyaltyAccount()
     {
@@ -25,6 +36,27 @@ class Card extends Model
     public function member()
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function checkinToken(): MorphOne
+    {
+        return $this->morphOne(CheckinToken::class, 'tokenable');
+    }
+
+    public function issueCheckinToken(): CheckinToken
+    {
+        $existingToken = $this->checkinToken()->first();
+
+        if ($existingToken) {
+            return $existingToken;
+        }
+
+        return $this->checkinToken()->create();
+    }
+
+    public function checkinIdentifier(): ?string
+    {
+        return $this->checkinToken?->token;
     }
 
     public function scopeActive($query)

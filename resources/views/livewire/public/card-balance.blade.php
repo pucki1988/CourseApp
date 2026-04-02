@@ -24,7 +24,11 @@ new class extends Component {
             return;
         }
 
-        $card = Card::with('loyaltyAccount')->where('uuid', $uid)->first();
+        $card = Card::with(['loyaltyAccount', 'checkinToken'])
+            ->whereHas('checkinToken', function ($query) use ($uid) {
+                $query->where('token', $uid);
+            })
+            ->first();
 
         if (!$card) {
             $this->message = 'Karte nicht gefunden.';

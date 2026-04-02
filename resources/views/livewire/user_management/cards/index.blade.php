@@ -4,7 +4,6 @@ use Livewire\Volt\Component;
 use App\Models\Member\Card;
 use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\Member\Member;
-use Illuminate\Support\Str;
 
 new class extends Component {
 
@@ -53,7 +52,6 @@ new class extends Component {
 
         for ($i = 0; $i < $count; $i++) {
             Card::create([
-                'uuid' => (string) Str::uuid(),
                 'active' => false,
             ]);
         }
@@ -166,7 +164,7 @@ new class extends Component {
 
     private function cardsQuery()
     {
-        $query = Card::with(['member.user', 'loyaltyAccount']);
+        $query = Card::with(['member.user', 'loyaltyAccount', 'checkinToken']);
 
         if (!empty($this->statusFilter)) {
             $query->where('active', $this->statusFilter === 'active');
@@ -174,11 +172,15 @@ new class extends Component {
 
         if (!empty($this->search)) {
             $search = trim($this->search);
-            $query->where('uuid', 'like', "%{$search}%")
-                ->orWhereHas('member', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('checkinToken', function ($tokenQuery) use ($search) {
+                    $tokenQuery->where('token', 'like', "%{$search}%");
+                })
+                ->orWhereHas('member', function ($memberQuery) use ($search) {
+                    $memberQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
                 });
+            });
         }
 
         return $query;
@@ -194,7 +196,7 @@ new class extends Component {
             $out = fopen('php://output', 'w');
 
             fputcsv($out, [
-                'uuid',
+                'token',
                 'member_first_name',
                 'member_last_name',
                 'user_name',
@@ -205,7 +207,7 @@ new class extends Component {
 
             foreach ($cards as $card) {
                 fputcsv($out, [
-                    $card->uuid,
+                    $card->checkinToken?->token,
                     $card->member?->first_name,
                     $card->member?->last_name,
                     $card->member?->user?->name,
@@ -235,7 +237,7 @@ new class extends Component {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <flux:input
                 wire:model.live.debounce.300ms="search"
-                placeholder="Suche nach UUID oder Mitglied…"
+                placeholder="Suche nach Kartenkennung oder Mitglied…"
                 icon="magnifying-glass"
             />
             <flux:select wire:model.live="statusFilter" placeholder="Status filtern">
@@ -251,8 +253,8 @@ new class extends Component {
                 <div class="border rounded-lg p-3 bg-white shadow-sm">
                     <div class="text-sm">
                         <div class="flex justify-between mt-1">
-                            <span class="text-gray-500">UUID</span>
-                            <span>{{ $card->uuid }}</span>
+                            <span class="text-gray-500">Kartenkennung</span>
+                            <span>{{ $card->checkinToken?->token ?? '-' }}</span>
                         </div>
 
                         <div class="flex justify-between mt-1">

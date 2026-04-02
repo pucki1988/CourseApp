@@ -1006,8 +1006,8 @@ new class extends Component {
                 <div class="border rounded-lg p-3 bg-white shadow-sm">
                     <div class="text-sm">
                         <div class="flex justify-between mt-1">
-                            <span class="text-gray-500">UUID</span>
-                            <span>{{ $card->uuid }}</span>
+                            <span class="text-gray-500">Kartenkennung</span>
+                            <span>{{ $card->checkinToken?->token ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between mt-1">
                             <span class="text-gray-500">Status</span>

@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 
 use App\Models\User;
 use App\Models\Member\Member;
+use App\Models\CheckinToken;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -100,6 +101,13 @@ new class extends Component {
         $this->loadAvailableMembers();
     }
 
+    public function rotateCheckinToken(): void
+    {
+        $this->user->issueCheckinToken(revokePrevious: true);
+        $this->user->refresh();
+        Flux::toast('Neuer Check-in Token erstellt');
+    }
+
     public function openTransactions(): void
     {
         $account = $this->user->loyaltyAccount;
@@ -136,6 +144,48 @@ new class extends Component {
                     @else
                         <flux:badge size="sm" color="zinc">Deaktiviert</flux:badge>
                     @endif
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="font-semibold">Aktiver Token</label>
+                <div class="mt-1">
+                    @php
+                        $activeToken = $user->checkinToken;
+                        $allTokens = $user->checkinTokens()->latest()->take(5)->get();
+                    @endphp
+                    @if($activeToken)
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <code class="text-xs font-mono bg-gray-100 px-2 py-1 rounded">{{ $activeToken->token }}</code>
+                            <flux:badge size="xs" color="zinc">{{ $activeToken->created_at?->format('d.m.Y H:i') }}</flux:badge>
+                        </div>
+                    @else
+                        <span class="text-sm text-gray-500">Kein aktiver Token</span>
+                    @endif
+
+                    @if($allTokens->count() > 1)
+                        <details class="mt-2">
+                            <summary class="text-xs uppercase tracking-wide text-gray-500 cursor-pointer">Token-Verlauf ({{ $allTokens->count() }})</summary>
+                            <div class="mt-1 space-y-1">
+                                @foreach($allTokens as $tok)
+                                    <div class="flex items-center gap-2 text-xs">
+                                        @if($tok->revoked_at)
+                                            <flux:badge size="xs" color="red">Revoked</flux:badge>
+                                            <span class="text-gray-400 font-mono">{{ $tok->token }}</span>
+                                            <span class="text-gray-400">{{ $tok->revoked_at->format('d.m.Y H:i') }}</span>
+                                        @else
+                                            <flux:badge size="xs" color="green">Aktiv</flux:badge>
+                                            <span class="font-mono">{{ $tok->token }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    @endif
+
+                    <div class="mt-2">
+                        <flux:button size="xs" variant="ghost" icon="arrow-path" wire:click="rotateCheckinToken" wire:confirm="Alten Token widerrufen und neuen erstellen?">Token rotieren</flux:button>
+                    </div>
                 </div>
             </div>
 
