@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Password;
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
+    Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
     Route::post('/me/receives-news', [UserController::class, 'updateReceivesNews']);
     
     Route::post('/logout', [AuthController::class, 'logout']);

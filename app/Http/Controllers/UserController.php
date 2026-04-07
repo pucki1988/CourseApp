@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\User\GoogleWalletPassService;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class UserController extends Controller
 {
@@ -29,6 +31,21 @@ class UserController extends Controller
 
         return response()->json([
             'token' => $user->checkinToken?->token,
+        ]);
+    }
+
+    public function googleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        try {
+            $saveLink = $walletPassService->generateSaveLink($request->user());
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'save_link' => $saveLink,
         ]);
     }
 
