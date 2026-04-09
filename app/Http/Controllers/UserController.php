@@ -21,6 +21,9 @@ class UserController extends Controller
                 'other' => $request->user()->loyaltyAccount?->balanceByOrigin('other') ?? 0,
                 'point_value_eur' => (float) config('loyalty.point_value_eur', 0.01),
                 'points_to_eur' => $request->user()->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
+            ],
+            'wallet' => [
+                'fitness_pass' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
             ]
         ]);
     }
@@ -34,19 +37,135 @@ class UserController extends Controller
         ]);
     }
 
-    public function googleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
+    private function googleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
     {
         try {
+            $status = $walletPassService->getObjectStatus($request->user());
+
+            if ($status['exists']) {
+                return [
+                    'has_pass' => true,
+                    'save_link' => null,
+                    'object_id' => $status['object_id'],
+                    'state' => $status['state'] ?? null,
+                ];
+            }
+
             $saveLink = $walletPassService->generateSaveLink($request->user());
+        } catch (RuntimeException $exception) {
+            return [
+                'message' => $exception->getMessage(),
+            ];
+        }
+
+        return [
+            'has_pass' => false,
+            'save_link' => $walletPassService->generateSaveLink($request->user()),
+            'object_id' => $status['object_id'] ?? null,
+        ];
+    }
+
+    public function deleteGoogleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        try {
+            $result = $walletPassService->deactivateObject($request->user());
         } catch (RuntimeException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
             ], 422);
         }
 
-        return response()->json([
-            'save_link' => $saveLink,
+        return response()->json($result);
+    }
+
+    public function getGoogleWalletClass(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        try {
+            $result = $walletPassService->getClass($request->user());
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json($result);
+    }
+
+    public function patchGoogleWalletClass(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        try {
+            $result = $walletPassService->patchClass($request->user());
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json($result);
+    }
+
+    public function broadcastGoogleWalletMessage(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        $validated = $request->validate([
+            'header' => ['required', 'string', 'max:120'],
+            'body' => ['required', 'string', 'max:500'],
         ]);
+
+        try {
+            $result = $walletPassService->broadcastMessage($validated['header'], $validated['body']);
+        } catch (\RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json($result);
+    }
+
+    public function listGoogleWalletPassObjects(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        $validated = $request->validate([
+            'max_results' => ['nullable', 'integer', 'min:1', 'max:1000'],
+            'page_token' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $result = $walletPassService->listObjectsForClass(
+                $request->user(),
+                (int) ($validated['max_results'] ?? 20),
+                $validated['page_token'] ?? null,
+            );
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json($result);
+    }
+
+    public function updateGoogleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
+    {
+        $validated = $request->validate([
+            'state' => ['nullable', 'in:ACTIVE,INACTIVE,COMPLETED,EXPIRED'],
+            'header' => ['nullable', 'string', 'max:120'],
+            'subheader' => ['nullable', 'string', 'max:120'],
+            'barcode_value' => ['nullable', 'string', 'max:255'],
+            'barcode_alternate_text' => ['nullable', 'string', 'max:255'],
+            'vereinsmitglied' => ['nullable', 'string', 'max:120'],
+            'treuepunkte' => ['nullable', 'string', 'max:120'],
+            'hex_background_color' => ['nullable', 'regex:/^#[A-Fa-f0-9]{6}$/'],
+        ]);
+
+        try {
+            $result = $walletPassService->updateObject($request->user(), $validated);
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        return response()->json($result);
     }
 
     public function updateReceivesNews(Request $request)
