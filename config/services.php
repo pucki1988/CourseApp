@@ -37,9 +37,10 @@ return [
 
     'google_wallet' => [
         'issuer_id' => env('GOOGLE_WALLET_ISSUER_ID'),
-        'class_id' => env('GOOGLE_WALLET_CLASS_ID'),
-        'class_suffix' => env('GOOGLE_WALLET_CLASS_SUFFIX', 'fitness_pass'),
-        'object_id' => env('GOOGLE_WALLET_OBJECT_ID'),
+        'fitness_class_id' => env('GOOGLE_WALLET_FITNESS_CLASS_ID'),
+        'fitness_class_suffix' => env('GOOGLE_WALLET_FITNESS_CLASS_SUFFIX', 'fitnesspass'),
+        'member_class_id' => env('GOOGLE_WALLET_MEMBER_CLASS_ID'),
+        'member_class_suffix' => env('GOOGLE_WALLET_MEMBER_CLASS_SUFFIX', 'memberpass'),
         'issuer_name' => env('GOOGLE_WALLET_ISSUER_NAME', env('APP_NAME', 'CourseApp')),
         'service_account_email' => env('GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL'),
         'private_key' => env('GOOGLE_WALLET_PRIVATE_KEY'),

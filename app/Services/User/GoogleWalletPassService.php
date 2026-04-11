@@ -53,7 +53,7 @@ class GoogleWalletPassService
                     'cardTitle' => [
                         'defaultValue' => [
                             'language' => 'de-DE',
-                            'value' => 'Fitnesspass',
+                            'value' => $resolved['pass_title'],
                         ],
                     ],
                     'header' => [
@@ -66,7 +66,7 @@ class GoogleWalletPassService
                         [
                             'id' => 'vereinsmitglied',
                             'header' => 'Vereinsmitglied',
-                            'body' => $user->is_member ? 'Ja' : 'Nein',
+                            'body' => $user->isMember() ? 'Ja' : 'Nein',
                         ],
                         [
                             'id' => 'treuepunkte',
@@ -79,7 +79,7 @@ class GoogleWalletPassService
                         'value' => $token,
                         'alternateText' => '',
                     ],
-                    'hexBackgroundColor' => '#ffc11e',
+                    'hexBackgroundColor' => $resolved['bg_hex_color'],
                 ]],
             ],
         ];
@@ -111,6 +111,8 @@ class GoogleWalletPassService
         return [
             'exists' => true,
             'object_id' => $resolved['object_id'],
+            'class_id' => $resolved['class_id'],
+            'pass_type' => $resolved['pass_type'],
             'state' => $response->json('state'),
         ];
     }
@@ -249,7 +251,7 @@ class GoogleWalletPassService
                 [
                     'id' => 'vereinsmitglied',
                     'header' => 'Vereinsmitglied',
-                    'body' => Arr::get($overrides, 'vereinsmitglied', $user->is_member ? 'Ja' : 'Nein'),
+                    'body' => Arr::get($overrides, 'vereinsmitglied', $user->isMember() ? 'Ja' : 'Nein'),
                 ],
                 [
                     'id' => 'treuepunkte',
@@ -275,7 +277,7 @@ class GoogleWalletPassService
         ];
 
         if (array_key_exists('hex_background_color', $overrides)) {
-            $payload['hexBackgroundColor'] = $overrides['hex_background_color'];
+            $payload['hexBackgroundColor'] = $resolved['bg_hex_color'] = Arr::get($overrides, 'hex_background_color', $resolved['bg_hex_color']);
         }
 
         $response = Http::withToken($accessToken)
@@ -414,9 +416,11 @@ class GoogleWalletPassService
         $config = config('services.google_wallet', []);
 
         $issuerId = (string) Arr::get($config, 'issuer_id', '');
-        $configuredClassId = (string) Arr::get($config, 'class_id', '');
-        $classSuffix = (string) Arr::get($config, 'class_suffix', 'fitnesspass');
-        $issuerName = (string) Arr::get($config, 'issuer_name', config('app.name', 'CourseApp'));
+        $configuredClassId = (string) Arr::get($config, 'fitness_class_id', '');
+        $configuredMemberClassId = (string) Arr::get($config, 'member_class_id', '');
+        $classSuffix = (string) Arr::get($config, 'fitness_class_suffix', 'fitnesspass');
+        $memberClassSuffix = (string) Arr::get($config, 'member_class_suffix', 'memberpass');
+        $issuerName = (string) Arr::get($config, 'issuer_name', config('app.name', 'DJK SG Schönbrunn'));
         $serviceAccountEmail = (string) Arr::get($config, 'service_account_email', '');
         $privateKey = (string) Arr::get($config, 'private_key', '');
         $origin = (string) Arr::get($config, 'origin', config('app.url'));
@@ -429,9 +433,10 @@ class GoogleWalletPassService
 
         return [
             'issuer_id' => $issuerId,
-            'class_id' => $configuredClassId !== ''
-                ? $configuredClassId
-                : $issuerId.'.'.$this->sanitizeIdentifier($classSuffix),
+            'fitness_class_id' => $configuredClassId,
+            'member_class_id' => $configuredMemberClassId,
+            'fitness_class_suffix' => $classSuffix,
+            'member_class_suffix' => $memberClassSuffix,
             'issuer_name' => $issuerName,
             'service_account_email' => $serviceAccountEmail,
             'private_key' => $normalizedKey,
@@ -442,9 +447,25 @@ class GoogleWalletPassService
     private function resolveConfig(User $user): array
     {
         $base = $this->resolveBaseConfig();
+        $passType = $user->isMember() ? 'memberpass' : 'fitnesspass';
+        $passTitle = $user->isMember() ? 'Mitgliederpass' : 'Fitnesspass';
+        $hexColor = $user->isMember() ? '#ffc11e' : '#333';
+
+
+        $classId = $user->isMember()
+            ? ($base['member_class_id'] !== ''
+                ? $base['member_class_id']
+                : $base['issuer_id'].'.'.$this->sanitizeIdentifier($base['member_class_suffix']))
+            : ($base['fitness_class_id'] !== ''
+                ? $base['fitness_class_id']
+                : $base['issuer_id'].'.'.$this->sanitizeIdentifier($base['fitness_class_suffix']));
 
         return array_merge($base, [
-            'object_id' => $base['issuer_id'].'.user_'.$user->id.'_fitnesspass',
+            'class_id' => $classId,
+            'object_id' => $base['issuer_id'].'.user_'.$user->id.'_'.$passType,
+            'pass_type' => $passType,
+            'pass_title' => $passTitle,
+            'bg_hex_color' => $hexColor,
         ]);
     }
 

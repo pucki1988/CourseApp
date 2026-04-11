@@ -23,7 +23,7 @@ class UserController extends Controller
                 'points_to_eur' => $request->user()->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
             ],
             'wallet' => [
-                'fitness_pass' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
+                'pass' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
             ]
         ]);
     }
@@ -37,7 +37,7 @@ class UserController extends Controller
         ]);
     }
 
-    private function googleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
+    public function googleWalletPass(Request $request, GoogleWalletPassService $walletPassService)
     {
         try {
             $status = $walletPassService->getObjectStatus($request->user());
@@ -47,11 +47,11 @@ class UserController extends Controller
                     'has_pass' => true,
                     'save_link' => null,
                     'object_id' => $status['object_id'],
+                    'class_id' => $status['class_id'] ?? null,
+                    'pass_type' => $status['pass_type'] ?? null,
                     'state' => $status['state'] ?? null,
                 ];
             }
-
-            $saveLink = $walletPassService->generateSaveLink($request->user());
         } catch (RuntimeException $exception) {
             return [
                 'message' => $exception->getMessage(),
@@ -62,6 +62,8 @@ class UserController extends Controller
             'has_pass' => false,
             'save_link' => $walletPassService->generateSaveLink($request->user()),
             'object_id' => $status['object_id'] ?? null,
+            'class_id' => $status['class_id'] ?? null,
+            'pass_type' => $request->user()->isMember() ? 'memberpass' : 'fitnesspass',
         ];
     }
 
