@@ -23,7 +23,7 @@ class UserController extends Controller
                 'points_to_eur' => $request->user()->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
             ],
             'wallet' => [
-                'pass' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
+                'google' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
             ]
         ]);
     }
