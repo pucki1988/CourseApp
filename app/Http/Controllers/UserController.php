@@ -46,7 +46,7 @@ class UserController extends Controller
             if ($status['exists']) {
                 return [
                     'has_pass' => true,
-                    'save_link' => null,
+                    'save_link' => 'https://pay.google.com/gp/v/object/'.rawurlencode($status['object_id']),
                     'object_id' => $status['object_id'],
                     'class_id' => $status['class_id'] ?? null,
                     'pass_type' => $status['pass_type'] ?? null,
