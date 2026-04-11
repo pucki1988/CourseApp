@@ -12,6 +12,7 @@ class UserController extends Controller
     {
         return response()->json([
             'user' => $request->user(),
+            'is_member' => $request->user()->isMember(),
             'loyalty' => [ 
                 'balance' => $request->user()->loyaltyAccount?->balance() ?? 0,
                 'sport' => $request->user()->loyaltyAccount?->balanceByOrigin('sport') ?? 0,
