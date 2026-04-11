@@ -97,7 +97,7 @@ class GoogleWalletPassService
         $response = Http::withToken($accessToken)
             ->get('https://walletobjects.googleapis.com/walletobjects/v1/genericObject/'.rawurlencode($resolved['object_id']));
 
-        if ($response->status() === 404) {
+        if ($response->status() === 404 || !$response->json('hasUsers')) {
             return [
                 'exists' => false,
                 'object_id' => $resolved['object_id'],
