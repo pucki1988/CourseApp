@@ -4,12 +4,19 @@ namespace App\Services\Loyalty;
 
 use App\Models\Loyalty\LoyaltyPointTransaction;
 use App\Models\Loyalty\LoyaltyAccount;
-use App\Models\User;
+use App\Services\User\GoogleWalletPassService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class LoyaltyPointService
 {
+    public function __construct(
+        private GoogleWalletPassService $googleWalletPassService,
+    ) {
+    }
+
     public function earn(LoyaltyAccount $account, int $points, string $type ='earn', string $origin = 'sport', ?Model $source = null, ?string $description = null): LoyaltyPointTransaction
     {
         return $this->record($account, abs($points), $type, $origin, $source, $description);
@@ -46,7 +53,33 @@ class LoyaltyPointService
             #$lockedUser->save();
             $transaction->update(['balance_after' => $balance]);
 
+            $this->syncWalletLoyaltyPointsAfterCommit($lockedAccount, $origin);
+
             return $transaction;
+        });
+    }
+
+    private function syncWalletLoyaltyPointsAfterCommit(LoyaltyAccount $account, string $origin): void
+    {
+        if ($origin !== 'sport') {
+            return;
+        }
+
+        $user = $account->user;
+
+        if (!$user) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($user) {
+            try {
+                $this->googleWalletPassService->updateLoyaltyPoints($user);
+            } catch (Throwable $exception) {
+                Log::warning('Google Wallet Treuepunkte konnten nach Loyalty-Update nicht synchronisiert werden.', [
+                    'user_id' => $user->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
         });
     }
 }

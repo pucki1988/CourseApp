@@ -62,18 +62,7 @@ class GoogleWalletPassService
                             'value' => $user->name ?: $user->email,
                         ],
                     ],
-                    'textModulesData' => [
-                        [
-                            'id' => 'vereinsmitglied',
-                            'header' => 'Vereinsmitglied',
-                            'body' => $user->isMember() ? 'Ja' : 'Nein',
-                        ],
-                        [
-                            'id' => 'treuepunkte',
-                            'header' => 'Treuepunkte',
-                            'body' => $user->loyaltyAccount?->balanceByOrigin('sport') ?? 0,
-                        ],
-                    ],
+                    'textModulesData' => $this->buildTextModulesData($user),
                     'barcode' => [
                         'type' => 'QR_CODE',
                         'value' => $token,
@@ -247,18 +236,7 @@ class GoogleWalletPassService
             ],
             'subheader' => null,
             'messages' => null,
-            'textModulesData' => [
-                [
-                    'id' => 'vereinsmitglied',
-                    'header' => 'Vereinsmitglied',
-                    'body' => Arr::get($overrides, 'vereinsmitglied', $user->isMember() ? 'Ja' : 'Nein'),
-                ],
-                [
-                    'id' => 'treuepunkte',
-                    'header' => 'Treuepunkte',
-                    'body' => Arr::get($overrides, 'treuepunkte', $user->loyaltyAccount?->balanceByOrigin('sport') ?? 0),
-                ],
-            ],
+            'textModulesData' => $this->buildTextModulesData($user, $overrides),
             'barcode' => [
                         'type' => 'QR_CODE',
                         'value' => $token,
@@ -299,6 +277,40 @@ class GoogleWalletPassService
             'updated' => true,
             'object_id' => $resolved['object_id'],
             'state' => Arr::get($payload, 'state'),
+            'object' => $response->json(),
+        ];
+    }
+
+    public function updateLoyaltyPoints(User $user): array
+    {
+        $resolved = $this->resolveConfig($user);
+        $accessToken = $this->fetchGoogleAccessToken($resolved);
+        $loyaltyPoints = $this->currentSportLoyaltyPoints($user);
+
+        $response = Http::withToken($accessToken)
+            ->patch('https://walletobjects.googleapis.com/walletobjects/v1/genericObject/'.rawurlencode($resolved['object_id']), [
+                'textModulesData' => $this->buildTextModulesData($user, [
+                    'treuepunkte' => $loyaltyPoints,
+                ]),
+            ]);
+
+        if ($response->status() === 404) {
+            return [
+                'updated' => false,
+                'message' => 'Objekt nicht gefunden.',
+                'object_id' => $resolved['object_id'],
+                'treuepunkte' => $loyaltyPoints,
+            ];
+        }
+
+        if (!$response->successful()) {
+            throw new RuntimeException('Google Wallet Treuepunkte konnten nicht aktualisiert werden: '.$response->body());
+        }
+
+        return [
+            'updated' => true,
+            'object_id' => $resolved['object_id'],
+            'treuepunkte' => $loyaltyPoints,
             'object' => $response->json(),
         ];
     }
@@ -524,6 +536,27 @@ class GoogleWalletPassService
     private function base64UrlEncode(string $value): string
     {
         return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+    }
+
+    private function buildTextModulesData(User $user, array $overrides = []): array
+    {
+        return [
+            [
+                'id' => 'vereinsmitglied',
+                'header' => 'Vereinsmitglied',
+                'body' => (string) Arr::get($overrides, 'vereinsmitglied', $user->isMember() ? 'Ja' : 'Nein'),
+            ],
+            [
+                'id' => 'treuepunkte',
+                'header' => 'Treuepunkte',
+                'body' => (string) Arr::get($overrides, 'treuepunkte', $this->currentSportLoyaltyPoints($user)),
+            ],
+        ];
+    }
+
+    private function currentSportLoyaltyPoints(User $user): int
+    {
+        return (int) ($user->loyaltyAccount?->balanceByOrigin('sport') ?? 0);
     }
 
     private function sanitizeIdentifier(string $value): string
