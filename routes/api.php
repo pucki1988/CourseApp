@@ -19,7 +19,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
     Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
-    Route::get('/me/apple-wallet-pass', [UserController::class, 'appleWalletPass'])->name('api.me.apple-wallet-pass');
     /*Route::get('/me/google-wallet-pass/objects', [UserController::class, 'listGoogleWalletPassObjects']);
     Route::get('/me/google-wallet-pass/class', [UserController::class, 'getGoogleWalletClass']);
     Route::post('/me/google-wallet-pass', [UserController::class, 'updateGoogleWalletPass']);
@@ -31,6 +30,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+// Publicly accessible but signature-protected Apple Wallet pass download
+Route::get('/wallet/apple/{userId}', [UserController::class, 'appleWalletPassSigned'])
+    ->middleware('signed')
+    ->name('api.apple-wallet-pass');
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);

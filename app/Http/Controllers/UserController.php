@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\User\AppleWalletPassService;
 use App\Services\User\GoogleWalletPassService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
 class UserController extends Controller
@@ -26,7 +28,13 @@ class UserController extends Controller
             ],
             'wallet' => [
                 'google' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
-                'apple' => ['download_url' => route('api.me.apple-wallet-pass')],
+                'apple' => [
+                    'download_url' => URL::temporarySignedRoute(
+                        'api.apple-wallet-pass',
+                        now()->addMinutes(10),
+                        ['userId' => $request->user()->id]
+                    ),
+                ],
             ]
         ]);
     }
@@ -70,17 +78,23 @@ class UserController extends Controller
         ];
     }
 
-    public function appleWalletPass(Request $request, AppleWalletPassService $appleWalletPassService)
+    public function appleWalletPassSigned(Request $request, int $userId, AppleWalletPassService $appleWalletPassService)
     {
+        $user = User::find($userId);
+
+        if (!$user) {
+            return response()->json(['message' => 'Benutzer nicht gefunden.'], 404);
+        }
+
         try {
-            $pkpassContent = $appleWalletPassService->generate($request->user());
+            $pkpassContent = $appleWalletPassService->generate($user);
         } catch (RuntimeException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
             ], 422);
         }
 
-        $filename = $request->user()->isMember() ? 'mitgliederpass.pkpass' : 'fitnesspass.pkpass';
+        $filename = $user->isMember() ? 'mitgliederpass.pkpass' : 'fitnesspass.pkpass';
 
         return response($pkpassContent, 200, [
             'Content-Type' => 'application/vnd.apple.pkpass',
