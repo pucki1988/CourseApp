@@ -19,6 +19,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
     Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
+    Route::get('/me/apple-wallet-pass', [UserController::class, 'appleWalletPass'])->name('api.me.apple-wallet-pass');
     /*Route::get('/me/google-wallet-pass/objects', [UserController::class, 'listGoogleWalletPassObjects']);
     Route::get('/me/google-wallet-pass/class', [UserController::class, 'getGoogleWalletClass']);
     Route::post('/me/google-wallet-pass', [UserController::class, 'updateGoogleWalletPass']);

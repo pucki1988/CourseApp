@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\User\AppleWalletPassService;
 use App\Services\User\GoogleWalletPassService;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -25,6 +26,7 @@ class UserController extends Controller
             ],
             'wallet' => [
                 'google' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
+                'apple' => ['download_url' => route('api.me.apple-wallet-pass')],
             ]
         ]);
     }
@@ -66,6 +68,24 @@ class UserController extends Controller
             'class_id' => $status['class_id'] ?? null,
             'pass_type' => $request->user()->isMember() ? 'memberpass' : 'fitnesspass',
         ];
+    }
+
+    public function appleWalletPass(Request $request, AppleWalletPassService $appleWalletPassService)
+    {
+        try {
+            $pkpassContent = $appleWalletPassService->generate($request->user());
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+
+        $filename = $request->user()->isMember() ? 'mitgliederpass.pkpass' : 'fitnesspass.pkpass';
+
+        return response($pkpassContent, 200, [
+            'Content-Type' => 'application/vnd.apple.pkpass',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     public function deleteGoogleWalletPass(Request $request, GoogleWalletPassService $walletPassService)

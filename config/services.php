@@ -47,4 +47,16 @@ return [
         'origin' => env('GOOGLE_WALLET_ORIGIN', env('APP_URL')),
     ],
 
+    'apple_wallet' => [
+        // Pass Type Identifier from Apple Developer Portal (e.g. pass.de.djk-sg-schoenbrunn.fitness)
+        'pass_type_identifier' => env('APPLE_WALLET_PASS_TYPE_IDENTIFIER'),
+        // 10-character Team ID from Apple Developer Portal
+        'team_identifier' => env('APPLE_WALLET_TEAM_IDENTIFIER'),
+        'organization_name' => env('APPLE_WALLET_ORGANIZATION_NAME', env('APP_NAME', 'CourseApp')),
+        // Either provide a path to the .p12 certificate file OR its base64-encoded content
+        'certificate_path' => env('APPLE_WALLET_CERTIFICATE_PATH'),
+        'certificate_content' => env('APPLE_WALLET_CERTIFICATE_CONTENT'), // base64-encoded .p12
+        'certificate_password' => env('APPLE_WALLET_CERTIFICATE_PASSWORD', ''),
+    ],
+
 ];
