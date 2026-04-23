@@ -315,6 +315,40 @@ class GoogleWalletPassService
         ];
     }
 
+    public function updateQrToken(User $user): array
+    {
+        $resolved = $this->resolveConfig($user);
+        $accessToken = $this->fetchGoogleAccessToken($resolved);
+        $token = $user->checkinToken?->token;
+
+        $response = Http::withToken($accessToken)
+            ->patch('https://walletobjects.googleapis.com/walletobjects/v1/genericObject/'.rawurlencode($resolved['object_id']), [
+                'barcode' => [
+                        'type' => 'QR_CODE',
+                        'value' => $token,
+                        'alternateText' => '',
+                ],
+            ]);
+
+        if ($response->status() === 404) {
+            return [
+                'updated' => false,
+                'message' => 'Objekt nicht gefunden.',
+                'object_id' => $resolved['object_id'],
+            ];
+        }
+
+        if (!$response->successful()) {
+            throw new RuntimeException('Google Wallet QR-Code konnte nicht aktualisiert werden: '.$response->body());
+        }
+
+        return [
+            'updated' => true,
+            'object_id' => $resolved['object_id'],
+            'object' => $response->json(),
+        ];
+    }
+
     private function buildClassTemplateInfo(): array
     {
         return [

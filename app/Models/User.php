@@ -18,6 +18,9 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Services\User\GoogleWalletPassService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class User extends Authenticatable
 {
@@ -132,7 +135,30 @@ class User extends Authenticatable
             $newToken = $this->checkinTokens()->create();
 
             DB::afterCommit(function () {
-                app(AppleWalletPassService::class)->markPassUpdatedForUser($this->fresh());
+
+                    $freshUser = $this->fresh();
+
+                    try {
+                        app(AppleWalletPassService::class)->markPassUpdatedForUser($freshUser);
+                    } catch (Throwable $exception) {
+                        Log::warning('Apple Wallet Pass konnte nach Token-Rotation nicht als aktualisiert markiert werden.', [
+                            'user_id' => $this->id,
+                            'message' => $exception->getMessage(),
+                        ]);
+                    }
+
+                    try {
+                        app(GoogleWalletPassService::class)->updateQrToken($freshUser);
+                    } catch (Throwable $exception) {
+                        Log::warning('Google Wallet Pass konnte nach Token-Rotation nicht aktualisiert werden.', [
+                            'user_id' => $this->id,
+                            'message' => $exception->getMessage(),
+                        ]);
+                    }
+
+
+
+                //app(AppleWalletPassService::class)->markPassUpdatedForUser($this->fresh());
             });
 
             return $newToken;

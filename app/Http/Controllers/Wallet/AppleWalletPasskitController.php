@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\User\AppleWalletPassService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
 
 class AppleWalletPasskitController extends Controller
 {
@@ -21,6 +22,14 @@ class AppleWalletPasskitController extends Controller
         string $passTypeIdentifier,
         string $serialNumber
     ) {
+
+        Log::info('Wallet Register Device', [
+            'device' => $deviceLibraryIdentifier,
+            'pass' => $passTypeIdentifier,
+            'serial' => $serialNumber,
+            'pushToken' => $request->input('pushToken'),
+        ]);
+        
         if (!$this->isAuthorized($request, $serialNumber)) {
             return response()->json([], Response::HTTP_UNAUTHORIZED);
         }
