@@ -19,7 +19,7 @@ use Flux\Flux;
 
 new class extends Component {
 
-    public $slots;
+    public $bookSlots = null;
     public bool $isTrainerView = false;
     public $search = '';
     public $coachId = null;
@@ -113,7 +113,7 @@ new class extends Component {
             $filters['coach_user_id'] = Auth::id();
         }
 
-        $this->slots = $service->listAllBookedSlotsBackend($filters);
+        $this->bookSlots = $service->listAllBookedSlotsBackend($filters);
     }
 
     public function hideCallout()
@@ -301,7 +301,7 @@ new class extends Component {
         @endif
         <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="grid auto-rows-min gap-4 xl:grid-cols-3">
-            @forelse($slots ?? [] as $slot)
+            @forelse($bookSlots ?? [] as $slot)
             <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
 
                 <div class="flex">

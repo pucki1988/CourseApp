@@ -4,6 +4,7 @@ namespace App\Services\Loyalty;
 
 use App\Models\Loyalty\LoyaltyPointTransaction;
 use App\Models\Loyalty\LoyaltyAccount;
+use App\Services\User\AppleWalletPassService;
 use App\Services\User\GoogleWalletPassService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ class LoyaltyPointService
 {
     public function __construct(
         private GoogleWalletPassService $googleWalletPassService,
+        private AppleWalletPassService $appleWalletPassService,
     ) {
     }
 
@@ -76,6 +78,15 @@ class LoyaltyPointService
                 $this->googleWalletPassService->updateLoyaltyPoints($user);
             } catch (Throwable $exception) {
                 Log::warning('Google Wallet Treuepunkte konnten nach Loyalty-Update nicht synchronisiert werden.', [
+                    'user_id' => $user->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+
+            try {
+                $this->appleWalletPassService->markPassUpdatedForUser($user);
+            } catch (Throwable $exception) {
+                Log::warning('Apple Wallet Pass konnte nach Loyalty-Update nicht als aktualisiert markiert werden.', [
                     'user_id' => $user->id,
                     'message' => $exception->getMessage(),
                 ]);

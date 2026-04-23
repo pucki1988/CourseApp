@@ -13,6 +13,7 @@ use App\Http\Controllers\Webhook\MollieWebhookController;
 use App\Http\Controllers\News\NewsController;
 
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Wallet\AppleWalletPasskitController;
 use Illuminate\Support\Facades\Password;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -31,10 +32,37 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-// Publicly accessible but signature-protected Apple Wallet pass download
-Route::get('/wallet/apple/{userId}', [UserController::class, 'appleWalletPassSigned'])
+
+Route::prefix('wallet')->group(function () {
+    Route::get('/apple/pass/{userId}', [UserController::class, 'appleWalletPassSigned'])
     ->middleware('signed')
     ->name('api.apple-wallet-pass');
+
+    //Apple API Endpoints
+    Route::prefix('apple/v1')->group(function () {
+        Route::post(
+            '/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}',
+            [AppleWalletPasskitController::class, 'registerDevice']
+        );
+
+        Route::delete(
+            '/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}/{serialNumber}',
+            [AppleWalletPasskitController::class, 'unregisterDevice']
+        );
+
+        Route::get(
+            '/devices/{deviceLibraryIdentifier}/registrations/{passTypeIdentifier}',
+            [AppleWalletPasskitController::class, 'listUpdatedSerialNumbers']
+        );
+
+        Route::get(
+            '/passes/{passTypeIdentifier}/{serialNumber}',
+            [AppleWalletPasskitController::class, 'latestPass']
+        );
+    });
+
+    
+});
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);

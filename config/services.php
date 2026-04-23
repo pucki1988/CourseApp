@@ -57,6 +57,8 @@ return [
         'certificate_path' => env('APPLE_WALLET_CERTIFICATE_PATH'),
         'certificate_content' => env('APPLE_WALLET_CERTIFICATE_CONTENT'), // base64-encoded .p12
         'certificate_password' => env('APPLE_WALLET_CERTIFICATE_PASSWORD', ''),
+        'web_service_url' => env('APPLE_WALLET_WEB_SERVICE_URL', rtrim(env('APP_URL'), '/').'/api/wallet/apple'),
+        'auth_token_salt' => env('APPLE_WALLET_AUTH_TOKEN_SALT'),
     ],
 
 ];

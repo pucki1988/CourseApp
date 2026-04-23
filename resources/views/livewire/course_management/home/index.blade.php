@@ -15,7 +15,7 @@ use App\Models\User;
 
 new class extends Component {
 
-    public $slots;
+    public $courseSlots;
     public $search = '';
     public $coachId = null;
     public $perPage = 10;
@@ -46,7 +46,7 @@ new class extends Component {
 
     public function loadSlots(CourseBookingSlotService $service)
     {
-        $this->slots = $service->listBookedSlots();
+        $this->courseSlots = $service->listBookedSlots();
     }
 
     
@@ -61,7 +61,7 @@ new class extends Component {
         
         <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="grid auto-rows-min gap-4 xl:grid-cols-3">
-            @forelse($slots ?? [] as $slot)
+            @forelse($courseSlots ?? [] as $slot)
             <div class="relative  rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 flex flex-col justify-between">
 
                 <div class="flex">

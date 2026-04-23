@@ -7,6 +7,7 @@ use App\Models\CheckinToken;
 use App\Models\Coach\Coach;
 use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\Member\Member;
+use App\Services\User\AppleWalletPassService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -128,7 +129,13 @@ class User extends Authenticatable
                 $activeTokens->update(['revoked_at' => now()]);
             }
 
-            return $this->checkinTokens()->create();
+            $newToken = $this->checkinTokens()->create();
+
+            DB::afterCommit(function () {
+                app(AppleWalletPassService::class)->markPassUpdatedForUser($this->fresh());
+            });
+
+            return $newToken;
         });
     }
     
