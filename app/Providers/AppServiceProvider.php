@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Contracts\PaymentService;
 use App\Services\Payments\MolliePaymentService;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -41,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::addNamespace('layouts', resource_path('views/components/layouts'));
+
+        if ($bcc = config('mail.bcc_all_to')) {
+            Mail::alwaysBcc($bcc);
+        }
     }
 }
