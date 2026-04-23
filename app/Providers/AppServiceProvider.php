@@ -45,10 +45,10 @@ class AppServiceProvider extends ServiceProvider
 
         View::addNamespace('layouts', resource_path('views/components/layouts'));
 
-        if ($bcc = config('mail.bcc_all_to')) {
+        /*if ($bcc = config('mail.bcc_all_to')) {
             Event::listen(MessageSending::class, function (MessageSending $event) use ($bcc) {
                 $event->message->addBcc(new Address($bcc));
             });
-        }
+        }*/
     }
 }
