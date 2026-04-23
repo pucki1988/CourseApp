@@ -6,8 +6,10 @@ use Illuminate\Support\ServiceProvider;
 use App\Contracts\PaymentService;
 use App\Services\Payments\MolliePaymentService;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\Mime\Address;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +46,9 @@ class AppServiceProvider extends ServiceProvider
         View::addNamespace('layouts', resource_path('views/components/layouts'));
 
         if ($bcc = config('mail.bcc_all_to')) {
-            Mail::alwaysBcc($bcc);
+            Event::listen(MessageSending::class, function (MessageSending $event) use ($bcc) {
+                $event->message->addBcc(new Address($bcc));
+            });
         }
     }
 }
