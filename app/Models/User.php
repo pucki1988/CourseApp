@@ -17,6 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 use App\Services\User\GoogleWalletPassService;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,7 @@ use Throwable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasApiTokens;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasApiTokens, HasPushSubscriptions;
     use HasRoles;
 
 

@@ -9,8 +9,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
         if (Schema::hasColumn('membership_payments', 'status')) {
-            DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'paid', 'collected', 'failed', 'cancelled') NOT NULL DEFAULT 'pending'");
+            if (! $isSqlite) {
+                DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'paid', 'collected', 'failed', 'cancelled') NOT NULL DEFAULT 'pending'");
+            }
 
             DB::table('membership_payments')
                 ->where('status', 'paid')
@@ -20,16 +24,18 @@ return new class extends Migration
                 ->whereNotIn('status', ['pending', 'collected', 'failed', 'cancelled'])
                 ->update(['status' => 'pending']);
 
-            DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'collected', 'failed', 'cancelled') NOT NULL DEFAULT 'pending'");
+            if (! $isSqlite) {
+                DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'collected', 'failed', 'cancelled') NOT NULL DEFAULT 'pending'");
+            }
         }
 
-        if (Schema::hasColumn('membership_payments', 'bank_account_id')) {
+        if (! $isSqlite && Schema::hasColumn('membership_payments', 'bank_account_id')) {
             Schema::table('membership_payments', function (Blueprint $table) {
                 $table->dropConstrainedForeignId('bank_account_id');
             });
         }
 
-        if (Schema::hasColumn('membership_payments', 'payment_run_id')) {
+        if (! $isSqlite && Schema::hasColumn('membership_payments', 'payment_run_id')) {
             Schema::table('membership_payments', function (Blueprint $table) {
                 $table->dropConstrainedForeignId('payment_run_id');
             });
@@ -52,7 +58,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('membership_payments', 'status')) {
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
+        if (Schema::hasColumn('membership_payments', 'status') && ! $isSqlite) {
             DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'paid', 'collected', 'failed', 'cancelled') NOT NULL DEFAULT 'pending'");
         }
 
@@ -95,7 +103,7 @@ return new class extends Migration
             ->where('status', 'failed')
             ->update(['status' => 'pending']);
 
-        if (Schema::hasColumn('membership_payments', 'status')) {
+        if (Schema::hasColumn('membership_payments', 'status') && ! $isSqlite) {
             DB::statement("ALTER TABLE membership_payments MODIFY status ENUM('pending', 'paid', 'cancelled') NOT NULL DEFAULT 'pending'");
         }
     }

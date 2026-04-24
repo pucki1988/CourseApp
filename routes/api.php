@@ -13,13 +13,19 @@ use App\Http\Controllers\Webhook\MollieWebhookController;
 use App\Http\Controllers\News\NewsController;
 
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Wallet\AppleWalletPasskitController;
 use Illuminate\Support\Facades\Password;
+
+Route::get('/push/public-key', [PushSubscriptionController::class, 'publicKey']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
     Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
+    Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);
+    Route::post('/push/subscriptions/unsubscribe', [PushSubscriptionController::class, 'destroy']);
+    Route::post('/push/subscriptions/test', [PushSubscriptionController::class, 'sendTest']);
     /*Route::get('/me/google-wallet-pass/objects', [UserController::class, 'listGoogleWalletPassObjects']);
     Route::get('/me/google-wallet-pass/class', [UserController::class, 'getGoogleWalletClass']);
     Route::post('/me/google-wallet-pass', [UserController::class, 'updateGoogleWalletPass']);

@@ -12,26 +12,45 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Check if column is already renamed
-        $columns = DB::select('SHOW COLUMNS FROM membership_types WHERE Field = ?', ['billing_interval']);
-        $columnName = !empty($columns) ? 'billing_interval' : 'interval';
-        
-        // Schritt 1: ENUM temporär zu VARCHAR ändern
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
+        // Determine current column name via platform-agnostic helper
+        $hasNewName = Schema::hasColumn('membership_types', 'billing_interval');
+        $columnName = $hasNewName ? 'billing_interval' : 'interval';
+
+        if ($isSqlite) {
+            // SQLite: rename column if needed, then update values.
+            // ENUMs and MODIFY COLUMN are not supported; the column stays VARCHAR.
+            if ($columnName === 'interval') {
+                Schema::table('membership_types', function (Blueprint $table) {
+                    $table->renameColumn('interval', 'billing_interval');
+                });
+            }
+
+            DB::table('membership_types')
+                ->where('billing_interval', 'yearly')
+                ->update(['billing_interval' => 'annual']);
+
+            return;
+        }
+
+        // MySQL / MariaDB path
+        // Step 1: Relax ENUM to VARCHAR so we can store the new values
         DB::statement("ALTER TABLE membership_types MODIFY COLUMN `{$columnName}` VARCHAR(50) NULL");
-        
-        // Schritt 2: yearly → annual konvertieren
+
+        // Step 2: Map old value
         DB::table('membership_types')
             ->where($columnName, 'yearly')
             ->update([$columnName => 'annual']);
-        
-        // Schritt 3: Umbenennen interval → billing_interval (falls noch nicht erfolgt)
+
+        // Step 3: Rename interval → billing_interval if needed
         if ($columnName === 'interval') {
             Schema::table('membership_types', function (Blueprint $table) {
                 $table->renameColumn('interval', 'billing_interval');
             });
         }
-        
-        // Schritt 4: Zurück zu ENUM mit erweiterten Werten
+
+        // Step 4: Restore ENUM with extended set
         DB::statement("ALTER TABLE membership_types MODIFY COLUMN billing_interval ENUM('monthly', 'quarterly', 'semi_annual', 'annual') DEFAULT 'monthly'");
     }
 
@@ -40,20 +59,31 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Schritt 1: ENUM zu VARCHAR
+        $isSqlite = DB::getDriverName() === 'sqlite';
+
+        if ($isSqlite) {
+            DB::table('membership_types')
+                ->where('billing_interval', 'annual')
+                ->update(['billing_interval' => 'yearly']);
+
+            Schema::table('membership_types', function (Blueprint $table) {
+                $table->renameColumn('billing_interval', 'interval');
+            });
+
+            return;
+        }
+
+        // MySQL / MariaDB path
         DB::statement("ALTER TABLE membership_types MODIFY COLUMN billing_interval VARCHAR(50) NULL");
-        
-        // Schritt 2: annual → yearly zurück
+
         DB::table('membership_types')
             ->where('billing_interval', 'annual')
             ->update(['billing_interval' => 'yearly']);
-        
-        // Schritt 3: Umbenennen zurück
+
         Schema::table('membership_types', function (Blueprint $table) {
             $table->renameColumn('billing_interval', 'interval');
         });
-        
-        // Schritt 4: Zurück zum alten ENUM
+
         DB::statement("ALTER TABLE membership_types MODIFY COLUMN `interval` ENUM('monthly', 'yearly') NULL");
     }
 };
