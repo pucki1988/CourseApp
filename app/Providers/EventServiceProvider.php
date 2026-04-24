@@ -10,6 +10,7 @@ use App\Listeners\SendCourseCanceledMail;
 use App\Listeners\SendCourseBookingSlotCanceledByUserMail;
 use App\Events\CourseBookingSlotCanceledByUser;
 use App\Listeners\SendCourseBookingCreateMail;
+use App\Listeners\SendCourseBookingCreateWebPush;
 use App\Events\CourseBookingCreate;
 use App\Listeners\SendWelcomeMail;
 use App\Listeners\SendManagerNewUserMail;
@@ -41,7 +42,8 @@ class EventServiceProvider extends ServiceProvider
             SendCourseSlotRescheduleMail::class,
         ],
         CourseBookingCreate::class => [
-            SendCourseBookingCreateMail::class
+            SendCourseBookingCreateMail::class,
+            SendCourseBookingCreateWebPush::class,
         ],
         UserRegistered::class => [
             SendWelcomeMail::class,
