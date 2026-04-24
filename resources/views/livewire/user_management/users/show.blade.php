@@ -5,6 +5,7 @@ use Livewire\Volt\Component;
 use App\Models\User;
 use App\Models\Member\Member;
 use App\Models\CheckinToken;
+use App\Notifications\TestWebPushNotification;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -106,6 +107,17 @@ new class extends Component {
         $this->user->issueCheckinToken(revokePrevious: true);
         $this->user->refresh();
         Flux::toast('Neuer Check-in Token erstellt');
+    }
+
+    public function sendTestPush(): void
+    {
+        if ($this->user->pushSubscriptions()->doesntExist()) {
+            //Flux::toast('Keine aktiven Push-Abonnements beim Benutzer.');
+            return;
+        }
+
+        $this->user->notify(new TestWebPushNotification());
+        //Flux::toast('Test-Push wird zugestellt…');
     }
 
     public function openTransactions(): void
@@ -316,6 +328,19 @@ new class extends Component {
                     @endforeach
                 </div>
             </details>
+
+            <div class="mb-6">
+                <label class="font-semibold">Web Push</label>
+                @php $pushCount = $user->pushSubscriptions()->count(); @endphp
+                <div class="mt-1 flex items-center gap-3">
+                    @if($pushCount > 0)
+                        <flux:badge color="green" size="sm">{{ $pushCount }} aktives Abonnement{{ $pushCount > 1 ? 'e' : '' }}</flux:badge>
+                        <flux:button size="xs" icon="bell" wire:click="sendTestPush">Test-Push senden</flux:button>
+                    @else
+                        <flux:badge color="zinc" size="sm">Keine Abonnements</flux:badge>
+                    @endif
+                </div>
+            </div>
 
             <div class="flex gap-2">
                 <flux:button type="submit">Speichern</flux:button>
