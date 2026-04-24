@@ -17,6 +17,11 @@ return [
     'default' => env('MAIL_MAILER', 'log'),
 
     /*
+    | BCC all outgoing mails to this address (optional).
+    */
+    'bcc_all_to' => env('MAIL_BCC_ALL_TO'),
+
+    /*
     |--------------------------------------------------------------------------
     | Mailer Configurations
     |--------------------------------------------------------------------------

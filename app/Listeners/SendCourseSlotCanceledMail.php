@@ -24,7 +24,11 @@ class SendCourseSlotCanceledMail implements ShouldQueue
     public function handle(CourseSlotCanceled $event): void
     {
 
-       
+       \Log::info('CourseSlotCanceled fired', [
+            'slot_id' => $event->slot->id,
+            'reason' => $event->reason,
+        ]);
+
         // Alle gebuchten BookingSlots laden
         $event->slot->bookingSlots()
             ->with('booking.user','booking.course')
