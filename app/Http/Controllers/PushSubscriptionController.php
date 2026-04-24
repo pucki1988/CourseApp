@@ -40,6 +40,8 @@ class PushSubscriptionController extends Controller
             $validated['keys']['auth'],
             $validated['contentEncoding'] ?? 'aes128gcm',
         );
+        
+        $request->user()->notify(new TestWebPushNotification());
 
         return response()->json([], Response::HTTP_CREATED);
     }
