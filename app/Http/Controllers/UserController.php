@@ -13,18 +13,21 @@ class UserController extends Controller
 {
     public function me(Request $request)
     {
+        $user = $request->user();
+
         return response()->json([
-            'user' => $request->user(),
-            'is_member' => $request->user()->isMember(),
+            'user' => $user,
+            'is_member' => $user->isMember(),
+            'push_subscription_endpoints' => $user->pushSubscriptions()->pluck('endpoint')->values(),
             'loyalty' => [ 
-                'balance' => $request->user()->loyaltyAccount?->balance() ?? 0,
-                'sport' => $request->user()->loyaltyAccount?->balanceByOrigin('sport') ?? 0,
-                'event' => $request->user()->loyaltyAccount?->balanceByOrigin('course') ?? 0,
-                'ticket' => $request->user()->loyaltyAccount?->balanceByOrigin('ticket') ?? 0,
-                'work' => $request->user()->loyaltyAccount?->balanceByOrigin('work') ?? 0,
-                'other' => $request->user()->loyaltyAccount?->balanceByOrigin('other') ?? 0,
+                'balance' => $user->loyaltyAccount?->balance() ?? 0,
+                'sport' => $user->loyaltyAccount?->balanceByOrigin('sport') ?? 0,
+                'event' => $user->loyaltyAccount?->balanceByOrigin('course') ?? 0,
+                'ticket' => $user->loyaltyAccount?->balanceByOrigin('ticket') ?? 0,
+                'work' => $user->loyaltyAccount?->balanceByOrigin('work') ?? 0,
+                'other' => $user->loyaltyAccount?->balanceByOrigin('other') ?? 0,
                 'point_value_eur' => (float) config('loyalty.point_value_eur', 0.01),
-                'points_to_eur' => $request->user()->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
+                'points_to_eur' => $user->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
             ],
             'wallet' => [
                 'google' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
@@ -32,7 +35,7 @@ class UserController extends Controller
                     'download_url' => URL::temporarySignedRoute(
                         'api.apple-wallet-pass',
                         now()->addMinutes(10),
-                        ['userId' => $request->user()->id]
+                        ['userId' => $user->id]
                     ),
                 ],
             ]
