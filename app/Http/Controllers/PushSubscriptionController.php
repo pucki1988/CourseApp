@@ -40,6 +40,8 @@ class PushSubscriptionController extends Controller
             $validated['keys']['auth'],
             $validated['contentEncoding'] ?? 'aes128gcm',
         );
+
+        $request->user()->update(['receives_push' => true]);
         
         $request->user()->notify(new TestWebPushNotification());
 
@@ -53,6 +55,7 @@ class PushSubscriptionController extends Controller
         ]);
 
         $request->user()->deletePushSubscription($validated['endpoint']);
+        $request->user()->update(['receives_push' => false]);
 
         return response()->json([], Response::HTTP_NO_CONTENT);
     }
