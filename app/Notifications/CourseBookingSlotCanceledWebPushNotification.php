@@ -6,9 +6,9 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class CourseBookingCreatedWebPushNotification extends Notification
+class CourseBookingSlotCanceledWebPushNotification extends Notification
 {
-    public function __construct(private readonly string $bookingId)
+    public function __construct(private readonly string $slotDate)
     {
     }
 
@@ -20,9 +20,9 @@ class CourseBookingCreatedWebPushNotification extends Notification
     public function toWebPush(object $notifiable, self $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Buchung bestaetigt')
-            ->body('Neue Buchung #' . $this->bookingId . ' für einen Kurs.')
-            ->tag('course-booking-created')
+            ->title('Termin deines Kurses storniert')
+            ->body('Die Stornierung für den Termin "' . $this->slotDate . '" wurde erfolgreich durchgeführt.')
+            ->tag('course-booking-slot-canceled')
             ->icon('/modules/mod_courseapp/tmpl/pwa/icon-192.png');
     }
 }

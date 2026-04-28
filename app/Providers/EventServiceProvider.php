@@ -5,9 +5,11 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use App\Events\CourseSlotCanceled;
 use App\Listeners\SendCourseSlotCanceledMail;
+use App\Listeners\SendCourseSlotCanceledWebPush;
 use App\Events\CourseCanceled;
 use App\Listeners\SendCourseCanceledMail;
 use App\Listeners\SendCourseBookingSlotCanceledByUserMail;
+use App\Listeners\SendCourseBookingSlotCanceledWebPush;
 use App\Events\CourseBookingSlotCanceledByUser;
 use App\Listeners\SendCourseBookingCreateMail;
 use App\Listeners\SendCourseBookingCreateWebPush;
@@ -16,6 +18,7 @@ use App\Listeners\SendWelcomeMail;
 use App\Listeners\SendManagerNewUserMail;
 use App\Events\UserRegistered;
 use App\Listeners\SendCourseSlotRescheduleMail;
+use App\Listeners\SendCourseSlotRescheduleWebPush;
 use App\Events\CourseSlotRescheduled;
 use App\Listeners\SendMembershipConfirmedMail;
 use App\Events\MembershipConfirmed;
@@ -31,15 +34,18 @@ class EventServiceProvider extends ServiceProvider
         // Event => [ Listener(s) ]
         CourseSlotCanceled::class => [
             SendCourseSlotCanceledMail::class,
+            SendCourseSlotCanceledWebPush::class,
         ],
         CourseCanceled::class => [
             SendCourseCanceledMail::class,
         ],
         CourseBookingSlotCanceledByUser::class => [
-            SendCourseBookingSlotCanceledByUserMail::class
+            SendCourseBookingSlotCanceledByUserMail::class,
+            SendCourseBookingSlotCanceledWebPush::class,
         ],
         CourseSlotRescheduled::class => [
             SendCourseSlotRescheduleMail::class,
+            SendCourseSlotRescheduleWebPush::class,
         ],
         CourseBookingCreate::class => [
             SendCourseBookingCreateMail::class,
