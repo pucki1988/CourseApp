@@ -21,9 +21,10 @@ class SendCourseSlotCanceledWebPush implements ShouldQueue
                     return;
                 }
 
-                $courseTitle = (string) ($bookingSlot->booking?->course?->title ?? 'deinem Kurs');
+                $slotDate = (string) ($event->slot->date->format('d.m.Y') . ' | ' . ($event->slot->start_time?->format('H:i') ?? 'Unbekannt'));
+                #$courseTitle = (string) ($bookingSlot->booking?->course?->title ?? 'deinem Kurs');
 
-                $user->notify(new CourseSlotCanceledWebPushNotification($courseTitle, $event->reason));
+                $user->notify(new CourseSlotCanceledWebPushNotification($slotDate, $event->reason));
             });
     }
 }

@@ -9,7 +9,7 @@ use NotificationChannels\WebPush\WebPushMessage;
 class CourseSlotCanceledWebPushNotification extends Notification
 {
     public function __construct(
-        private readonly string $courseTitle,
+        private readonly string $slotDate,
         private readonly string $reason,
     ) {
     }
@@ -23,7 +23,7 @@ class CourseSlotCanceledWebPushNotification extends Notification
     {
         return (new WebPushMessage)
             ->title('Kurstermin abgesagt')
-            ->body('"' . $this->courseTitle . '" wurde abgesagt: ' . $this->reason)
+            ->body('Der Kurstermin am ' . $this->slotDate . ' wurde abgesagt: ' . $this->reason)
             ->tag('course-slot-canceled')
             ->icon('/modules/mod_courseapp/tmpl/pwa/icon-192.png');
     }

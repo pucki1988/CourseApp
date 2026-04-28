@@ -21,7 +21,7 @@ class CourseBookingSlotCanceledWebPushNotification extends Notification
     {
         return (new WebPushMessage)
             ->title('Termin deines Kurses storniert')
-            ->body('Die Stornierung für den Termin "' . $this->slotDate . '" wurde erfolgreich durchgeführt.')
+            ->body('Die Stornierung für den Termin ' . $this->slotDate . ' wurde erfolgreich durchgeführt.')
             ->tag('course-booking-slot-canceled')
             ->icon('/modules/mod_courseapp/tmpl/pwa/icon-192.png');
     }
