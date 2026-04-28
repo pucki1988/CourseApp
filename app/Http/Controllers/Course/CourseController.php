@@ -10,6 +10,21 @@ use App\Http\Resources\CourseResource;
 
 class CourseController extends Controller
 {
+    /**
+     * Liefert alle Kurse inkl. Slots, BookingSlots und Bookings.
+     */
+    public function indexWithAllRelations()
+    {
+        $courses = Course::query()
+            ->with([
+                'slots.bookingSlots.booking',
+                'bookings',
+            ])
+            ->get();
+
+        return response()->json($courses);
+    }
+
     public function store(Request $request, CourseService $service)
     {
         $this->authorize('create', Course::class);

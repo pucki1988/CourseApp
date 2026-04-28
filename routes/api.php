@@ -77,6 +77,8 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     // Kurse
+    Route::get('/courses/full-tree', [CourseController::class, 'indexWithAllRelations'])
+        ->middleware('role:admin|manager|course_manager');
     
     Route::get('/courses/{course}', [CourseController::class, 'show']);
     Route::post('/courses', [CourseController::class, 'store']);
