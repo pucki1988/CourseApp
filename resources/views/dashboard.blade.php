@@ -39,6 +39,10 @@ new class extends Component {
             
             
         </div>
+        <flux:heading size="xl" class="mb-1">Auswertung Sportkurse</flux:heading>
+        @if(auth()->user()->hasRole('manager') || auth()->user()->hasRole('admin') || auth()->user()->hasRole('course_manager'))
+         <iframe width="100%" height="600" src="https://datastudio.google.com/embed/reporting/9d5ec922-5245-4fe6-b73c-8e4adad89ecf/page/e6iwF" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+        @endif
         
     </div>
 </x-layouts.app>
