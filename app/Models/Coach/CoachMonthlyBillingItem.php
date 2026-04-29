@@ -4,6 +4,7 @@ namespace App\Models\Coach;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Course\CourseSlot;
 
 class CoachMonthlyBillingItem extends Model
 {

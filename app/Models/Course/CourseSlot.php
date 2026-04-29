@@ -3,6 +3,7 @@
 namespace App\Models\Course;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\Coach\CoachMonthlyBillingItem;
 
 class CourseSlot extends Model
 {
@@ -27,6 +28,11 @@ class CourseSlot extends Model
     {
         return $this->hasMany(CourseBookingSlot::class);
        
+    }
+
+    public function billingItem()
+    {
+        return $this->hasOne(CoachMonthlyBillingItem::class);
     }
 
     public function reminders()
