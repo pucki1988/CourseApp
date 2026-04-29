@@ -17,8 +17,12 @@ class CourseController extends Controller
     {
         $courses = Course::query()
             ->with([
-                'slots.bookingSlots.booking',
-                'bookings',
+                'slots.bookingSlots.booking' => fn ($query) => $query->withExists([
+                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('members'),
+                ]),
+                'bookings' => fn ($query) => $query->withExists([
+                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('members'),
+                ]),
             ])
             ->get();
 
