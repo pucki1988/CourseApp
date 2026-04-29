@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\Course\CourseSlot;
 
 
-class CourseSlotReminderMail extends Mailable
+class CourseSlotReminderMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

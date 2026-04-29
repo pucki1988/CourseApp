@@ -39,9 +39,15 @@ class SendCourseSlotReminder implements ShouldQueue
             return;
         }
 
-        Mail::to($emails)
+
+        foreach ($emails as $email) 
+        {
+            Mail::to($email)->queue(new CourseSlotReminderMail($this->slot));
+        }
+
+        /* Mail::to($emails)
             ->send(new CourseSlotReminderMail(
                 $this->slot,
-            ));
+            ));*/
     }
 }
