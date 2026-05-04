@@ -64,6 +64,15 @@ e Gruppen erstellen mit Mitgliederauswahl
 
 
 Trainer
-+ Abrechnungssystem für Trainer
-+ Trainer und Schatzmeister erhalten eine Mail mit der Abrechnung des letzen Monat 
-+ Zugang für Trainer 
+e Abrechnungssystem für Trainer
+e Trainer und Schatzmeister erhalten eine Mail mit der Abrechnung des letzen Monat 
+e Zugang für Trainer 
+
+Gutschein & Treuepunkte
++ Wallet System mit verschieden Wallets
++ Gutscheinkauf ohne Userkonto (zweckbezogen)
++ Account je User bzw. Card/Member
++ Gutscheine/Bonuspunkte für bestimmte Tätigkeiten (Kuchen backen etc.)
+
+
+
