@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Models\Accounting\Account;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -35,6 +36,13 @@ class CreateNewUser implements CreatesNewUsers
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
+
+        $centralAccount = Account::create([
+            'name' => $user->name,
+            'type' => 'person',
+        ]);
+        $user->account_id = $centralAccount->id;
+        $user->save();
 
         $user->assignRole('user');
 

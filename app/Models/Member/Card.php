@@ -2,6 +2,7 @@
 
 namespace App\Models\Member;
 
+use App\Models\Accounting\Account;
 use App\Models\CheckinToken;
 use App\Models\Loyalty\LoyaltyAccount;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Card extends Model
 {
-    protected $fillable = ['member_id', 'active', 'revoked_at', 'loyalty_account_id'];
+    protected $fillable = ['member_id', 'account_id', 'active', 'revoked_at', 'loyalty_account_id'];
 
     protected $casts = [
         'active' => 'boolean',
@@ -19,6 +20,12 @@ class Card extends Model
     protected static function booted(): void
     {
         static::created(function (self $card) {
+            $accountId = $card->member?->account_id;
+
+            if ($accountId && ! $card->account_id) {
+                $card->update(['account_id' => $accountId]);
+            }
+
             $card->issueCheckinToken();
         });
 
@@ -36,6 +43,11 @@ class Card extends Model
     public function member()
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function checkinToken(): MorphOne

@@ -1,6 +1,7 @@
 <?php
 namespace App\Services\User;
 
+use App\Models\Accounting\Account;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Events\UserRegistered;
@@ -22,6 +23,13 @@ class UserService
         ]);
 
         #$user->assignRole('user');
+
+        $centralAccount = Account::create([
+            'name' => $user->name,
+            'type' => 'person',
+        ]);
+        $user->account_id = $centralAccount->id;
+        $user->save();
 
 
         $account = LoyaltyAccount::create(['type' => 'user']);

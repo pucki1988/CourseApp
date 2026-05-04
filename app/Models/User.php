@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Accounting\Account;
 use App\Models\CheckinToken;
 use App\Models\Coach\Coach;
 use App\Models\Loyalty\LoyaltyAccount;
@@ -41,6 +42,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'account_id',
         'receives_news',
         'password',
         'member_requested',
@@ -106,6 +108,11 @@ class User extends Authenticatable
     public function loyaltyAccount()
     {
         return $this->belongsTo(LoyaltyAccount::class, 'loyalty_account_id');
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function checkinTokens(): MorphMany

@@ -4,6 +4,7 @@ namespace App\Models\Member;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Accounting\Account;
 use App\Models\User;
 use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\Member\MemberGroup;
@@ -15,6 +16,7 @@ class Member extends Model
 
     protected $fillable = [
         'user_id',
+        'account_id',
         'first_name',
         'last_name',
         'entry_date',
@@ -34,6 +36,22 @@ class Member extends Model
         'deceased_at' => 'date',
         'birth_date' => 'date'
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (self $member): void {
+            $accountId = $member->user?->account_id;
+
+            if ($accountId && ! $member->account_id) {
+                $member->update(['account_id' => $accountId]);
+            }
+        });
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
 
     public function user()
     {
