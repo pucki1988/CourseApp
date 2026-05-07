@@ -26,8 +26,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);
     Route::post('/push/subscriptions/unsubscribe', [PushSubscriptionController::class, 'destroy']);
     Route::post('/push/subscriptions/test', [PushSubscriptionController::class, 'sendTest']);
-    /*Route::get('/me/google-wallet-pass/objects', [UserController::class, 'listGoogleWalletPassObjects']);
-    Route::get('/me/google-wallet-pass/class', [UserController::class, 'getGoogleWalletClass']);
+    Route::get('/google-wallet-pass/objects', [UserController::class, 'listGoogleWalletPassObjects'])
+    ->middleware('role:admin');
+    /*Route::get('/me/google-wallet-pass/class', [UserController::class, 'getGoogleWalletClass']);
     Route::post('/me/google-wallet-pass', [UserController::class, 'updateGoogleWalletPass']);
     Route::post('/me/google-wallet-pass/deactivate', [UserController::class, 'deleteGoogleWalletPass']);
     Route::post('/me/google-wallet-pass/class/patch', [UserController::class, 'patchGoogleWalletClass']);
