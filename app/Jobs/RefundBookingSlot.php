@@ -7,6 +7,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use App\Exceptions\PaymentFailedException;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseBooking;
+use App\Models\Payment\Payment;
 use App\Contracts\PaymentService;
 use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingSlotService;
@@ -67,19 +68,68 @@ class RefundBookingSlot implements ShouldQueue
         
         try {
 
-            $discount=0;
-            if($booking->redeemed_points > 0 && !$booking->points_restored){
-                $discount= $booking->bookingSlots()->sum('price') - $booking->total_price;
+            $discount = 0;
+            if ($booking->redeemed_points > 0 && !$booking->points_restored) {
+                $discount = $booking->bookingSlots()->sum('price') - $booking->total_price;
+            }
+
+            // 1) Primär exakt die bezahlte Provider-Transaktion des Bookings
+            $localPayment = null;
+
+            if ($booking->payment_transaction_id) {
+                $localPayment = Payment::where('source_type', CourseBooking::class)
+                    ->where('source_id', $booking->id)
+                    ->where('provider', 'mollie')
+                    ->where('provider_payment_id', $booking->payment_transaction_id)
+                    ->latest()
+                    ->first();
+            }
+
+            // 2) Fallback: letzte als paid markierte Mollie-Zahlung
+            if (! $localPayment) {
+                $localPayment = Payment::where('source_type', CourseBooking::class)
+                    ->where('source_id', $booking->id)
+                    ->where('provider', 'mollie')
+                    ->where('status', 'paid')
+                    ->latest()
+                    ->first();
+            }
+
+            // 3) Letzter Fallback: irgendein lokaler Payment-Record
+            if (! $localPayment) {
+                $localPayment = Payment::where('source_type', CourseBooking::class)
+                    ->where('source_id', $booking->id)
+                    ->latest()
+                    ->first();
+            }
+
+            // Für alte Buchungen ohne Payment-Record: synthetischen Record aus Legacy-Feld erzeugen
+            if (!$localPayment && $booking->payment_transaction_id) {
+                $localPayment = $booking->payments()->create([
+                    'amount'               => $booking->total_price,
+                    'currency'             => 'EUR',
+                    'method'               => 'pending',
+                    'provider'             => 'mollie',
+                    'provider_payment_id'  => $booking->payment_transaction_id,
+                    'status'               => 'paid',
+                    'paid_at'              => $booking->updated_at,
+                ]);
+            }
+
+            if (!$localPayment) {
+                throw new PaymentFailedException(
+                    'Kein Payment-Record für Booking #'.$booking->id.' gefunden.'
+                );
             }
 
             $refund = $paymentService->refund(
-                $booking,
-                $bookingSlot->price - $discount // proportionaler Anteil der Punkte auf diesen Slot
+                $localPayment,
+                (float) ($bookingSlot->price - $discount)
             );
 
             $bookingRefundService->createRefund(
                 $booking,
-                $bookingSlot->price,
+                (float) $bookingSlot->price,
                 $refund
             );
 

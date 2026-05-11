@@ -11,6 +11,7 @@ use App\Services\Bookings\BookingPaymentService;
 use App\Contracts\PaymentService;
 use Illuminate\Http\Request;
 use App\Events\CourseBookingCreate;
+use App\Models\Payment\Payment;
 
 class CreateBookingAction
 {
@@ -25,7 +26,16 @@ class CreateBookingAction
 
             $newBooking = $this->courseBookingService->store($request, $course);
 
-            $data["payment"] = $this->paymentService->createPayment($newBooking);
+            // Lokalen Payment-Record anlegen, dann an Provider übergeben
+            $localPayment = $newBooking->payments()->create([
+                'amount'   => $newBooking->total_price,
+                'currency' => 'EUR',
+                'method'   => 'pending',
+                'provider' => 'mollie',
+                'status'   => 'draft',
+            ]);
+
+            $data["payment"] = $this->paymentService->createPayment($localPayment);
 
             $this->bookingPaymentService->setPaymentData($newBooking,$data["payment"]->transactionId,$data["payment"]->checkoutUrl);
             $this->courseBookingService->refreshBookingStatus($newBooking);

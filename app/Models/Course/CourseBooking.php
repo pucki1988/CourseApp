@@ -2,6 +2,7 @@
 namespace App\Models\Course;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use App\Models\Payment\Payment;
 
 class CourseBooking extends Model
 {
@@ -32,6 +33,16 @@ class CourseBooking extends Model
     public function refunds()
     {
         return $this->hasMany(CourseBookingRefund::class);
+    }
+
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'source');
+    }
+
+    public function latestPayment()
+    {
+        return $this->morphOne(Payment::class, 'source')->latestOfMany();
     }
 
     /* =========================

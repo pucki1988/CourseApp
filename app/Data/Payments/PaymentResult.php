@@ -8,6 +8,7 @@ class PaymentResult
         public string $provider,
         public string $transactionId,
         public ?string $checkoutUrl,
-        public string $status
+        public string $status,
+        public ?string $method = null,
     ) {}
 }

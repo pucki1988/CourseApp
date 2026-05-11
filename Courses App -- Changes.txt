@@ -74,5 +74,12 @@ Gutschein & Treuepunkte
 + Account je User bzw. Card/Member
 + Gutscheine/Bonuspunkte für bestimmte Tätigkeiten (Kuchen backen etc.)
 
+Payment
++ Erweiteren des bisherigen Modell und CourseBooking und ShopOrder integrieren
++ Webhook Prozess anpassen
++ Paid und Stornoprozess anpassen
 
+Shop
++ Gutscheine
+o Merchandise
 
