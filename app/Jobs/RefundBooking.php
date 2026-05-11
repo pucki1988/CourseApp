@@ -22,7 +22,7 @@ use App\Notifications\RefundFailedNotification;
 
 class RefundBooking implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Queueable;
 
     public int $bookingId;
 
@@ -117,7 +117,8 @@ class RefundBooking implements ShouldQueue
 
             $booking->bookingSlots()
                 ->where('status', 'canceled')
-                ->each(fn ($bookingSlot) =>
+                ->get()
+                ->each(fn (CourseBookingSlot $bookingSlot) =>
                     $bookingSlotService->refund($bookingSlot)
             );
            

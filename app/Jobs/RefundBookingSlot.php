@@ -23,7 +23,7 @@ use App\Notifications\RefundFailedNotification;
 
 class RefundBookingSlot implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Queueable;
 
     public int $bookingId;
     public int $bookingSlotId;
