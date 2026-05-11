@@ -45,6 +45,8 @@ class MolliePaymentService implements PaymentService
             $cancelUrl   = 'https://djk-sg-schoenbrunn.de/shop?paymentId='.$payment->id.'&success=false';
         }
 
+        $webhookUrl = config('services.mollie.webhook_url_dev') ?: route('webhooks.mollie');
+
         // Mollie-Zahlung erzeugen — metadata enthält nur die lokale payment_id
         $molliePayment = Mollie::api()->payments->create([
             'amount' => [
@@ -54,7 +56,7 @@ class MolliePaymentService implements PaymentService
             'description' => $description,
             'redirectUrl' => $redirectUrl,
             'cancelUrl'   => $cancelUrl,
-            'webhookUrl'  => route('webhooks.mollie'),
+            'webhookUrl'  => $webhookUrl,
             'metadata'    => $metadata,
         ]);
 

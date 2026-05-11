@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'mollie' => [
+        'webhook_url_dev' => env('MOLLIE_WEBHOOK_URL_DEV'),
+    ],
+
     'google_wallet' => [
         'issuer_id' => env('GOOGLE_WALLET_ISSUER_ID'),
         'fitness_class_id' => env('GOOGLE_WALLET_FITNESS_CLASS_ID'),
