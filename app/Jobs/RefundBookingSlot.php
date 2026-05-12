@@ -73,39 +73,37 @@ class RefundBookingSlot implements ShouldQueue
                 $discount = $booking->bookingSlots()->sum('price') - $booking->total_price;
             }
 
-            // 1) Primär exakt die bezahlte Provider-Transaktion des Bookings
-            $localPayment = null;
+            // 1) Neuer Weg: genau ein Payment pro Booking
+            $localPayment = $booking?->payment;
 
-            if ($booking->payment_transaction_id) {
+            // 2) Legacy-Fallback: exakt die gespeicherte Provider-Transaktion
+            if (! $localPayment && $booking->payment_transaction_id) {
                 $localPayment = Payment::where('source_type', CourseBooking::class)
                     ->where('source_id', $booking->id)
                     ->where('provider', 'mollie')
                     ->where('provider_payment_id', $booking->payment_transaction_id)
-                    ->latest()
                     ->first();
             }
 
-            // 2) Fallback: letzte als paid markierte Mollie-Zahlung
+            // 3) Fallback: letzte als paid markierte Mollie-Zahlung
             if (! $localPayment) {
                 $localPayment = Payment::where('source_type', CourseBooking::class)
                     ->where('source_id', $booking->id)
                     ->where('provider', 'mollie')
                     ->where('status', 'paid')
-                    ->latest()
                     ->first();
             }
 
-            // 3) Letzter Fallback: irgendein lokaler Payment-Record
+            // 4) Letzter Fallback: irgendein lokaler Payment-Record
             if (! $localPayment) {
                 $localPayment = Payment::where('source_type', CourseBooking::class)
                     ->where('source_id', $booking->id)
-                    ->latest()
                     ->first();
             }
 
             // Für alte Buchungen ohne Payment-Record: synthetischen Record aus Legacy-Feld erzeugen
             if (!$localPayment && $booking->payment_transaction_id) {
-                $localPayment = $booking->payments()->create([
+                $localPayment = $booking->payment()->create([
                     'amount'               => $booking->total_price,
                     'currency'             => 'EUR',
                     'method'               => 'pending',

@@ -25,13 +25,15 @@ class SendCourseBookingCreateMail  implements ShouldQueue
      */
     public function handle(CourseBookingCreate $event): void
     {
+        $booking = $event->booking->loadMissing('payment');
+        $paymentStatus = $booking->payment?->status ?? $booking->payment_status;
 
-        if (! in_array($event->booking->payment_status, ['paid', 'open', 'pending'], true)) {
+        if (! in_array($paymentStatus, ['paid', 'open', 'pending'], true)) {
             return;
         }
 
         // Alle gebuchten BookingSlots laden
-        $booking=$event->booking->load([
+        $booking=$booking->load([
             'bookingSlots.slot',
             'course',
             'user',

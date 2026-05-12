@@ -31,7 +31,7 @@ Ort: <strong>{{ $booking->course->location }}</strong>
 </div>
 <p class="price">Gesamtpreis: € {{ number_format($booking->total_price, 2, ',', '.') }}</p>
 <p><strong>Hinweis:</strong> Deine Buchung gilt erst nach Abschluss des Zahlungsvorgangs als vollständig.</p>
-@if($booking->payment_status === 'open')
+@if($booking->payment_status === 'open' ||  $booking->payment?->status === 'pending')
 <a href="{{ $booking->checkout_url }}" target="_blank">Zahlung abschließen</a>
 @endif
 <p>Wir freuen uns auf deine Teilnahme.</p>

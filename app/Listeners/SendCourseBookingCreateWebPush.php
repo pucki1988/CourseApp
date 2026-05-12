@@ -10,11 +10,13 @@ class SendCourseBookingCreateWebPush implements ShouldQueue
 {
     public function handle(CourseBookingCreate $event): void
     {
-        if (! in_array($event->booking->payment_status, ['paid', 'open', 'pending'], true)) {
+        $booking = $event->booking->loadMissing(['payment', 'course', 'user']);
+        $paymentStatus = $booking->payment?->status ?? $booking->payment_status;
+
+        if (! in_array($paymentStatus, ['paid', 'open', 'pending'], true)) {
             return;
         }
 
-        $booking = $event->booking->loadMissing(['course', 'user']);
         $user = $booking->user;
 
         if (! $user || $user->pushSubscriptions()->doesntExist()) {

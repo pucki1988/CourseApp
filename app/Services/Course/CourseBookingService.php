@@ -54,6 +54,7 @@ class CourseBookingService
               ->orderBy('start_time');
         },
         'bookingSlots',
+                'payment',
         ]);
     }
 
@@ -66,7 +67,11 @@ class CourseBookingService
     public function bookWholeCourse(Course $course)
     {
         $bookingCount = $course->bookings()
-            ->where('payment_status', 'paid')
+            ->where(function ($query) {
+                $query->whereHas('payment', function ($paymentQuery) {
+                    $paymentQuery->where('status', 'paid');
+                })->orWhere('payment_status', 'paid');
+            })
             ->count();
 
         if($bookingCount >= $course->capacity)
@@ -220,7 +225,7 @@ class CourseBookingService
      */
     public function listBookings(array $filters = [], int $perPage = 10)
     {
-        $query=CourseBooking::with(['course','bookingSlots.slot','user']);
+        $query=CourseBooking::with(['course','bookingSlots.slot','user','payment']);
 
         $user = auth()->user();
 
@@ -232,7 +237,11 @@ class CourseBookingService
             abort(403);
         }
 
-         $query->whereIn('payment_status',['pending','open','paid']);
+         $query->where(function ($statusQuery) {
+            $statusQuery->whereHas('payment', function ($paymentQuery) {
+                $paymentQuery->whereIn('status', ['pending', 'open', 'paid']);
+            })->orWhereIn('payment_status', ['pending', 'open', 'paid']);
+         });
 
         if (!empty($filters['status'])) {
             $query->where('status',$filters['status']);
@@ -258,11 +267,15 @@ class CourseBookingService
 
     public function listBookingsFrontend()
     {
-        $query=CourseBooking::with(['course','bookingSlots.slot','user']);
+        $query=CourseBooking::with(['course','bookingSlots.slot','user','payment']);
         
         $query->where('user_id', auth()->user()->id);
         
-        $query->whereIn('payment_status',['pending','open','paid']);
+        $query->where(function ($statusQuery) {
+            $statusQuery->whereHas('payment', function ($paymentQuery) {
+                $paymentQuery->whereIn('status', ['pending', 'open', 'paid']);
+            })->orWhereIn('payment_status', ['pending', 'open', 'paid']);
+        });
 
         $query->orderByDesc('created_at');
 
@@ -274,7 +287,16 @@ class CourseBookingService
      */
     public function refreshBookingStatus(CourseBooking $booking)
     {
-        if ($booking->payment_status !== 'paid') {
+        $booking->loadMissing('payment');
+
+        print_r($booking->payment);
+        
+        $paymentStatus = $booking->payment?->status ?? $booking->payment_status;
+        $paymentStatus = is_string($paymentStatus)
+            ? strtolower(trim($paymentStatus))
+            : null;
+
+        if (!in_array($paymentStatus, ['paid', 'partially_refunded', 'refund_processing', 'refunded'], true)) {
             $booking->update(['status' => 'pending']);
             return;
         }

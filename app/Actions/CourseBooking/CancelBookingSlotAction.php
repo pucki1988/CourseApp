@@ -14,8 +14,6 @@ use App\Jobs\RefundBookingSlot;
 class CancelBookingSlotAction
 {
     public function __construct(
-        private PaymentService $paymentService,
-        private BookingRefundService $bookingRefundService,
         private CourseBookingSlotService $bookingSlotService,
         private CourseBookingService $courseBookingService
     ) {}

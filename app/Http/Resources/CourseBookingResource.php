@@ -14,12 +14,16 @@ class CourseBookingResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $payment = $this->payment;
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
             'course_id' => $this->course_id,
             'total_price' => $this->total_price,
             'status' => $this->status,
+
+            // Legacy fields are kept for old refunds.
             'payment_status' => $this->payment_status,
             'payment_transaction_id' => $this->payment_transaction_id,
             'course_title' => $this->course_title,
@@ -27,8 +31,9 @@ class CourseBookingResource extends JsonResource
             'booking_type' => $this->booking_type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'checkout_url' => $this->checkout_url,
+            'checkout_url' => $payment?->checkout_url ?? $this->checkout_url,
             'is_cancelable' => $this->isCancelable(),
+            'payment' => $payment ? new \App\Http\Resources\PaymentResource($payment) : null,
 
             'course' => $this->course, // Optional: du kannst hier auch CourseResource machen
 

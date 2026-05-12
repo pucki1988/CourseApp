@@ -24,13 +24,6 @@ class BookingRefundService
     {
         
         $refund->update(['status' => 'completed','refunded_at' => now()]);
-
-        /*$booking = $refund->booking;
-        if ($booking->refundedTotal() >= $booking->total_price) {
-            $booking->update([
-                'payment_status' => 'refunded'
-            ]);
-        }*/
     }
 
     public function markFailed(CourseBookingRefund $refund): void

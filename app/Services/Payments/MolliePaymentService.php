@@ -125,6 +125,7 @@ class MolliePaymentService implements PaymentService
     public function handleWebhook(string $providerPaymentId): void
     {
         $molliePayment = Mollie::api()->payments->get($providerPaymentId);
+        $hasRefunds = $molliePayment->hasRefunds();
 
         // ----- Neuer Weg: lokale payment_id in Metadata -----
         $localPaymentId = $molliePayment->metadata->payment_id ?? null;
@@ -144,7 +145,7 @@ class MolliePaymentService implements PaymentService
 
             $source = $localPayment->source;
 
-            if ($molliePayment->hasRefunds() && $source instanceof CourseBooking) {
+            if ($hasRefunds && $source instanceof CourseBooking) {
                 foreach ($molliePayment->refunds() as $refund) {
                     $this->handleRefund($refund, $source);
                 }
@@ -153,7 +154,7 @@ class MolliePaymentService implements PaymentService
             }
 
             match (true) {
-                $molliePayment->isPaid()    => $this->handlePaid($localPayment),
+                $molliePayment->isPaid() && ! $hasRefunds => $this->handlePaid($localPayment),
                 $molliePayment->isFailed()  => $this->handleFailed($localPayment, 'failed'),
                 $molliePayment->isCanceled() => $this->handleFailed($localPayment, 'canceled'),
                 $molliePayment->isExpired() => $this->handleFailed($localPayment, 'expired'),
@@ -176,19 +177,13 @@ class MolliePaymentService implements PaymentService
             return;
         }
 
-        if ($molliePayment->hasRefunds()) {
+        if ($hasRefunds) {
             foreach ($molliePayment->refunds() as $refund) {
                 $this->handleRefund($refund, $booking);
             }
         }
 
-        match (true) {
-            $molliePayment->isPaid()    => $this->handlePaidLegacy($booking),
-            $molliePayment->isFailed(),
-            $molliePayment->isCanceled(),
-            $molliePayment->isExpired() => $this->handleFailedLegacy($booking),
-            default                     => null,
-        };
+        
     }
 
     // ---- Neuer Weg (über lokales Payment) -----------------------------------
@@ -204,7 +199,6 @@ class MolliePaymentService implements PaymentService
         $source = $payment->source;
 
         if ($source instanceof CourseBooking) {
-            $this->bookingPaymentService->markPaid($source);
             foreach ($source->bookingSlots as $bookingSlot) {
                 $bookingSlot->update(['status' => 'booked']);
             }
@@ -228,28 +222,25 @@ class MolliePaymentService implements PaymentService
             $attributes['canceled_at'] = now();
         }
 
-        $payment->update($attributes);
-
-        $source = $payment->source;
-
-        if ($source instanceof CourseBooking) {
-            $this->handleFailedLegacy($source);
-        }
+        $payment->update($attributes);               
     }
 
     private function syncRefundState(Payment $payment, $molliePayment): void
     {
-        $hasRefunded = false;
-        $hasProcessing = false;
+        $totalAmount = (float) $payment->amount;
+        $refundedAmount = 0.0;
+        $processingAmount = 0.0;
         $hasFailed = false;
 
         foreach ($molliePayment->refunds() as $refund) {
+            $value = (float) ($refund->amount->value ?? 0);
+
             if ($refund->status === 'refunded') {
-                $hasRefunded = true;
+                $refundedAmount += $value;
             }
 
             if ($refund->status === 'processing') {
-                $hasProcessing = true;
+                $processingAmount += $value;
             }
 
             if ($refund->status === 'failed') {
@@ -257,7 +248,13 @@ class MolliePaymentService implements PaymentService
             }
         }
 
-        if ($hasRefunded) {
+        $epsilon = 0.0001;
+        $isFullyRefunded = $totalAmount > 0
+            && $refundedAmount >= ($totalAmount - $epsilon);
+        $hasPartialRefund = $refundedAmount > $epsilon && ! $isFullyRefunded;
+        $hasProcessing = $processingAmount > $epsilon;
+
+        if ($isFullyRefunded) {
             $payment->update([
                 'status' => 'refunded',
                 'refunded_at' => now(),
@@ -272,6 +269,13 @@ class MolliePaymentService implements PaymentService
             return;
         }
 
+        if ($hasPartialRefund) {
+            $payment->update([
+                'status' => 'partially_refunded',
+            ]);
+            return;
+        }
+
         if ($hasFailed) {
             $payment->update([
                 'status' => 'refund_failed',
@@ -279,44 +283,6 @@ class MolliePaymentService implements PaymentService
         }
     }
 
-    // ---- Legacy-Weg (direktes Booking ohne lokalen Payment-Record) -----------
-
-    private function handlePaidLegacy(CourseBooking $booking): void
-    {
-        if ($booking->payment_status === 'paid') {
-            return;
-        }
-
-        $this->bookingPaymentService->markPaid($booking);
-        foreach ($booking->bookingSlots as $bookingSlot) {
-            $bookingSlot->update(['status' => 'booked']);
-        }
-        $this->courseBookingService->refreshBookingStatus($booking);
-    }
-
-    private function handleFailedLegacy(CourseBooking $booking): void
-    {
-        $this->bookingPaymentService->markFailed($booking);
-
-        if ($booking->redeemed_points > 0 && !$booking->points_restored && $booking->user && $booking->user->loyaltyAccount) {
-            $this->loyaltyPointService->earn(
-                $booking->user->loyaltyAccount,
-                $booking->redeemed_points,
-                'earn',
-                'sport',
-                $booking,
-                'Zahlung von Buchung fehlgeschlagen - Rückerstattung von Treuepunkten'
-            );
-            $booking->update(['points_restored' => true]);
-            $booking->refresh();
-        }
-
-        foreach ($booking->bookingSlots as $bookingSlot) {
-            $this->courseBookingSlotService->cancel($bookingSlot);
-        }
-
-        $this->courseBookingService->refreshBookingStatus($booking);
-    }
 
     // ---- Refund-Handling (Booking-seitig, unverändert) ----------------------
 

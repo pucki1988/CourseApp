@@ -35,14 +35,9 @@ class CourseBooking extends Model
         return $this->hasMany(CourseBookingRefund::class);
     }
 
-    public function payments()
+    public function payment()
     {
-        return $this->morphMany(Payment::class, 'source');
-    }
-
-    public function latestPayment()
-    {
-        return $this->morphOne(Payment::class, 'source')->latestOfMany();
+        return $this->morphOne(Payment::class, 'source');
     }
 
     /* =========================

@@ -67,7 +67,7 @@ new class extends Component {
                                 </div>
                                 <div class="flex justify-between mt-1">
                                     <span class="text-gray-500">Zahlungsstatus</span>
-                                    <span><flux:badge size="sm" color="{{ $booking->payment_status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></span>
+                                    <span><flux:badge size="sm" color="{{ $booking->payment_status == 'paid' || $booking->payment?->status === 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></span>
                                 </div>
                             </div>
                 </div>
