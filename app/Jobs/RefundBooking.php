@@ -59,6 +59,7 @@ class RefundBooking implements ShouldQueue
         LoyaltyPointService $loyaltyPointService): void
     {
         $booking = CourseBooking::find($this->bookingId);
+        $booking->loadMissing('payment');
         
         try {
             // 1) Neuer Weg: genau ein Payment pro Booking

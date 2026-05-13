@@ -287,20 +287,7 @@ class CourseBookingService
      */
     public function refreshBookingStatus(CourseBooking $booking)
     {
-        $booking->loadMissing('payment');
-
-        print_r($booking->payment);
         
-        $paymentStatus = $booking->payment?->status ?? $booking->payment_status;
-        $paymentStatus = is_string($paymentStatus)
-            ? strtolower(trim($paymentStatus))
-            : null;
-
-        if (!in_array($paymentStatus, ['paid', 'partially_refunded', 'refund_processing', 'refunded'], true)) {
-            $booking->update(['status' => 'pending']);
-            return;
-        }
-
         $totalSlots = $booking->bookingSlots()->count();
         $refundedSlots = $booking->bookingSlots()
             ->where('status', 'refunded')

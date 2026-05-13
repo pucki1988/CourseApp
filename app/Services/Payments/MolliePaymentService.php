@@ -18,6 +18,7 @@ use App\Services\Loyalty\LoyaltyPointService;
 class MolliePaymentService implements PaymentService
 {
     public function __construct(
+        protected PaymentProcessor $paymentProcessor,
         protected BookingPaymentService $bookingPaymentService,
         protected BookingRefundService $bookingRefundService,
         protected CourseBookingService $courseBookingService,
@@ -154,10 +155,10 @@ class MolliePaymentService implements PaymentService
             }
 
             match (true) {
-                $molliePayment->isPaid() && ! $hasRefunds => $this->handlePaid($localPayment),
-                $molliePayment->isFailed()  => $this->handleFailed($localPayment, 'failed'),
-                $molliePayment->isCanceled() => $this->handleFailed($localPayment, 'canceled'),
-                $molliePayment->isExpired() => $this->handleFailed($localPayment, 'expired'),
+                $molliePayment->isPaid() && ! $hasRefunds => $this->paymentProcessor->handlePaid($localPayment),
+                $molliePayment->isFailed()  => $this->paymentProcessor->handleFailed($localPayment, 'failed'),
+                $molliePayment->isCanceled() => $this->paymentProcessor->handleFailed($localPayment, 'canceled'),
+                $molliePayment->isExpired() => $this->paymentProcessor->handleFailed($localPayment, 'expired'),
                 default                     => null,
             };
 
@@ -183,46 +184,6 @@ class MolliePaymentService implements PaymentService
             }
         }
 
-        
-    }
-
-    // ---- Neuer Weg (über lokales Payment) -----------------------------------
-
-    private function handlePaid(Payment $payment): void
-    {
-        if ($payment->isPaid()) {
-            return; // idempotent
-        }
-
-        $payment->update(['status' => 'paid', 'paid_at' => now()]);
-
-        $source = $payment->source;
-
-        if ($source instanceof CourseBooking) {
-            foreach ($source->bookingSlots as $bookingSlot) {
-                $bookingSlot->update(['status' => 'booked']);
-            }
-            $this->courseBookingService->refreshBookingStatus($source);
-        }
-    }
-
-    private function handleFailed(Payment $payment, string $status = 'failed'): void
-    {
-        if ($payment->status === $status) {
-            return; // idempotent
-        }
-
-        $attributes = ['status' => $status];
-
-        if ($status === 'failed') {
-            $attributes['failed_at'] = now();
-        }
-
-        if ($status === 'canceled') {
-            $attributes['canceled_at'] = now();
-        }
-
-        $payment->update($attributes);               
     }
 
     private function syncRefundState(Payment $payment, $molliePayment): void

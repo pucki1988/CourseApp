@@ -64,6 +64,7 @@ class RefundBookingSlot implements ShouldQueue
         LoyaltyPointService $loyaltyPointService): void
     {
         $booking = CourseBooking::find($this->bookingId);
+        $booking->loadMissing('payment');
         $bookingSlot = CourseBookingSlot::find($this->bookingSlotId);
         
         try {

@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use App\Models\Course\CourseSlot;
+use App\Models\Course\CourseBooking;
 use App\Actions\Course\CancelCourseAction;
 use App\Models\User;
 use App\Mail\CourseConfirmedMail;
@@ -57,6 +58,32 @@ Artisan::command('create:missing-loyalty-accounts', function () {
     $this->info("Fertig!");
 
 });
+
+Artisan::command('migrate:course-payments', function () {
+    CourseBooking::whereNotNull('payment_status')
+    ->orWhereNotNull('payment_transaction_id')
+    ->each(function ($booking) {
+        if (!$booking->payment) {
+            $booking->payment()->create([
+                'amount' => $booking->total_price,
+                'currency' => 'EUR',
+                'provider' => 'mollie',
+                'method' => 'unknown',
+                'source_type' => CourseBooking::class,
+                'source_id' => $booking->id,
+                'provider_payment_id' => $booking->payment_transaction_id,
+                'status' => $booking->status,
+                'paid_at' => $booking->status === 'paid' ? $booking->updated_at : null,
+                'refunded_at' => $booking->status === 'refunded' ? $booking->updated_at : null,
+                'checkout_url' => $booking->checkout_url,
+            ]);
+
+            $this->info("Payment für CourseBooking {$booking->id} erstellt.");
+        }
+    });
+
+});
+
 
 Schedule::command('coaches:generate-billing')
     ->monthlyOn(3, '08:00');
