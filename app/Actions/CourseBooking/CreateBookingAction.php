@@ -37,6 +37,8 @@ class CreateBookingAction
                 'status'   => 'pending',
             ]);
 
+            $newBooking->load('payment');
+
             $this->paymentService->createPayment($localPayment);
             $this->courseBookingService->refreshBookingStatus($newBooking);
 

@@ -4,6 +4,7 @@ namespace App\Models\Payment;
 
 use App\Models\Member\BankAccount;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
@@ -18,7 +19,6 @@ class Payment extends Model
         'paid_at',
         'failed_at',
         'canceled_at',
-        'refunded_at',
         'source_type',
         'source_id',
         'payment_run_id',
@@ -32,7 +32,6 @@ class Payment extends Model
         'paid_at'     => 'datetime',
         'failed_at'   => 'datetime',
         'canceled_at' => 'datetime',
-        'refunded_at' => 'datetime',
         'meta'        => 'array',
     ];
 
@@ -49,6 +48,11 @@ class Payment extends Model
     public function bankAccount()
     {
         return $this->belongsTo(BankAccount::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
     }
 
     // ---- Status-Helpers --------------------------------------------

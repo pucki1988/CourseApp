@@ -59,6 +59,6 @@ class PaymentProcessor
             $attributes['canceled_at'] = now();
         }
 
-        $payment->update($attributes);               
+        $payment->update($attributes);
     }
 }

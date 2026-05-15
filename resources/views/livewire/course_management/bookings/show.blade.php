@@ -67,7 +67,7 @@ new class extends Component {
                                 </div>
                                 <div class="flex justify-between mt-1">
                                     <span class="text-gray-500">Zahlungsstatus</span>
-                                    <span><flux:badge size="sm" color="{{ $booking->payment_status == 'paid' || $booking->payment?->status === 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment_status }}</flux:badge></span>
+                                    <span><flux:badge size="sm" color="{{ $booking->payment?->status === 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payment?->status }}</flux:badge></span>
                                 </div>
                             </div>
                 </div>
@@ -160,15 +160,15 @@ new class extends Component {
             @endif
 
 
-            @if($booking->refunds->count() > 0)
+            @if($booking->payment->refunds->count() > 0)
             <flux:heading size="lg">Erstattungen</flux:heading>
             <div class="space-y-3 grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
-                @foreach ($booking->refunds as $index => $refund)
+                @foreach ($booking->payment->refunds as $index => $refund)
                     <div class="border rounded-lg p-3 bg-white shadow-sm">
                         <div class="text-sm">
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Datum</span>
-                                <span>{{ $refund?->refunded_at?->format('d.m.Y H:i') }}</span>
+                                <span>{{ $refund?->completed_at?->format('d.m.Y H:i') }}</span>
                             </div>
 
                             <div class="flex justify-between mt-1">
@@ -179,7 +179,7 @@ new class extends Component {
 
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-500">Status</span>
-                                <span><flux:badge size="sm" color="{{ $refund->status == 'completed' ? 'green' : ($refund->status == 'canceled' ? 'red' : 'gray') }}">{{ $refund->status }}</flux:badge></span>
+                                <span><flux:badge size="sm" color="{{ $refund->status == 'refunded' ? 'green' : ($refund->status == 'canceled' ? 'red' : 'gray') }}">{{ $refund->status }}</flux:badge></span>
                             </div>
                         </div>
                     </div>
@@ -199,12 +199,12 @@ new class extends Component {
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-900">Erstattungen</span>
                                 <span class="font-medium">
-                                <flux:badge color="red" size="sm">- {{ number_format($booking->refunds->where('status', 'completed')->sum('amount'), 2, '.', '') }} €</flux:badge>
+                                <flux:badge color="red" size="sm">- {{ number_format($booking->payment->refunds->where('status', 'refunded')->sum('amount'), 2, '.', '') }} €</flux:badge>
                             </div>
                             <div class="flex justify-between mt-1">
                                 <span class="text-gray-900">Gesamt</span>
                                 <span class="font-medium">
-                                <flux:badge color="green" size="sm">{{ number_format($booking->total_price -$booking->refunds->where('status', 'completed')->sum('amount'), 2, '.', '')}} €</flux:badge></span>
+                                <flux:badge color="green" size="sm">{{ number_format($booking->total_price -$booking->payment->refunds->where('status', 'refunded')->sum('amount'), 2, '.', '')}} €</flux:badge></span>
                             </div>
                         </div>
                 </div>

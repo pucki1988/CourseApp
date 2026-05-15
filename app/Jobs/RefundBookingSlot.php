@@ -9,7 +9,6 @@ use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseBooking;
 use App\Models\Payment\Payment;
 use App\Contracts\PaymentService;
-use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseBookingService;
 use App\Services\Loyalty\LoyaltyPointService;
@@ -58,7 +57,6 @@ class RefundBookingSlot implements ShouldQueue
      * Execute the job.
      */
     public function handle(PaymentService $paymentService,
-        BookingRefundService $bookingRefundService,
         CourseBookingSlotService $bookingSlotService,
         CourseBookingService $courseBookingService,
         LoyaltyPointService $loyaltyPointService): void
@@ -121,15 +119,17 @@ class RefundBookingSlot implements ShouldQueue
                 );
             }
 
-            $refund = $paymentService->refund(
-                $localPayment,
-                (float) ($bookingSlot->price - $discount)
-            );
+            $refundAmount = (float) ($bookingSlot->price - $discount);
 
-            $bookingRefundService->createRefund(
-                $booking,
-                (float) $bookingSlot->price,
-                $refund
+            $refund = $paymentService->refund($localPayment, $refundAmount);
+
+            $localPayment->refunds()->updateOrCreate(
+                ['provider_refund_id' => $refund->refundId],
+                [
+                    'amount' => $refundAmount,
+                    'currency' => $localPayment->currency ?? 'EUR',
+                    'status' => $this->normalizeRefundStatus($refund->status),
+                ]
             );
 
             $bookingSlotService->refund($bookingSlot);
@@ -159,6 +159,19 @@ class RefundBookingSlot implements ShouldQueue
 
             throw $e; // ⬅️ wichtig für Retry!
         }
+    }
+
+    private function normalizeRefundStatus(string $providerStatus): string
+    {
+        return match ($providerStatus) {
+            'queued' => 'queued',
+            'pending' => 'pending',
+            'processing' => 'processing',
+            'refunded' => 'refunded',
+            'failed' => 'failed',
+            'canceled' => 'canceled',
+            default => 'queued',
+        };
     }
 
     public function failed(Throwable $exception): void

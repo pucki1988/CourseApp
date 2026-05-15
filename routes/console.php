@@ -60,27 +60,96 @@ Artisan::command('create:missing-loyalty-accounts', function () {
 });
 
 Artisan::command('migrate:course-payments', function () {
-    CourseBooking::whereNotNull('payment_status')
-    ->orWhereNotNull('payment_transaction_id')
-    ->each(function ($booking) {
-        if (!$booking->payment) {
-            $booking->payment()->create([
-                'amount' => $booking->total_price,
-                'currency' => 'EUR',
-                'provider' => 'mollie',
-                'method' => 'unknown',
-                'source_type' => CourseBooking::class,
-                'source_id' => $booking->id,
-                'provider_payment_id' => $booking->payment_transaction_id,
-                'status' => $booking->status,
-                'paid_at' => $booking->status === 'paid' ? $booking->updated_at : null,
-                'refunded_at' => $booking->status === 'refunded' ? $booking->updated_at : null,
-                'checkout_url' => $booking->checkout_url,
-            ]);
+    $createdPayments = 0;
+    $createdOrUpdatedRefunds = 0;
 
-            $this->info("Payment für CourseBooking {$booking->id} erstellt.");
-        }
-    });
+    CourseBooking::whereNotNull('payment_status')
+        ->orWhereNotNull('payment_transaction_id')
+        ->orWhereHas('refunds')
+        ->with(['payment', 'refunds'])
+        ->each(function (CourseBooking $booking) use (&$createdPayments, &$createdOrUpdatedRefunds) {
+            $legacyPaymentStatus = strtolower((string) $booking->payment_status);
+
+            $mappedPaymentStatus = match ($legacyPaymentStatus) {
+                'open' => 'open',
+                'pending' => 'pending',
+                'paid' => 'paid',
+                'failed' => 'failed',
+                'canceled', 'cancelled' => 'canceled',
+                'expired' => 'expired',
+                // Legacy-Refund-States gehörten früher zu payment_status
+                'refunded', 'partially_refunded', 'refund_processing', 'refund_failed' => 'paid',
+                default => $booking->refunds->isNotEmpty() ? 'paid' : 'pending',
+            };
+
+            $payment = $booking->payment;
+            $currentPaymentStatus = null;
+
+            if (! $payment) {
+                $payment = $booking->payment()->create([
+                    'amount' => $booking->total_price,
+                    'currency' => 'EUR',
+                    'provider' => 'mollie',
+                    'method' => 'unknown',
+                    'source_type' => CourseBooking::class,
+                    'source_id' => $booking->id,
+                    'provider_payment_id' => $booking->payment_transaction_id,
+                    'status' => $mappedPaymentStatus,
+                    'paid_at' => $mappedPaymentStatus === 'paid' ? $booking->updated_at : null,
+                    'checkout_url' => $booking->checkout_url,
+                ]);
+
+                $createdPayments++;
+                $this->info("Payment für CourseBooking {$booking->id} erstellt.");
+            } else {
+                $currentPaymentStatus = (string) $payment->status;
+
+                if (in_array($currentPaymentStatus, ['open', 'pending', 'paid', 'canceled', 'expired', 'failed'], true)) {
+                    $currentPaymentStatus = null;
+                }
+            }
+
+            if ($currentPaymentStatus !== null) {
+                $payment->update([
+                    'status' => $mappedPaymentStatus,
+                    'paid_at' => $mappedPaymentStatus === 'paid' ? ($payment->paid_at ?? $booking->updated_at) : $payment->paid_at,
+                ]);
+            }
+
+            foreach ($booking->refunds as $legacyRefund) {
+                $legacyRefundStatus = strtolower((string) $legacyRefund->status);
+
+                $mappedRefundStatus = match ($legacyRefundStatus) {
+                    'queued' => 'queued',
+                    'pending' => 'pending',
+                    'processing' => 'processing',
+                    'completed', 'refunded' => 'refunded',
+                    'failed' => 'failed',
+                    'canceled', 'cancelled' => 'canceled',
+                    default => 'queued',
+                };
+
+                $providerRefundId = $legacyRefund->payment_refund_id ?: 'legacy-booking-refund-'.$legacyRefund->id;
+
+                $payment->refunds()->updateOrCreate(
+                    ['provider_refund_id' => $providerRefundId],
+                    [
+                        'amount' => (float) $legacyRefund->amount,
+                        'currency' => $payment->currency ?? 'EUR',
+                        'status' => $mappedRefundStatus,
+                        'completed_at' => $mappedRefundStatus === 'refunded'
+                            ? ($legacyRefund->refunded_at ?? $legacyRefund->updated_at)
+                            : null,
+                        'failed_at' => $mappedRefundStatus === 'failed' ? $legacyRefund->updated_at : null,
+                        'canceled_at' => $mappedRefundStatus === 'canceled' ? $legacyRefund->updated_at : null,
+                    ]
+                );
+
+                $createdOrUpdatedRefunds++;
+            }
+        });
+
+    $this->info("Migration abgeschlossen. Payments erstellt: {$createdPayments}, Refunds migriert: {$createdOrUpdatedRefunds}");
 
 });
 

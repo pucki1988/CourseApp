@@ -9,7 +9,6 @@ use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseBooking;
 use App\Models\Payment\Payment;
 use App\Contracts\PaymentService;
-use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseBookingService;
 use App\Services\Loyalty\LoyaltyPointService;
@@ -53,7 +52,6 @@ class RefundBooking implements ShouldQueue
      * Execute the job.
      */
     public function handle(PaymentService $paymentService,
-        BookingRefundService $bookingRefundService,
         CourseBookingSlotService $bookingSlotService,
         CourseBookingService $courseBookingService,
         LoyaltyPointService $loyaltyPointService): void
@@ -111,7 +109,14 @@ class RefundBooking implements ShouldQueue
 
             $refund = $paymentService->refund($localPayment, (float) $booking->total_price);
 
-            $bookingRefundService->createRefund($booking, (float) $booking->total_price, $refund);
+            $localPayment->refunds()->updateOrCreate(
+                ['provider_refund_id' => $refund->refundId],
+                [
+                    'amount' => (float) $booking->total_price,
+                    'currency' => $localPayment->currency ?? 'EUR',
+                    'status' => $this->normalizeRefundStatus($refund->status),
+                ]
+            );
 
 
             $booking->bookingSlots()
@@ -146,6 +151,19 @@ class RefundBooking implements ShouldQueue
 
             throw $e; // ⬅️ wichtig für Retry!
         }
+    }
+
+    private function normalizeRefundStatus(string $providerStatus): string
+    {
+        return match ($providerStatus) {
+            'queued' => 'queued',
+            'pending' => 'pending',
+            'processing' => 'processing',
+            'refunded' => 'refunded',
+            'failed' => 'failed',
+            'canceled' => 'canceled',
+            default => 'queued',
+        };
     }
 
     public function failed(Throwable $exception): void

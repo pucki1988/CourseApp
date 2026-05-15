@@ -33,18 +33,17 @@ class SendCourseBookingCreateMail  implements ShouldQueue
         }
 
         // Alle gebuchten BookingSlots laden
-        $booking=$booking->load([
+        $booking = $booking->load([
             'bookingSlots.slot',
             'course',
             'user',
         ]);
-            $user = $booking?->user;
+        $user = $booking?->user;
 
-                Mail::to($user->email)->send(
-                    new CourseBookingCreateMail(
-                        $booking
-                    )
-                );
-            
+        Mail::to($user->email)->send(
+            new CourseBookingCreateMail(
+                $booking
+            )
+        );
     }
 }

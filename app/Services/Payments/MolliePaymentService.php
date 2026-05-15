@@ -8,8 +8,8 @@ use App\Data\Payments\PaymentResult;
 use App\Data\Payments\RefundResult;
 use App\Models\Course\CourseBooking;
 use App\Models\Payment\Payment;
+use App\Models\Payment\Refund;
 use App\Services\Bookings\BookingPaymentService;
-use App\Services\Bookings\BookingRefundService;
 use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Exceptions\PaymentFailedException;
@@ -20,7 +20,6 @@ class MolliePaymentService implements PaymentService
     public function __construct(
         protected PaymentProcessor $paymentProcessor,
         protected BookingPaymentService $bookingPaymentService,
-        protected BookingRefundService $bookingRefundService,
         protected CourseBookingService $courseBookingService,
         protected CourseBookingSlotService $courseBookingSlotService,
         protected LoyaltyPointService $loyaltyPointService
@@ -144,13 +143,7 @@ class MolliePaymentService implements PaymentService
                 'method' => $molliePayment->method ?? $localPayment->method,
             ]);
 
-            $source = $localPayment->source;
-
-            if ($hasRefunds && $source instanceof CourseBooking) {
-                foreach ($molliePayment->refunds() as $refund) {
-                    $this->handleRefund($refund, $source);
-                }
-
+            if ($hasRefunds) {
                 $this->syncRefundState($localPayment, $molliePayment);
             }
 
@@ -174,95 +167,71 @@ class MolliePaymentService implements PaymentService
 
         $booking = CourseBooking::find($bookingId);
 
-        if (!$booking) {
+        if (! $booking) {
             return;
         }
 
-        if ($hasRefunds) {
-            foreach ($molliePayment->refunds() as $refund) {
-                $this->handleRefund($refund, $booking);
-            }
+        $legacyLocalPayment = $booking->payment;
+
+        if (! $legacyLocalPayment || ! $hasRefunds) {
+            return;
         }
+
+        $this->syncRefundState($legacyLocalPayment, $molliePayment);
 
     }
 
     private function syncRefundState(Payment $payment, $molliePayment): void
     {
-        $totalAmount = (float) $payment->amount;
-        $refundedAmount = 0.0;
-        $processingAmount = 0.0;
-        $hasFailed = false;
+        $processedProviderIds = [];
 
-        foreach ($molliePayment->refunds() as $refund) {
-            $value = (float) ($refund->amount->value ?? 0);
+        foreach ($molliePayment->refunds() as $mollieRefund) {
+            $processedProviderIds[] = $mollieRefund->id;
 
-            if ($refund->status === 'refunded') {
-                $refundedAmount += $value;
+            /** @var Refund|null $localRefund */
+            $localRefund = $payment->refunds()
+                ->where('provider_refund_id', $mollieRefund->id)
+                ->first();
+
+            if (! $localRefund instanceof Refund) {
+                $localRefund = $payment->refunds()->create([
+                    'amount' => (float) ($mollieRefund->amount->value ?? 0),
+                    'currency' => $mollieRefund->amount->currency ?? 'EUR',
+                    'provider_refund_id' => $mollieRefund->id,
+                    'status' => 'queued',
+                ]);
             }
 
-            if ($refund->status === 'processing') {
-                $processingAmount += $value;
-            }
+            $newStatus = match ($mollieRefund->status) {
+                'pending' => 'pending',
+                'processing' => 'processing',
+                'refunded' => 'refunded',
+                'failed' => 'failed',
+                'canceled' => 'canceled',
+                default => $localRefund->status,
+            };
 
-            if ($refund->status === 'failed') {
-                $hasFailed = true;
-            }
+            $localRefund->update([
+                'status' => $newStatus,
+                'completed_at' => $newStatus === 'refunded' ? now() : null,
+                'failed_at' => $newStatus === 'failed' ? now() : null,
+                'canceled_at' => $newStatus === 'canceled' ? now() : null,
+            ]);
         }
 
-        $epsilon = 0.0001;
-        $isFullyRefunded = $totalAmount > 0
-            && $refundedAmount >= ($totalAmount - $epsilon);
-        $hasPartialRefund = $refundedAmount > $epsilon && ! $isFullyRefunded;
-        $hasProcessing = $processingAmount > $epsilon;
-
-        if ($isFullyRefunded) {
-            $payment->update([
-                'status' => 'refunded',
-                'refunded_at' => now(),
-            ]);
+        if (count($processedProviderIds) === 0) {
             return;
         }
 
-        if ($hasProcessing) {
-            $payment->update([
-                'status' => 'refund_processing',
+        $payment->refunds()
+            ->whereNotIn('provider_refund_id', $processedProviderIds)
+            ->whereNotIn('status', ['refunded', 'failed', 'canceled'])
+            ->update([
+                'status' => 'canceled',
+                'canceled_at' => now(),
             ]);
-            return;
-        }
-
-        if ($hasPartialRefund) {
-            $payment->update([
-                'status' => 'partially_refunded',
-            ]);
-            return;
-        }
-
-        if ($hasFailed) {
-            $payment->update([
-                'status' => 'refund_failed',
-            ]);
-        }
     }
 
 
-    // ---- Refund-Handling (Booking-seitig, unverändert) ----------------------
-
-    protected function handleRefund($refund, CourseBooking $booking): void
-    {
-        $localRefund = $booking->refunds()
-            ->where('payment_refund_id', $refund->id)
-            ->first();
-
-        if (!$localRefund) {
-            return; // idempotent
-        }
-
-        match ($refund->status) {
-            'refunded'   => $this->bookingRefundService->markRefunded($localRefund),
-            'processing' => $this->bookingRefundService->markProcessing($localRefund),
-            'failed'     => $this->bookingRefundService->markFailed($localRefund),
-            default      => null,
-        };
-    }
 }
 
