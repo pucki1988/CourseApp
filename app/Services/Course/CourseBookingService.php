@@ -70,7 +70,7 @@ class CourseBookingService
             ->where(function ($query) {
                 $query->whereHas('payment', function ($paymentQuery) {
                     $paymentQuery->where('status', 'paid');
-                })->orWhere('payment_status', 'paid');
+                });
             })
             ->count();
 
@@ -274,7 +274,7 @@ class CourseBookingService
         $query->where(function ($statusQuery) {
             $statusQuery->whereHas('payment', function ($paymentQuery) {
                 $paymentQuery->whereIn('status', ['pending', 'open', 'paid']);
-            })->orWhereIn('payment_status', ['pending', 'open', 'paid']);
+            });
         });
 
         $query->orderByDesc('created_at');

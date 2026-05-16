@@ -24,8 +24,8 @@ class CourseBookingResource extends JsonResource
             'status' => $this->status,
 
             // Legacy fields are kept for old refunds.
-            'payment_status' => $this->payment_status,
-            'payment_transaction_id' => $this->payment_transaction_id,
+            'payment_status' => $payment?->status ?? $this->payment_status,
+            'payment_transaction_id' => $payment?->provider_payment_id ?? $this->payment_transaction_id,
             'course_title' => $this->course_title,
             'user_name' => $this->user_name,
             'booking_type' => $this->booking_type,
