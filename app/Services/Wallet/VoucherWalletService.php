@@ -27,6 +27,10 @@ class VoucherWalletService
     public function redeemVoucher(Account $account, string $code): Voucher
     {
         return DB::transaction(function () use ($account, $code): Voucher {
+            if (! $account->users()->exists()) {
+                throw new RuntimeException('Das Einloesen ist nur mit einem User-Account moeglich.');
+            }
+
             $voucher = Vouchers::check($code);
 
             if ($voucher->users()->whereKey($account->getKey())->exists()) {
@@ -39,6 +43,15 @@ class VoucherWalletService
             }
 
             $amountInCents = (int) ($voucher->data->get('amount', 0));
+            $walletSlug = (string) ($voucher->data->get('wallet_slug') ?? '');
+
+            if ($walletSlug === '' && $voucher->data->get('product_type') === 'voucher_wallet_topup') {
+                $walletSlug = Account::WALLET_SPORTS_VOUCHER;
+            }
+
+            if ($walletSlug !== Account::WALLET_SPORTS_VOUCHER) {
+                throw new RuntimeException('Dieser Gutschein darf nur für Sport Kurse verwendet werden.');
+            }
 
             if ($amountInCents <= 0) {
                 throw new RuntimeException('Ungültiger Gutscheinbetrag.');
@@ -48,9 +61,12 @@ class VoucherWalletService
                 'redeemed_at' => now(),
             ]);
 
-            $account->deposit($amountInCents, [
+            $wallet = $account->walletBySlug($walletSlug);
+
+            $wallet->deposit($amountInCents, [
                 'type' => 'voucher_redemption',
                 'voucher_code' => $voucher->code,
+                'wallet_slug' => $walletSlug,
             ]);
 
             return $voucher;

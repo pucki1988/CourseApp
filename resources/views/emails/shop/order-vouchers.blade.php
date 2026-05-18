@@ -22,7 +22,7 @@
     </div>
 @endforeach
 
-<p>Die Gutscheine werden nicht automatisch zugeordnet. Bitte loese den Code in deinem Gutschein-Wallet ein.</p>
+<p>Der Gutschein wird nicht automatisch zugeordnet. Erstelle einen Account oder logge dich ein, um den Gutschein zu verwenden.</p>
 <p>Viele Gruesse</p>
 </body>
 </html>

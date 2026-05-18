@@ -17,6 +17,7 @@ use App\Http\Controllers\Shop\ProductController as ShopProductController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Wallet\AppleWalletPasskitController;
+use App\Http\Controllers\Wallet\VoucherRedeemController;
 use Illuminate\Support\Facades\Password;
 
 Route::get('/push/public-key', [PushSubscriptionController::class, 'publicKey']);
@@ -24,6 +25,7 @@ Route::get('/push/public-key', [PushSubscriptionController::class, 'publicKey'])
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/orders', [ShopOrderController::class, 'index']);
+    Route::post('/me/vouchers/redeem', VoucherRedeemController::class);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
     Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
     Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);

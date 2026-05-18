@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Accounting\Account;
 use App\Models\User;
 use App\Services\User\AppleWalletPassService;
 use App\Services\User\GoogleWalletPassService;
@@ -14,6 +15,8 @@ class UserController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
+        $sportsVoucherWallet = $user->account?->getWallet(Account::WALLET_SPORTS_VOUCHER);
+        $sportsVoucherBalance = (int) ($sportsVoucherWallet?->balance ?? 0);
 
         return response()->json([
             'user' => $user,
@@ -30,6 +33,11 @@ class UserController extends Controller
                 'points_to_eur' => $user->loyaltyAccount?->balance() * (float) config('loyalty.point_value_eur', 0.01) ?? 0,
             ],
             'wallet' => [
+                'sports_voucher' => [
+                    'slug' => Account::WALLET_SPORTS_VOUCHER,
+                    'balance' => $sportsVoucherBalance,
+                    'balance_eur' => round($sportsVoucherBalance / 100, 2),
+                ],
                 'google' => $this->googleWalletPass($request, app(GoogleWalletPassService::class)),
                 'apple' => [
                     'download_url' => URL::temporarySignedRoute(

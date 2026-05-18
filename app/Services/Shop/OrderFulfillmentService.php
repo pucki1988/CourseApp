@@ -47,6 +47,7 @@ class OrderFulfillmentService
                         'order_item_id' => $item->id,
                         'product_id' => $item->product_id,
                         'product_type' => $item->product_type,
+                        'wallet_slug' => Account::WALLET_SPORTS_VOUCHER,
                         'customer_email' => $order->customer_email,
                     ]
                 );
