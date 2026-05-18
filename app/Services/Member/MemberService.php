@@ -22,7 +22,10 @@ class MemberService
         if ($user->can('members.view')) {
             // alle anzeigen
         } elseif ($user->can('members.view.own')) {
-            $members->where('user_id', $user->id);
+            $members->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhere('managed_by_user_id', $user->id);
+            });
         } else {
             return Member::query()->whereRaw('1 = 0')->paginate($perPage);
         }

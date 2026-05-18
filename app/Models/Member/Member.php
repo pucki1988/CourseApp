@@ -16,6 +16,7 @@ class Member extends Model
 
     protected $fillable = [
         'user_id',
+        'managed_by_user_id',
         'account_id',
         'first_name',
         'last_name',
@@ -40,7 +41,7 @@ class Member extends Model
     protected static function booted(): void
     {
         static::created(function (self $member): void {
-            $accountId = $member->user?->account_id;
+            $accountId = $member->user?->account_id ?? $member->manager?->account_id;
 
             if ($accountId && ! $member->account_id) {
                 $member->update(['account_id' => $accountId]);
@@ -56,6 +57,11 @@ class Member extends Model
     public function user()
     {
         return $this->belongsTo(User::class,'user_id');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'managed_by_user_id');
     }
 
     public function cards()

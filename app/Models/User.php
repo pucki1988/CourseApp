@@ -10,6 +10,8 @@ use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\Member\Member;
 use App\Services\User\AppleWalletPassService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\DB;
@@ -99,9 +101,14 @@ class User extends Authenticatable
         return $this->hasOne(Coach::class);
     }
 
-    public function members()
+    public function member(): HasOne
     {
-        return $this->hasMany(Member::class);
+        return $this->hasOne(Member::class, 'user_id');
+    }
+
+    public function managedMembers(): HasMany
+    {
+        return $this->hasMany(Member::class, 'managed_by_user_id');
     }
 
 
@@ -186,6 +193,6 @@ class User extends Authenticatable
 
     public function isMember(): bool
     {
-        return $this->members()->exists();
+        return $this->member()->exists();
     }
 }
