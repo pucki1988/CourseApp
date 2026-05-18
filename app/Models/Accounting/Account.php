@@ -4,6 +4,7 @@ namespace App\Models\Accounting;
 
 use App\Models\Member\Card;
 use App\Models\Member\Member;
+use App\Models\Shop\Order;
 use App\Models\User;
 use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Traits\HasWallet;
@@ -35,9 +36,15 @@ class Account extends Model implements Wallet
         return $this->hasMany(Card::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function redeemedVouchers(): BelongsToMany
     {
         return $this->belongsToMany(Voucher::class, config('vouchers.relation_table', 'account_voucher'))
-            ->withPivot('redeemed_at');
+            ->withPivot('redeemed_at')
+            ->withTimestamps();
     }
 }

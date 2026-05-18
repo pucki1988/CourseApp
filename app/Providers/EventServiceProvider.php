@@ -24,6 +24,8 @@ use App\Listeners\SendMembershipConfirmedMail;
 use App\Events\MembershipConfirmed;
 use App\Listeners\SendCourseBookingPaidMail;
 use App\Events\CourseBookingPaid;
+use App\Events\OrderPaid;
+use App\Listeners\FulfillPaidOrder;
 use App\Events\NewsItemSaved;
 use App\Listeners\ScheduleNewsDelivery;
 
@@ -60,6 +62,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         CourseBookingPaid::class => [
             SendCourseBookingPaidMail::class
+        ],
+        OrderPaid::class => [
+            FulfillPaidOrder::class,
         ],
         NewsItemSaved::class => [
             ScheduleNewsDelivery::class,

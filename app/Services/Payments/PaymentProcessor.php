@@ -3,8 +3,10 @@
 namespace App\Services\Payments;
 
 use App\Events\CourseBookingCreate;
+use App\Events\OrderPaid;
 use App\Models\Payment\Payment;
 use App\Models\Course\CourseBooking;
+use App\Models\Shop\Order;
 use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
 
@@ -12,7 +14,7 @@ class PaymentProcessor
 {
     public function __construct(
         protected CourseBookingService $courseBookingService,
-        protected CourseBookingSlotService $courseBookingSlotService
+        protected CourseBookingSlotService $courseBookingSlotService,
     ) {}
 
     /**
@@ -21,25 +23,38 @@ class PaymentProcessor
      */
     public function handlePaid(Payment $payment): void
     {
-        // Idempotency check
-        if ($payment->isPaid()) {
-            return;
-        }
+        $alreadyPaid = $payment->isPaid();
 
-        // Update payment status
-        $payment->update(['status' => 'paid', 'paid_at' => now()]);
+        if (! $alreadyPaid) {
+            $payment->update(['status' => 'paid', 'paid_at' => now()]);
+        }
 
         $source = $payment->source;
 
-        // Update booking slots and refresh status if source is a CourseBooking
         if ($source instanceof CourseBooking) {
+            if ($alreadyPaid) {
+                return;
+            }
+
             foreach ($source->bookingSlots as $bookingSlot) {
                 $bookingSlot->update(['status' => 'booked']);
             }
             $this->courseBookingService->refreshBookingStatus($source);
 
-            // Trigger event
             event(new CourseBookingCreate($source));
+
+            return;
+        }
+
+        if ($source instanceof Order) {
+            if (! $source->isPaid()) {
+                $source->update([
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                ]);
+            }
+
+            event(new OrderPaid($source));
         }
     }
 
@@ -60,5 +75,14 @@ class PaymentProcessor
         }
 
         $payment->update($attributes);
+
+        $source = $payment->source;
+
+        if ($source instanceof Order) {
+            $source->update([
+                'status' => $status,
+                'canceled_at' => $status === 'canceled' ? now() : $source->canceled_at,
+            ]);
+        }
     }
 }

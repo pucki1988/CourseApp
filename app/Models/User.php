@@ -8,6 +8,7 @@ use App\Models\CheckinToken;
 use App\Models\Coach\Coach;
 use App\Models\Loyalty\LoyaltyAccount;
 use App\Models\Member\Member;
+use App\Models\Shop\Order;
 use App\Services\User\AppleWalletPassService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -120,6 +121,11 @@ class User extends Authenticatable
     public function account()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
     }
 
     public function checkinTokens(): MorphMany

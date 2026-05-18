@@ -11,6 +11,8 @@ use App\Http\Controllers\Course\CourseSlotController;
 use App\Http\Controllers\Course\CourseBookingSlotController;
 use App\Http\Controllers\Webhook\MollieWebhookController;
 use App\Http\Controllers\News\NewsController;
+use App\Http\Controllers\Shop\OrderController as ShopOrderController;
+use App\Http\Controllers\Shop\ProductController as ShopProductController;
 
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -21,6 +23,7 @@ Route::get('/push/public-key', [PushSubscriptionController::class, 'publicKey'])
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
+    Route::get('/me/orders', [ShopOrderController::class, 'index']);
     Route::get('/me/qr-code', [UserController::class, 'qr_code']);
     Route::get('/me/google-wallet-pass', [UserController::class, 'googleWalletPass']);
     Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store']);
@@ -114,6 +117,8 @@ Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->name('webhooks.mollie');
 Route::get('/courses', [CourseController::class, 'index']);
 Route::get('/news', [NewsController::class, 'index']);
+Route::get('/shop/products', [ShopProductController::class, 'index']);
+Route::post('/shop/orders', [ShopOrderController::class, 'store']);
 
 Route::post('/feedback', [FeedbackController::class, 'send']);
 
