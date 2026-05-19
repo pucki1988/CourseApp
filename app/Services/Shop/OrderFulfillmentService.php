@@ -22,7 +22,7 @@ class OrderFulfillmentService
         $hasVoucherProducts = false;
 
         foreach ($order->items as $item) {
-            if ($item->product_type !== 'voucher_wallet_topup') {
+            if ($item->product_type !== 'voucher_wallet_sports') {
                 continue;
             }
 
@@ -36,12 +36,13 @@ class OrderFulfillmentService
 
             $vouchers = [];
             $issuer = $this->resolveIssuerAccount();
+            $expiresAt = Carbon::create(now()->year + 3, 12, 31, 23, 59, 59);
 
             for ($index = 0; $index < $item->quantity; $index++) {
                 $voucher = $this->voucherWalletService->issueVoucher(
                     $issuer,
                     (int) round(((float) $item->unit_price) * 100),
-                    null,
+                    $expiresAt,
                     [
                         'order_id' => $order->id,
                         'order_item_id' => $item->id,

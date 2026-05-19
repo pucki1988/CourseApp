@@ -7,6 +7,7 @@ use App\Contracts\PaymentService;
 use App\Data\Payments\PaymentResult;
 use App\Data\Payments\RefundResult;
 use App\Models\Course\CourseBooking;
+use App\Models\Shop\Order;
 use App\Models\Payment\Payment;
 use App\Models\Payment\Refund;
 use App\Services\Bookings\BookingPaymentService;
@@ -39,10 +40,10 @@ class MolliePaymentService implements PaymentService
             $redirectUrl = 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$source->id.'&success=true';
             $cancelUrl   = 'https://djk-sg-schoenbrunn.de/sportkurse?bookingId='.$source->id.'&success=false';
             $metadata['booking_id'] = $source->id;
-        } else {
-            $description = 'Bestellung #'.$payment->id;
-            $redirectUrl = 'https://djk-sg-schoenbrunn.de/shop?paymentId='.$payment->id.'&success=true';
-            $cancelUrl   = 'https://djk-sg-schoenbrunn.de/shop?paymentId='.$payment->id.'&success=false';
+        } elseif($source instanceof Order) {
+            $description = 'Bestellung #'.$source->id;
+            $redirectUrl = 'https://djk-sg-schoenbrunn.de/sportkurse?orderId='.$source->id.'&success=true';
+            $cancelUrl   = 'https://djk-sg-schoenbrunn.de/sportkurse?orderId='.$source->id.'&success=false';
         }
 
         $webhookUrl = config('services.mollie.webhook_url_dev') ?: route('webhooks.mollie');

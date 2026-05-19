@@ -45,7 +45,7 @@ class VoucherWalletService
             $amountInCents = (int) ($voucher->data->get('amount', 0));
             $walletSlug = (string) ($voucher->data->get('wallet_slug') ?? '');
 
-            if ($walletSlug === '' && $voucher->data->get('product_type') === 'voucher_wallet_topup') {
+            if ($walletSlug === '' && $voucher->data->get('product_type') === 'voucher_wallet_sports') {
                 $walletSlug = Account::WALLET_SPORTS_VOUCHER;
             }
 
