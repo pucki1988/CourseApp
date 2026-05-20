@@ -3,7 +3,7 @@
 namespace App\Actions\CourseBooking;
 
 
-use App\Models\Course\CourseBookingSlot;
+use App\Events\CourseBookingCreate;
 use App\Models\Course\Course;
 use App\Models\Accounting\Account;
 use Bavix\Wallet\Exceptions\BalanceIsEmpty;
@@ -26,10 +26,10 @@ class CreateBookingAction
     public function execute(Request $request, Course $course): array
     {
         $validated = $request->validate([
-            'payment_method' => ['nullable', Rule::in(['provider', 'wallet_sports_voucher'])],
+            'pay_provider' => ['nullable', Rule::in(['mollie', 'wallet_sports_voucher'])],
         ]);
 
-        $useSportsWallet = ($validated['payment_method'] ?? null) === 'wallet_sports_voucher';
+        $useSportsWallet = ($validated['pay_provider'] ?? null) === 'wallet_sports_voucher';
 
         return DB::transaction(function () use ($request, $course, $useSportsWallet) {
 
@@ -78,10 +78,16 @@ class CreateBookingAction
                 ]);
 
                 $newBooking->load('payment');
+
+                foreach ($newBooking->bookingSlots as $bookingSlot) {
+                    $bookingSlot->update(['status' => 'booked']);
+                }
+            
                 $this->courseBookingService->refreshBookingStatus($newBooking);
-
+                
                 $data['booking'] = $newBooking->refresh();
-
+                
+                event(new CourseBookingCreate($newBooking));
                 return $data;
             }
 
