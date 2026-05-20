@@ -28,7 +28,7 @@ class VoucherWalletService
     {
         return DB::transaction(function () use ($account, $code): Voucher {
             if (! $account->users()->exists()) {
-                throw new RuntimeException('Das Einloesen ist nur mit einem User-Account moeglich.');
+                throw new RuntimeException('Das Einlösen ist nur mit einem Account möglich.');
             }
 
             $voucher = Vouchers::check($code);

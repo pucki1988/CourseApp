@@ -487,6 +487,10 @@ new class extends Component {
 let qrScanner = null;
 let scanLocked = false;
 
+// NEU:
+window.qrScanner = window.qrScanner ?? null;
+window.scanLocked = window.scanLocked ?? false;
+
 function startScanner() {
     if (qrScanner) return; // 🚫 schon aktiv
 
@@ -531,12 +535,11 @@ function restartScanner() {
 }
 
 /* Livewire Events */
-window.addEventListener('startScanner', startScanner);
-window.addEventListener('stopScanner', stopScanner);
-window.addEventListener('restartScanner', restartScanner);
-
-/* Modal Cleanup */
-window.addEventListener('flux:modal-closed', () => {
-    stopScanner();
-});
+if (!window.__qrListenersRegistered) {
+    window.__qrListenersRegistered = true;
+    window.addEventListener('startScanner', startScanner);
+    window.addEventListener('stopScanner', stopScanner);
+    window.addEventListener('restartScanner', restartScanner);
+    window.addEventListener('flux:modal-closed', () => { stopScanner(); });
+}
 </script>

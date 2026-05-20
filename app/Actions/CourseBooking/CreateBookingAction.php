@@ -46,7 +46,7 @@ class CreateBookingAction
                 $account = $user?->account;
 
                 if (! $account) {
-                    throw new RuntimeException('Keine Zahlung ueber Sports Wallet moeglich: User hat keinen Account.');
+                    throw new RuntimeException('Keine Zahlung Über Sports Wallet möglich: User hat keinen Account.');
                 }
 
                 $wallet = $account->walletBySlug(Account::WALLET_SPORTS_VOUCHER);
@@ -67,7 +67,7 @@ class CreateBookingAction
                 $newBooking->payment()->create([
                     'amount' => $newBooking->total_price,
                     'currency' => 'EUR',
-                    'method' => 'sports_wallet',
+                    'method' => 'sports_voucher_wallet',
                     'provider' => 'wallet',
                     'status' => 'paid',
                     'paid_at' => Carbon::now(),

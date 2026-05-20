@@ -74,6 +74,13 @@ Gutschein & Treuepunkte
 + Account je User bzw. Card/Member
 + Gutscheine/Bonuspunkte für bestimmte Tätigkeiten (Kuchen backen etc.)
 
+Gutscheinbedingungen:
+Dieser Wertgutschein über 50,00 € ist übertragbar und kann im Online-Konto des Vereins aktiviert werden. 
+Das Guthaben ist nach der Aktivierung personengebunden und 
+ausschließlich für die umsatzsteuerbefreiten Sportkurse des DJK-SG Schönbrunn am Lusen e.V. einlösbar. 
+Eine Nutzung für Mitgliedsbeiträge, Fanartikel oder eine Barauszahlung ist ausgeschlossen. 
+Der Gutschein-Code ist ab dem Ende des Ausstellungsjahres 3 Jahre gültig.
+
 Payment
 + Erweiteren des bisherigen Modell und CourseBooking und ShopOrder integrieren
 + Webhook Prozess anpassen
@@ -82,4 +89,15 @@ Payment
 Shop
 + Gutscheine
 o Merchandise
+
+
+Compliance / Manipulationsschutz / Revisionssicherheit
+1. Audit-Logging (Standard-Lösung)
+Spatie Laravel Activitylog
+2. Bessere Architektur: Event Sourcing
+Spatie Event Sourcing
+3. Manipulationsschutz (wichtig für dein Thema)
+laravel-hashids (nur ID-Verschleierung, nicht Sicherheit)
+Vinkla Hashids Laravel
+
 
