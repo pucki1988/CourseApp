@@ -81,7 +81,7 @@ class UserService
 
     public function usersWithMemberRequest(){
         return User::where('member_requested', true)
-        ->whereDoesntHave('members')
+        ->whereDoesntHave('member')
         ->get();
     }
 

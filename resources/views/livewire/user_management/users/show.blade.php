@@ -24,9 +24,9 @@ new class extends Component {
     public function mount($user)
     {
         if ($user instanceof User) {
-            $this->user = $user->load('roles', 'members');
+            $this->user = $user->load('roles', 'member');
         } else {
-            $this->user = User::with('roles', 'members')->findOrFail($user);
+            $this->user = User::with('roles', 'member')->findOrFail($user);
         }
 
         $this->roles = Role::all();
@@ -87,7 +87,7 @@ new class extends Component {
         $member = Member::whereNull('user_id')->findOrFail($this->memberToAssignId);
         $member->update(['user_id' => $this->user->id]);
 
-        $this->user->load('members');
+        $this->user->load('member');
         $this->memberToAssignId = null;
         $this->loadAvailableMembers();
         Flux::modal('assignMember')->close();
@@ -98,7 +98,7 @@ new class extends Component {
         $member = Member::where('user_id', $this->user->id)->findOrFail($memberId);
         $member->update(['user_id' => null]);
 
-        $this->user->load('members');
+        $this->user->load('member');
         $this->loadAvailableMembers();
     }
 
@@ -122,7 +122,7 @@ new class extends Component {
 
     public function openTransactions(): void
     {
-        $account = $this->user->loyaltyAccount;
+        $account = $this->user?->loyaltyAccount;
         $this->transactions = $account
             ? $account->transactions()->orderByDesc('created_at')->get()
             : collect();
@@ -213,16 +213,16 @@ new class extends Component {
             <div class="mb-4">
                 <label class="font-semibold">Zugeordnete Member</label>
                 <div class="mt-1 flex flex-wrap gap-2">
-                    @forelse($user->members as $member)
+                    @if($user->member)
                         <div class="flex items-center gap-1">
                             <flux:badge size="sm">
-                                {{ $member->first_name }} {{ $member->last_name }} <flux:badge.close wire:click="unassignMember({{ $member->id }})" />
+                                {{ $user->member->first_name }} {{ $user->member->last_name }} <flux:badge.close wire:click="unassignMember({{ $user->member->id }})" />
                             </flux:badge>
                             
                         </div>
-                    @empty
+                    @else
                         <span class="text-sm text-gray-500">Keine</span>
-                    @endforelse
+                    @endif
                 </div>
                 <div class="mt-2">
                     <flux:button size="xs" variant="ghost" wire:click="openAssignMember">Member zuordnen</flux:button>
@@ -354,7 +354,7 @@ new class extends Component {
         <flux:heading size="lg">Treuepunkte</flux:heading>
         
         <div class="text-end my-1">
-        <flux:badge>{{ $this->user->loyaltyAccount->balance() }} Punkte</flux:badge>
+        <flux:badge>{{ $this->user?->loyaltyAccount?->balance() }} Punkte</flux:badge>
         </div>
         <div class="mt-4 max-h-80 overflow-auto">
             @if($transactions && count($transactions))
