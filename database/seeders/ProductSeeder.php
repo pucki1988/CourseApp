@@ -12,7 +12,7 @@ class ProductSeeder extends Seeder
         $products = [
             [
                 'sku' => 'SPORT-VOUCHER-10',
-                'type' => 'voucher_wallet_sports',
+                'type' => 'sports_voucher',
                 'name' => 'Gutschein 10 EUR',
                 'description' => 'Der Gutschein ist nur für Sportkurse gültig.',
                 'price' => 10.00,
@@ -24,7 +24,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'sku' => 'SPORT-VOUCHER-25',
-                'type' => 'voucher_wallet_sports',
+                'type' => 'sports_voucher',
                 'name' => 'Gutschein 25 EUR',
                 'description' => 'Der Gutschein ist nur für Sportkurse gültig.',
                 'price' => 25.00,
@@ -36,7 +36,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'sku' => 'SPORT-VOUCHER-50',
-                'type' => 'voucher_wallet_sports',
+                'type' => 'sports_voucher',
                 'name' => 'Gutschein 50 EUR',
                 'description' => 'Der Gutschein ist nur für Sportkurse gültig.',
                 'price' => 50.00,

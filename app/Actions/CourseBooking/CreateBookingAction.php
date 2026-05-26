@@ -3,35 +3,56 @@
 namespace App\Actions\CourseBooking;
 
 
-use App\Events\CourseBookingCreate;
-use App\Models\Course\Course;
 use App\Models\Accounting\Account;
-use Bavix\Wallet\Exceptions\BalanceIsEmpty;
-use Bavix\Wallet\Exceptions\InsufficientFunds;
-use Carbon\Carbon;
+use App\Models\Course\Course;
 use Illuminate\Support\Facades\DB;
 use App\Services\Course\CourseBookingService;
-use App\Contracts\PaymentService;
+use App\Services\Payments\PaymentServiceResolver;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use LogicException;
-use RuntimeException;
 
 class CreateBookingAction
 {
     public function __construct(
         protected CourseBookingService $courseBookingService,
-        protected PaymentService $paymentService,
+        protected PaymentServiceResolver $paymentServiceResolver,
     ) {}
     public function execute(Request $request, Course $course): array
     {
         $validated = $request->validate([
-            'pay_provider' => ['nullable', Rule::in(['mollie', 'wallet_sports_voucher'])],
+            'pay_provider' => ['nullable', Rule::in(['mollie', 'wallet'])],
+            'wallet_slug' => ['nullable', 'string', Rule::in(array_keys(Account::systemWalletDefinitions()))],
         ]);
 
-        $useSportsWallet = ($validated['pay_provider'] ?? null) === 'wallet_sports_voucher';
+        $useSportsWallet = ($validated['pay_provider'] ?? null) === 'wallet';
+        $walletSlug = null;
 
-        return DB::transaction(function () use ($request, $course, $useSportsWallet) {
+        if ($useSportsWallet) {
+            $allowedWallets = collect($course->allowed_wallet_slugs ?? [])
+                ->filter(fn ($slug) => is_string($slug) && $slug !== '')
+                ->values();
+
+            if ($allowedWallets->isEmpty()) {
+                throw new LogicException('Für diesen Kurs ist keine Wallet-Zahlung konfiguriert.');
+            }
+
+            $requestedWalletSlug = $validated['wallet_slug'] ?? null;
+
+            if (is_string($requestedWalletSlug) && $requestedWalletSlug !== '') {
+                if (! $allowedWallets->contains($requestedWalletSlug)) {
+                    throw new LogicException('Diese Wallet ist für den Kurs nicht zugelassen.');
+                }
+
+                $walletSlug = $requestedWalletSlug;
+            } elseif ($allowedWallets->count() === 1) {
+                $walletSlug = (string) $allowedWallets->first();
+            } else {
+                throw new LogicException('Bitte wähle eine erlaubte Wallet für diesen Kurs aus.');
+            }
+        }
+
+        return DB::transaction(function () use ($request, $course, $useSportsWallet, $walletSlug) {
 
             $newBooking = $this->courseBookingService->store($request, $course);
 
@@ -39,71 +60,26 @@ class CreateBookingAction
                 throw new LogicException('Für diese Buchung existiert bereits ein Payment.');
             }
 
-            $amountInCents = (int) round(((float) $newBooking->total_price) * 100);
-
-            if ($useSportsWallet) {
-                $user = $request->user();
-                $account = $user?->account;
-
-                if (! $account) {
-                    throw new RuntimeException('Keine Zahlung Über Sports Wallet möglich: User hat keinen Account.');
-                }
-
-                $wallet = $account->walletBySlug(Account::WALLET_SPORTS_VOUCHER);
-
-                if ($amountInCents > 0) {
-                    try {
-                        $wallet->withdraw($amountInCents, [
-                            'type' => 'course_booking_payment',
-                            'booking_id' => $newBooking->id,
-                            'course_id' => $course->id,
-                            'wallet_slug' => Account::WALLET_SPORTS_VOUCHER,
-                        ]);
-                    } catch (BalanceIsEmpty|InsufficientFunds $exception) {
-                        throw new RuntimeException('Nicht genug Guthaben in der Sports Wallet.');
-                    }
-                }
-
-                $newBooking->payment()->create([
-                    'amount' => $newBooking->total_price,
-                    'currency' => 'EUR',
-                    'method' => 'sports_voucher_wallet',
-                    'provider' => 'wallet',
-                    'status' => 'paid',
-                    'paid_at' => Carbon::now(),
-                    'meta' => [
-                        'wallet_slug' => Account::WALLET_SPORTS_VOUCHER,
-                        'wallet_amount_cents' => $amountInCents,
-                    ],
-                ]);
-
-                $newBooking->load('payment');
-
-                foreach ($newBooking->bookingSlots as $bookingSlot) {
-                    $bookingSlot->update(['status' => 'booked']);
-                }
-            
-                $this->courseBookingService->refreshBookingStatus($newBooking);
-                
-                $data['booking'] = $newBooking->refresh();
-                
-                event(new CourseBookingCreate($newBooking));
-                return $data;
-            }
-
-            #Lokalen Payment-Record anlegen, dann an Provider übergeben
-            
             $localPayment = $newBooking->payment()->create([
                 'amount'   => $newBooking->total_price,
                 'currency' => 'EUR',
-                'method'   => 'pending',
-                'provider' => 'mollie',
+                'method'   => $useSportsWallet ? 'wallet' : 'pending',
+                'provider' => $useSportsWallet ? 'wallet' : 'mollie',
                 'status'   => 'pending',
+                'meta'     => $useSportsWallet
+                    ? [
+                        'wallet_slug' => $walletSlug,
+                        'payer_account_id' => $request->user()?->account?->id,
+                    ]
+                    : null,
             ]);
 
             $newBooking->load('payment');
 
-            $this->paymentService->createPayment($localPayment);
+            $this->paymentServiceResolver
+                ->resolve($localPayment)
+                ->createPayment($localPayment);
+
             $this->courseBookingService->refreshBookingStatus($newBooking);
 
             $data["booking"]=$newBooking->refresh();

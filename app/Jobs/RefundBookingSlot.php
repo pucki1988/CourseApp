@@ -8,10 +8,10 @@ use App\Exceptions\PaymentFailedException;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseBooking;
 use App\Models\Payment\Payment;
-use App\Contracts\PaymentService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseBookingService;
 use App\Services\Loyalty\LoyaltyPointService;
+use App\Services\Payments\PaymentServiceResolver;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -56,7 +56,7 @@ class RefundBookingSlot implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(PaymentService $paymentService,
+    public function handle(PaymentServiceResolver $paymentServiceResolver,
         CourseBookingSlotService $bookingSlotService,
         CourseBookingService $courseBookingService,
         LoyaltyPointService $loyaltyPointService): void
@@ -121,7 +121,9 @@ class RefundBookingSlot implements ShouldQueue
 
             $refundAmount = (float) ($bookingSlot->price - $discount);
 
-            $refund = $paymentService->refund($localPayment, $refundAmount);
+            $refund = $paymentServiceResolver
+                ->resolve($localPayment)
+                ->refund($localPayment, $refundAmount);
 
             $localPayment->refunds()->updateOrCreate(
                 ['provider_refund_id' => $refund->refundId],

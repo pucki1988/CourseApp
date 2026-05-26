@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Models\Accounting\Account;
 use App\Services\Course\CourseService;
 use App\Services\Course\CourseSlotService;
 use App\Models\Course\Course;
@@ -37,6 +38,7 @@ new class extends Component {
     public array $editData = [];
     public array $selectedSportTypes = [];
     public array $selectedEquipmentItems = [];
+    public array $walletDefinitions = [];
 
     public function mount(Course $course, CourseService $service)
     {   
@@ -47,6 +49,7 @@ new class extends Component {
         // Lade Sport-Types und Equipment
         $this->sportTypes = \App\Models\Course\SportType::all();
         $this->equipmentItems = \App\Models\Course\EquipmentItem::all();
+        $this->walletDefinitions = Account::systemWalletDefinitions();
 
         $this->assistent=[
             "date" => now()->format('Y-m-d'),
@@ -80,6 +83,7 @@ new class extends Component {
             'title' => $this->course->title,
             'description' => $this->course->description,
             'difficulty_level' => $this->course->difficulty_level,
+            'allowed_wallet_slugs' => $this->course->allowed_wallet_slugs ?? [],
         ];
         $this->selectedSportTypes = $this->course->sportTypes->pluck('id')->toArray();
         $this->selectedEquipmentItems = $this->course->equipmentItems->pluck('id')->toArray();
@@ -321,6 +325,21 @@ new class extends Component {
                                    value="{{ $equipment->id }}"
                                    class="rounded" />
                             <span>{{ $equipment->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                </flux:field>
+
+                <flux:field>
+                <flux:label>Erlaubte Wallets (optional)</flux:label>
+                <div class="space-y-2">
+                    @foreach($walletDefinitions as $walletSlug => $walletName)
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox"
+                                   wire:model="editData.allowed_wallet_slugs"
+                                   value="{{ $walletSlug }}"
+                                   class="rounded" />
+                            <span>{{ $walletName }} ({{ $walletSlug }})</span>
                         </label>
                     @endforeach
                 </div>

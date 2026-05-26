@@ -2,17 +2,17 @@
 
 namespace App\Services\Shop;
 
-use App\Contracts\PaymentService;
 use App\Models\Shop\Order;
 use App\Models\Shop\Product;
 use App\Models\User;
+use App\Services\Payments\PaymentServiceResolver;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class OrderService
 {
     public function __construct(
-        protected PaymentService $paymentService,
+        protected PaymentServiceResolver $paymentServiceResolver,
     ) {}
 
     public function createProductCheckout(Product $product, int $quantity, array $customerData, ?User $user = null): Order
@@ -74,7 +74,9 @@ class OrderService
                 ],
             ]);
 
-            $this->paymentService->createPayment($payment);
+            $this->paymentServiceResolver
+                ->resolve($payment)
+                ->createPayment($payment);
 
             return $order->fresh(['items', 'payments']);
         });

@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
+use App\Models\Accounting\Account;
 
 class CourseService
 {
@@ -177,6 +178,8 @@ class CourseService
             'location' => 'required|string|max:255',
             'member_discount' =>'nullable|numeric|min:0',
             'difficulty_level' => ['nullable', Rule::in(['beginner', 'intermediate', 'advanced', 'expert'])],
+            'allowed_wallet_slugs' => ['nullable', 'array'],
+            'allowed_wallet_slugs.*' => ['string', Rule::in(array_keys(Account::systemWalletDefinitions()))],
 
             // Slots optional
             'slots' => 'nullable|array',
@@ -205,6 +208,8 @@ class CourseService
             'coach_id' => 'sometimes|nullable|exists:coaches,id',
             'location' => 'sometimes|required|string|max:255',
             'difficulty_level' => ['sometimes', 'nullable', Rule::in(['beginner', 'intermediate', 'advanced', 'expert'])],
+            'allowed_wallet_slugs' => ['sometimes', 'nullable', 'array'],
+            'allowed_wallet_slugs.*' => ['string', Rule::in(array_keys(Account::systemWalletDefinitions()))],
 
             'slots' => 'nullable|array',
             'slots.*.id' => 'nullable|exists:slots,id',

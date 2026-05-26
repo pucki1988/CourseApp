@@ -23,6 +23,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'product_id' => ['required', 'integer', Rule::exists('products', 'id')],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'pay_provider' => ['nullable', Rule::in(['mollie'])],
             'customer_name' => ['nullable', 'string', 'max:255'],
             'customer_email' => [$user ? 'nullable' : 'required', 'email', 'max:255'],
         ]);

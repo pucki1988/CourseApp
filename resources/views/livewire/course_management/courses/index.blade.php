@@ -1,12 +1,14 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Models\Accounting\Account;
 use App\Services\Course\CourseService;
 use App\Services\Coach\CoachService;
 use App\Models\Course\Course;
 use App\Models\Course\SportType;
 use App\Models\Course\EquipmentItem;
 use App\Models\User;
+use Flux\Flux;
 
 new class extends Component {
 
@@ -26,6 +28,7 @@ new class extends Component {
    public array $newCourse;
    public array $selectedSportTypes = [];
    public array $selectedEquipmentItems = [];
+    public array $walletDefinitions = [];
 
     public function mount(CourseService $service, CoachService $coachService)
     {
@@ -35,6 +38,7 @@ new class extends Component {
         $this->loadCoaches($coachService);
         $this->loadSportTypes();
         $this->loadEquipmentItems();
+        $this->walletDefinitions = Account::systemWalletDefinitions();
     }
 
     private function initializeNewCourse(){
@@ -47,7 +51,8 @@ new class extends Component {
             'coach_id' => null,
             'location' => '',
             'member_discount' => null,
-            'difficulty_level' => null
+            'difficulty_level' => null,
+            'allowed_wallet_slugs' => [],
         ];
         $this->selectedSportTypes = [];
         $this->selectedEquipmentItems = [];
@@ -279,6 +284,21 @@ new class extends Component {
                                value="{{ $equipment->id }}"
                                class="rounded" />
                         <span>{{ $equipment->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            </flux:field>
+
+            <flux:field>
+            <flux:label>Erlaubte Wallets (optional)</flux:label>
+            <div class="space-y-2">
+                @foreach($walletDefinitions as $walletSlug => $walletName)
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox"
+                               wire:model="newCourse.allowed_wallet_slugs"
+                               value="{{ $walletSlug }}"
+                               class="rounded" />
+                        <span>{{ $walletName }} ({{ $walletSlug }})</span>
                     </label>
                 @endforeach
             </div>

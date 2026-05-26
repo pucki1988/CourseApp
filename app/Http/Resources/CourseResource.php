@@ -27,6 +27,7 @@ class CourseResource extends JsonResource
             'location' => $this->location,
             'member_discount' => $this->member_discount,
             'difficulty_level' => $this->difficulty_level,
+            'allowed_wallet_slugs' => $this->allowed_wallet_slugs ?? [],
             'display_price' => $this->display_price,
             'is_visible' => $this->isVisible(),
             // Sportarten

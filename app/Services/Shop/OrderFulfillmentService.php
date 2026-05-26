@@ -22,7 +22,7 @@ class OrderFulfillmentService
         $hasVoucherProducts = false;
 
         foreach ($order->items as $item) {
-            if ($item->product_type !== 'voucher_wallet_sports') {
+            if ($item->product_type !== 'sports_voucher') {
                 continue;
             }
 
