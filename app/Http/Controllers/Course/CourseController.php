@@ -19,10 +19,10 @@ class CourseController extends Controller
             ->with([
                 'slots.billingItem',
                 'slots.bookingSlots.booking' => fn ($query) => $query->withExists([
-                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('members'),
+                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('member'),
                 ]),
                 'bookings' => fn ($query) => $query->withExists([
-                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('members'),
+                    'user as is_member' => fn ($userQuery) => $userQuery->whereHas('member'),
                 ]),
             ])
             ->get();

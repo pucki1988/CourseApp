@@ -26,7 +26,7 @@ class MemberImportService
     {
 
         $params=["Vereinsnummer" => config('members.external_system_club_id'),"Benutzername"=>config('members.external_system_user'),"Passwort"=> config('members.external_system_password')];
-        $loginUrl=config('members.external_system_url',"https://212.58.87.29/eingabe.php");
+        $loginUrl=config('members.external_system_url',"https://212.58.87.29/Prog_Mitglieder/eingabe.php");
        
 
         $jar = new CookieJar();
