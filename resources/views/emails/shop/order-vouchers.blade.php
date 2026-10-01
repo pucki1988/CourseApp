@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <title>Deine Gutscheincodes</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; color: #1f2937; }
-        .code { font-family: Consolas, monospace; font-size: 1.1rem; font-weight: bold; }
-        .voucher { margin-bottom: 12px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        body { font-family: Arial, sans-serif; padding: 10px; color: #1f2937; }
+        .code { font-family: Consolas, monospace; padding: 10px; font-size: 1.1rem; font-weight: bold; border: 1px solid #333; margin-bottom: 12px; border-radius: 8px; }
+        .voucher { margin-bottom: 12px; padding: 10px;  }
     </style>
 </head>
 <body>
 <p>Hallo,</p>
 <p>vielen Dank fuer deine Bestellung #{{ $order->id }}.</p>
-<p>Hier sind deine Gutscheincodes:</p>
+<p>Deine Gutscheincodes:</p>
 
 @foreach($vouchers as $voucher)
     <div class="voucher">
         <div><strong>{{ $voucher['product_name'] }}</strong></div>
-        <div class="code">{{ $voucher['code'] }}</div>
         <div>{{ number_format(((int) $voucher['amount']) / 100, 2, ',', '.') }} {{ $voucher['currency'] }}</div>
     </div>
+
+    <div class="code">{{ $voucher['code'] }}</div>
 @endforeach
 <p>Der Gutschein ist ausschließlich für Sportkurse der DJK-SG Schönbrunn einlösbar. Eine Einlösung für andere Veranstaltungen oder den Erwerb von Fanartikeln ist nicht möglich.</p>
 <p>Der Gutschein ist ab Ende des Kaufjahres drei Jahre lang gültig. Gültig bis ({{ \Illuminate\Support\Carbon::create(now()->year + 3, 12, 31, 23, 59, 59)->format('d.m.Y') }})</p>
