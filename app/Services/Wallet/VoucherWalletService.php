@@ -7,6 +7,9 @@ use BeyondCode\Vouchers\Facades\Vouchers;
 use BeyondCode\Vouchers\Models\Voucher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use BeyondCode\Vouchers\Exceptions\VoucherAlreadyRedeemed;
+use BeyondCode\Vouchers\Exceptions\VoucherExpired;
+use BeyondCode\Vouchers\Exceptions\VoucherIsInvalid;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -31,8 +34,25 @@ class VoucherWalletService
                 throw new RuntimeException('Das Einlösen ist nur mit einem Account möglich.');
             }
 
+
+            try {
             $voucher = Vouchers::check($code);
 
+            } catch (VoucherIsInvalid $exception) {
+               throw new RuntimeException("Dieser Gutscheincode ist ungültig.");
+            } catch (VoucherExpired $exception) {
+               throw new RuntimeException('Dieser Gutschein ist abgelaufen.');
+            } catch (VoucherAlreadyRedeemed $exception) {
+                throw new RuntimeException("Dieser Gutschein wurde bereits eingelöst.");
+            }
+
+            if (! $voucher) {
+                throw new RuntimeException('Dieser Gutschein existiert nicht.');
+            }
+            if ($voucher->isExpired()) {
+                throw new RuntimeException('Dieser Gutschein ist abgelaufen.');
+            }
+            
             if ($voucher->users()->whereKey($account->getKey())->exists()) {
                 throw new RuntimeException('Dieser Gutschein wurde bereits von diesem Account eingelöst.');
             }
