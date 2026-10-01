@@ -21,8 +21,10 @@
         <div>{{ number_format(((int) $voucher['amount']) / 100, 2, ',', '.') }} {{ $voucher['currency'] }}</div>
     </div>
 @endforeach
-
+<p>Der Gutschein ist ausschließlich für Sportkurse der DJK-SG Schönbrunn einlösbar. Eine Einlösung für andere Veranstaltungen oder den Erwerb von Fanartikeln ist nicht möglich.</p>
+<p>Der Gutschein ist ab Ende des Kaufjahres drei Jahre lang gültig. Gültig bis ({{ \Illuminate\Support\Carbon::create(now()->year + 3, 12, 31, 23, 59, 59)->format('d.m.Y') }})</p>
+<p>Zur Einlösung des Gutscheins ist ein User Account erforderlich.</p>
 <p>Der Gutschein wird nicht automatisch zugeordnet. Erstelle einen Account oder logge dich ein, um den Gutschein zu verwenden.</p>
-<p>Viele Gruesse</p>
+<p>Sportliche Grüße</p>
 </body>
 </html>
