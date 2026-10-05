@@ -14,7 +14,9 @@ class CourseBookingResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $payment = $this->payment;
+        $payments = $this->payments;
+        $payment = $payments->sortByDesc('id')->first();
+        $checkoutPayment = $payments->first(fn ($item) => $item->checkout_url !== null);
 
         return [
             'id' => $this->id,
@@ -31,9 +33,10 @@ class CourseBookingResource extends JsonResource
             'booking_type' => $this->booking_type,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'checkout_url' => $payment?->checkout_url ?? $this->checkout_url,
+            'checkout_url' => $checkoutPayment?->checkout_url ?? $this->checkout_url,
             'is_cancelable' => $this->isCancelable(),
             'payment' => $payment ? new \App\Http\Resources\PaymentResource($payment) : null,
+            'payments' => \App\Http\Resources\PaymentResource::collection($payments),
 
             'course' => $this->course, // Optional: du kannst hier auch CourseResource machen
 

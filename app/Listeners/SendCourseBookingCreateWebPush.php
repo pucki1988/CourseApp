@@ -10,8 +10,8 @@ class SendCourseBookingCreateWebPush implements ShouldQueue
 {
     public function handle(CourseBookingCreate $event): void
     {
-        $booking = $event->booking->loadMissing(['payment', 'course', 'user']);
-        $paymentStatus = $booking->payment?->status ?? $booking->payment_status;
+        $booking = $event->booking->loadMissing(['payments', 'course', 'user']);
+        $paymentStatus = $booking->payments->sortByDesc('id')->first()?->status ?? $booking->payment_status;
 
         if (! in_array($paymentStatus, ['paid', 'open', 'pending'], true)) {
             return;

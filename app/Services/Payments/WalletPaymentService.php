@@ -6,6 +6,7 @@ use App\Contracts\PaymentService;
 use App\Data\Payments\PaymentResult;
 use App\Data\Payments\RefundResult;
 use App\Exceptions\PaymentFailedException;
+use App\Exceptions\WalletInsufficientFundsException;
 use App\Models\Accounting\Account;
 use App\Models\Course\CourseBooking;
 use App\Models\Payment\Payment;
@@ -70,7 +71,7 @@ class WalletPaymentService implements PaymentService
                 $this->paymentProcessor->handlePaid($payment->fresh());
             });
         } catch (BalanceIsEmpty|InsufficientFunds $exception) {
-            throw new PaymentFailedException('Nicht genug Guthaben in der Wallet.');
+            throw new WalletInsufficientFundsException('Nicht genug Guthaben in der Wallet.');
         }
 
         $freshPayment = $payment->fresh();

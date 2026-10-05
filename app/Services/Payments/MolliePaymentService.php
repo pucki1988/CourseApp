@@ -172,7 +172,9 @@ class MolliePaymentService implements PaymentService
             return;
         }
 
-        $legacyLocalPayment = $booking->payment;
+        $legacyLocalPayment = $booking->payments()
+            ->where('provider', 'mollie')
+            ->first();
 
         if (! $legacyLocalPayment || ! $hasRefunds) {
             return;
@@ -235,4 +237,3 @@ class MolliePaymentService implements PaymentService
 
 
 }
-

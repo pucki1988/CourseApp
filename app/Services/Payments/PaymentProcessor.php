@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Events\CourseBookingCreate;
 use App\Events\OrderPaid;
+use App\Jobs\RefundFailedBookingWalletPayments;
 use App\Models\Payment\Payment;
 use App\Models\Course\CourseBooking;
 use App\Models\Shop\Order;
@@ -36,9 +37,19 @@ class PaymentProcessor
                 return;
             }
 
+            $paidAmountCents = (int) round((float) $source->payments()
+                ->where('status', 'paid')
+                ->sum('amount') * 100);
+            $bookingAmountCents = (int) round((float) $source->total_price * 100);
+
+            if ($paidAmountCents < $bookingAmountCents) {
+                return;
+            }
+
             foreach ($source->bookingSlots as $bookingSlot) {
                 $bookingSlot->update(['status' => 'booked']);
             }
+            $source->update(['payment_status' => 'paid']);
             $this->courseBookingService->refreshBookingStatus($source);
 
             event(new CourseBookingCreate($source));
@@ -77,6 +88,21 @@ class PaymentProcessor
         $payment->update($attributes);
 
         $source = $payment->source;
+
+        if ($source instanceof CourseBooking) {
+            $paidAmountCents = (int) round((float) $source->payments()
+                ->where('status', 'paid')
+                ->sum('amount') * 100);
+            $bookingAmountCents = (int) round((float) $source->total_price * 100);
+
+            if ($paidAmountCents < $bookingAmountCents) {
+                $source->update(['payment_status' => $status]);
+
+                if ($payment->provider === 'mollie') {
+                    RefundFailedBookingWalletPayments::dispatch($source->id)->afterCommit();
+                }
+            }
+        }
 
         if ($source instanceof Order) {
             $source->update([

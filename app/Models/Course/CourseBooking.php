@@ -3,6 +3,7 @@ namespace App\Models\Course;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Payment\Payment;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CourseBooking extends Model
 {
@@ -35,9 +36,9 @@ class CourseBooking extends Model
         return $this->hasMany(CourseBookingRefund::class);
     }
 
-    public function payment()
+    public function payments(): MorphMany
     {
-        return $this->morphOne(Payment::class, 'source');
+        return $this->morphMany(Payment::class, 'source');
     }
 
     /* =========================

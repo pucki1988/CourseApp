@@ -66,7 +66,7 @@ Artisan::command('migrate:course-payments', function () {
     CourseBooking::whereNotNull('payment_status')
         ->orWhereNotNull('payment_transaction_id')
         ->orWhereHas('refunds')
-        ->with(['payment', 'refunds'])
+        ->with(['payments', 'refunds'])
         ->each(function (CourseBooking $booking) use (&$createdPayments, &$createdOrUpdatedRefunds) {
             $legacyPaymentStatus = strtolower((string) $booking->payment_status);
 
@@ -82,11 +82,11 @@ Artisan::command('migrate:course-payments', function () {
                 default => $booking->refunds->isNotEmpty() ? 'paid' : 'pending',
             };
 
-            $payment = $booking->payment;
+            $payment = $booking->payments->first();
             $currentPaymentStatus = null;
 
             if (! $payment) {
-                $payment = $booking->payment()->create([
+                $payment = $booking->payments()->create([
                     'amount' => $booking->total_price,
                     'currency' => 'EUR',
                     'provider' => 'mollie',

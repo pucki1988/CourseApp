@@ -8,6 +8,7 @@ use App\Models\Course\Course;
 use Illuminate\Support\Facades\DB;
 use App\Services\Course\CourseBookingService;
 use App\Services\Payments\PaymentServiceResolver;
+use App\Exceptions\WalletInsufficientFundsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use LogicException;
@@ -56,33 +57,62 @@ class CreateBookingAction
 
             $newBooking = $this->courseBookingService->store($request, $course);
 
-            if ($newBooking->payment()->exists()) {
-                throw new LogicException('Für diese Buchung existiert bereits ein Payment.');
+            if ($newBooking->payments()->exists()) {
+                throw new LogicException('Für diese Buchung existieren bereits Payments.');
             }
 
-            $localPayment = $newBooking->payment()->create([
-                'amount'   => $newBooking->total_price,
-                'currency' => 'EUR',
-                'method'   => $useSportsWallet ? 'wallet' : 'pending',
-                'provider' => $useSportsWallet ? 'wallet' : 'mollie',
-                'status'   => 'pending',
-                'meta'     => $useSportsWallet
-                    ? [
+            $totalCents = (int) round(((float) $newBooking->total_price) * 100);
+            $walletCents = 0;
+            $account = $request->user()?->account;
+
+            if ($useSportsWallet && ! $account) {
+                throw new LogicException('Für eine Wallet-Zahlung ist ein Account erforderlich.');
+            }
+
+            if ($useSportsWallet) {
+                $wallet = $account->walletBySlug($walletSlug);
+                $walletCents = min($totalCents, max(0, (int) $wallet->balanceInt));
+            }
+
+            if ($walletCents > 0) {
+                $walletPayment = $newBooking->payments()->create([
+                    'amount' => number_format($walletCents / 100, 2, '.', ''),
+                    'currency' => 'EUR',
+                    'method' => 'wallet',
+                    'provider' => 'wallet',
+                    'status' => 'pending',
+                    'meta' => [
                         'wallet_slug' => $walletSlug,
-                        'payer_account_id' => $request->user()?->account?->id,
-                    ]
-                    : null,
-            ]);
+                        'payer_account_id' => $account->id,
+                    ],
+                ]);
 
-            $newBooking->load('payment');
+                try {
+                    $this->paymentServiceResolver
+                        ->resolve($walletPayment)
+                        ->createPayment($walletPayment);
+                } catch (WalletInsufficientFundsException) {
+                    $walletPayment->delete();
+                    $walletCents = 0;
+                }
+            }
 
-            $this->paymentServiceResolver
-                ->resolve($localPayment)
-                ->createPayment($localPayment);
+            $providerCents = $totalCents - $walletCents;
+            if ($providerCents > 0 || $totalCents === 0) {
+                $providerPayment = $newBooking->payments()->create([
+                    'amount' => number_format($providerCents / 100, 2, '.', ''),
+                    'currency' => 'EUR',
+                    'method' => 'pending',
+                    'provider' => 'mollie',
+                    'status' => 'pending',
+                ]);
 
-            $this->courseBookingService->refreshBookingStatus($newBooking);
+                $this->paymentServiceResolver
+                    ->resolve($providerPayment)
+                    ->createPayment($providerPayment);
+            }
 
-            $data["booking"]=$newBooking->refresh();
+            $data['booking'] = $newBooking->refresh()->load('payments');
             return $data;
         });
     }

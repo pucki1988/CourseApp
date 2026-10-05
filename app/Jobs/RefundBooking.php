@@ -7,11 +7,10 @@ use Illuminate\Foundation\Queue\Queueable;
 use App\Exceptions\PaymentFailedException;
 use App\Models\Course\CourseBookingSlot;
 use App\Models\Course\CourseBooking;
-use App\Models\Payment\Payment;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseBookingService;
 use App\Services\Loyalty\LoyaltyPointService;
-use App\Services\Payments\PaymentServiceResolver;
+use App\Services\Payments\BookingPaymentRefundService;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -51,74 +50,15 @@ class RefundBooking implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(PaymentServiceResolver $paymentServiceResolver,
+    public function handle(BookingPaymentRefundService $bookingPaymentRefundService,
         CourseBookingSlotService $bookingSlotService,
         CourseBookingService $courseBookingService,
         LoyaltyPointService $loyaltyPointService): void
     {
         $booking = CourseBooking::find($this->bookingId);
-        $booking->loadMissing('payment');
         
         try {
-            // 1) Neuer Weg: genau ein Payment pro Booking
-            $localPayment = $booking?->payment;
-
-            // 2) Legacy-Fallback: exakt die gespeicherte Provider-Transaktion
-            if (! $localPayment && $booking->payment_transaction_id) {
-                $localPayment = Payment::where('source_type', CourseBooking::class)
-                    ->where('source_id', $booking->id)
-                    ->where('provider', 'mollie')
-                    ->where('provider_payment_id', $booking->payment_transaction_id)
-                    ->first();
-            }
-
-            // 3) Fallback: letzte als paid markierte Mollie-Zahlung
-            if (! $localPayment) {
-                $localPayment = Payment::where('source_type', CourseBooking::class)
-                    ->where('source_id', $booking->id)
-                    ->where('provider', 'mollie')
-                    ->where('status', 'paid')
-                    ->first();
-            }
-
-            // 4) Letzter Fallback: irgendein lokaler Payment-Record
-            if (! $localPayment) {
-                $localPayment = Payment::where('source_type', CourseBooking::class)
-                    ->where('source_id', $booking->id)
-                    ->first();
-            }
-
-            // Für alte Buchungen ohne Payment-Record: synthetischen Record aus Legacy-Feld erzeugen
-            if (!$localPayment && $booking->payment_transaction_id) {
-                $localPayment = $booking->payment()->create([
-                    'amount'               => $booking->total_price,
-                    'currency'             => 'EUR',
-                    'method'               => 'pending',
-                    'provider'             => 'mollie',
-                    'provider_payment_id'  => $booking->payment_transaction_id,
-                    'status'               => 'paid',
-                    'paid_at'              => $booking->updated_at,
-                ]);
-            }
-
-            if (!$localPayment) {
-                throw new PaymentFailedException(
-                    'Kein Payment-Record für Booking #'.$booking->id.' gefunden.'
-                );
-            }
-
-            $refund = $paymentServiceResolver
-                ->resolve($localPayment)
-                ->refund($localPayment, (float) $booking->total_price);
-
-            $localPayment->refunds()->updateOrCreate(
-                ['provider_refund_id' => $refund->refundId],
-                [
-                    'amount' => (float) $booking->total_price,
-                    'currency' => $localPayment->currency ?? 'EUR',
-                    'status' => $this->normalizeRefundStatus($refund->status),
-                ]
-            );
+            $bookingPaymentRefundService->refund($booking, (float) $booking->total_price);
 
 
             $booking->bookingSlots()
@@ -153,19 +93,6 @@ class RefundBooking implements ShouldQueue
 
             throw $e; // ⬅️ wichtig für Retry!
         }
-    }
-
-    private function normalizeRefundStatus(string $providerStatus): string
-    {
-        return match ($providerStatus) {
-            'queued' => 'queued',
-            'pending' => 'pending',
-            'processing' => 'processing',
-            'refunded' => 'refunded',
-            'failed' => 'failed',
-            'canceled' => 'canceled',
-            default => 'queued',
-        };
     }
 
     public function failed(Throwable $exception): void

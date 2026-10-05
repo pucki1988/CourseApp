@@ -54,7 +54,7 @@ class CourseBookingService
               ->orderBy('start_time');
         },
         'bookingSlots',
-                'payment',
+                'payments',
         ]);
     }
 
@@ -67,11 +67,7 @@ class CourseBookingService
     public function bookWholeCourse(Course $course)
     {
         $bookingCount = $course->bookings()
-            ->where(function ($query) {
-                $query->whereHas('payment', function ($paymentQuery) {
-                    $paymentQuery->where('status', 'paid');
-                });
-            })
+            ->whereIn('status', ['paid', 'partially_refunded'])
             ->count();
 
         if($bookingCount >= $course->capacity)
@@ -225,7 +221,7 @@ class CourseBookingService
      */
     public function listBookings(array $filters = [], int $perPage = 10)
     {
-        $query=CourseBooking::with(['course','bookingSlots.slot','user','payment']);
+        $query=CourseBooking::with(['course','bookingSlots.slot','user','payments']);
 
         $user = auth()->user();
 
@@ -238,7 +234,7 @@ class CourseBookingService
         }
 
          $query->where(function ($statusQuery) {
-            $statusQuery->whereHas('payment', function ($paymentQuery) {
+            $statusQuery->whereHas('payments', function ($paymentQuery) {
                 $paymentQuery->whereIn('status', ['pending', 'open', 'paid']);
             })->orWhereIn('payment_status', ['pending', 'open', 'paid']);
          });
@@ -267,12 +263,12 @@ class CourseBookingService
 
     public function listBookingsFrontend()
     {
-        $query=CourseBooking::with(['course','bookingSlots.slot','user','payment']);
+        $query=CourseBooking::with(['course','bookingSlots.slot','user','payments']);
         
         $query->where('user_id', auth()->user()->id);
         
         $query->where(function ($statusQuery) {
-            $statusQuery->whereHas('payment', function ($paymentQuery) {
+            $statusQuery->whereHas('payments', function ($paymentQuery) {
                 $paymentQuery->whereIn('status', ['pending', 'open', 'paid']);
             });
         });
