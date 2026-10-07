@@ -49,7 +49,7 @@ class PaymentProcessor
             foreach ($source->bookingSlots as $bookingSlot) {
                 $bookingSlot->update(['status' => 'booked']);
             }
-            $source->update(['payment_status' => 'paid']);
+            #$source->update(['payment_status' => 'paid']);
             $this->courseBookingService->refreshBookingStatus($source);
 
             event(new CourseBookingCreate($source));
@@ -96,7 +96,7 @@ class PaymentProcessor
             $bookingAmountCents = (int) round((float) $source->total_price * 100);
 
             if ($paidAmountCents < $bookingAmountCents) {
-                $source->update(['payment_status' => $status]);
+                #$source->update(['payment_status' => $status]);
 
                 if ($payment->provider === 'mollie') {
                     RefundFailedBookingWalletPayments::dispatch($source->id)->afterCommit();
