@@ -65,10 +65,7 @@ new class extends Component {
                                     <span class="text-gray-500">Buchungsstatus</span>
                                     <span><flux:badge size="sm" color="{{ $booking->status == 'paid' ? 'green' : ($booking->status == 'pending' ? 'red' : 'gray') }}">{{ $booking->status }}</flux:badge></span>
                                 </div>
-                                <div class="flex justify-between mt-1">
-                                    <span class="text-gray-500">Zahlungsstatus</span>
-                                    <span><flux:badge size="sm" color="{{ $booking->payments?->status === 'paid' ? 'green' : ($booking->status == 'pending' ? 'gray' : 'red') }}">{{ $booking->payments?->status }}</flux:badge></span>
-                                </div>
+                                
                             </div>
                 </div>
             </div>
@@ -158,37 +155,64 @@ new class extends Component {
             </div>
             
             @endif
-
-            <flux:heading size="lg">Erstattungen</flux:heading>
-            @foreach ($booking->payments as $payment)
-            
+            <flux:heading size="lg">Zahlungen</flux:heading>
             <div class="space-y-3 grid auto-rows-min gap-4 xl:grid-cols-3 mb-3">
-                @foreach ($payment->refunds as $index => $refund)
-                    <div class="border rounded-lg p-3 bg-white shadow-sm">
-                        <div class="text-sm">
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Datum</span>
-                                <span>{{ $refund?->completed_at?->format('d.m.Y H:i') }}</span>
-                            </div>
-
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Betrag</span>
-                                <span>€ {{ $refund->amount }}</span>
-                            </div>
-                            
-
-                            <div class="flex justify-between mt-1">
-                                <span class="text-gray-500">Status</span>
-                                <span><flux:badge size="sm" color="{{ $refund->status == 'refunded' ? 'green' : ($refund->status == 'canceled' ? 'red' : 'gray') }}">{{ $refund->status }}</flux:badge></span>
-                            </div>
+            @foreach ($booking->payments as $payment)
+                <div class="border rounded-lg p-3 bg-white shadow-sm">
+                    <div class="text-sm">
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Datum</span>
+                            <span>{{ $payment?->created_at?->format('d.m.Y H:i') }}</span>
                         </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Provider</span>
+                            <span>{{ $payment?->provider }}</span>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Zahlungsart</span>
+                            <span>{{ $payment?->method }}</span>
+                        </div>
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Betrag</span>
+                            <span>€ {{ $payment->amount }}</span>
+                        </div>
+
+                        <div class="flex justify-between mt-1">
+                            <span class="text-gray-500">Status</span>
+                            <span><flux:badge size="sm" color="{{ $payment->status == 'paid' ? 'green' : ($payment->status == 'canceled' ? 'red' : 'gray') }}">{{ $payment->status }}</flux:badge></span>
+                        </div>
+
+                        @if ($payment->refunds->count() > 0)
+                            <flux:heading size="lg">Rückerstattungen</flux:heading>
+                             @foreach ($payment->refunds as $index => $refund)
+                                 <div class="flex justify-between mt-1">
+                                     <span class="text-gray-500">Rückerstattung {{ $index + 1 }}</span>
+                                     <span>€ {{ $refund->amount }}</span>
+                                 </div>
+                                 <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Status</span>
+                                    <span><flux:badge size="sm" color="{{ $refund->status == 'refunded' ? 'green' : ($refund->status == 'canceled' ? 'red' : 'gray') }}">{{ $refund->status }}</flux:badge></span>
+                                </div>
+                                <div class="flex justify-between mt-1">
+                                    <span class="text-gray-500">Datum</span>
+                                    <span>{{ $refund?->completed_at?->format('d.m.Y H:i') }}</span>
+                                </div>
+                             @endforeach
+                        @endif
+
                     </div>
-                @endforeach
-                
+                </div>
+            @endforeach
+
+            
+
 
             </div>
 
-            @endforeach
+            
+            
+
+            
             <flux:heading size="lg">Zusammenfassung</flux:heading>
             <div class="border rounded-lg p-3 bg-white shadow-sm mt-3">
                         <div class="text-sm">
