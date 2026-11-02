@@ -82,6 +82,7 @@ new class extends Component {
         $this->editData = [
             'title' => $this->course->title,
             'description' => $this->course->description,
+            'address' => $this->course->address,
             'difficulty_level' => $this->course->difficulty_level,
             'allowed_wallet_slugs' => $this->course->allowed_wallet_slugs ?? [],
         ];
@@ -289,6 +290,8 @@ new class extends Component {
                 
                 <flux:textarea label="Beschreibung" wire:model="editData.description" placeholder="Beschreibung des Kurses" rows="2" />
 
+                <flux:input label="Adresse (optional)" wire:model="editData.address" placeholder="Straße, Hausnummer, PLZ und Stadt" type="text" />
+
                 <flux:field>
                 <flux:label>Schwierigkeitsgrad</flux:label>
                 <flux:select wire:model="editData.difficulty_level" placeholder="Wähle den Schwierigkeitsgrad">
@@ -363,6 +366,7 @@ new class extends Component {
             >
             {{ $course->description }}
             </flux:textarea>
+            <flux:input label="Adresse" class="mb-5" type="text" :value="$course->address ?: '-'" readonly disabled />
             @endif
             
 

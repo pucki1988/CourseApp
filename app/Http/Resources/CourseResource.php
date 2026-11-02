@@ -25,6 +25,7 @@ class CourseResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'location' => $this->location,
+            'address' => $this->address,
             'member_discount' => $this->member_discount,
             'difficulty_level' => $this->difficulty_level,
             'allowed_wallet_slugs' => $this->allowed_wallet_slugs ?? [],
@@ -98,6 +99,7 @@ class CourseResource extends JsonResource
                         'created_at' => $this->created_at,
                         'updated_at' => $this->updated_at,
                         'location' => $this->location,
+                        'address' => $this->address,
                         'member_discount' => $this->member_discount,
                     ],
                 ];

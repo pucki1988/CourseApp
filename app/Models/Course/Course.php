@@ -8,7 +8,7 @@ use App\Models\Coach\Coach;
 class Course extends Model
 {
 
-    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location','member_discount','difficulty_level','allowed_wallet_slugs'];
+    protected $fillable = ['title','description','booking_type','price','capacity','coach_id','location','address','member_discount','difficulty_level','allowed_wallet_slugs'];
     protected $casts = [
         'member_discount' => 'decimal:2',
         'allowed_wallet_slugs' => 'array',

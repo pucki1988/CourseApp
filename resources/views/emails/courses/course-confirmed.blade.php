@@ -16,6 +16,10 @@
 <p>gute Nachrichten — der Termin am <strong>{{ $slot->date->format('d.m.Y') }} | {{ $slot->start_time->format('H:i') }}</strong>
 für den Kurs <strong>{{ $slot->course->title }}</strong> findet statt.</p>
 
+@if($slot->course->address)
+<p>Anfahrtsadresse: <br/><strong>{{ $slot->course->address }}</strong></p>
+@endif
+
 @if($slot->course->equipmentItems && $slot->course->equipmentItems->isNotEmpty())
     <p>Bitte denke daran, folgendes Equipment mitzubringen:</p>
     <ul>

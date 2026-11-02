@@ -50,6 +50,7 @@ new class extends Component {
             'capacity' => null,
             'coach_id' => null,
             'location' => '',
+            'address' => '',
             'member_discount' => null,
             'difficulty_level' => null,
             'allowed_wallet_slugs' => [],
@@ -237,6 +238,9 @@ new class extends Component {
             <flux:input label="Ort" placeholder="Ort des Kurses" type="text" :value="$newCourse['location']"
     wire:change="$set('newCourse.location', $event.target.value)" />
 
+            <flux:input label="Adresse (optional)" placeholder="Straße, Hausnummer, PLZ und Stadt" type="text" :value="$newCourse['address']"
+    wire:change="$set('newCourse.address', $event.target.value)" />
+
             <flux:input wire:model="newCourse.capacity" label="Kapazität" placeholder="Maximale Teilnehmer je Termin" min="1"  type="number" />
             
             <flux:label>Coach</flux:label>
@@ -338,7 +342,6 @@ new class extends Component {
         
     </x-courses.layout>
 </section>
-
 
 
 

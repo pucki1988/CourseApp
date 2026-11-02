@@ -18,6 +18,9 @@
 Kurs: <strong>{{ $booking->course->title }}</strong><br/>
 Buchung: <strong>#{{ $booking->id }}</strong><br/>
 Ort: <strong>{{ $booking->course->location }}</strong>
+@if($booking->course->address)
+<br/>Anfahrtsadresse: <strong>{{ $booking->course->address }}</strong>
+@endif
 </p>
 <h4>Gebuchte Termine</h4>
 <div>
