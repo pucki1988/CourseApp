@@ -2,9 +2,11 @@
 
 namespace App\Mail;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Shop\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -34,6 +36,19 @@ class OrderVouchersMail extends Mailable
 
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromData(
+                fn () => $this->generatePdf(),
+                'gutscheine-bestellung-'.$this->order->id.'.pdf',
+            )->withMime('application/pdf'),
+        ];
+    }
+
+    private function generatePdf(): string
+    {
+        return Pdf::loadView('pdf.shop.order-vouchers', [
+            'order' => $this->order,
+            'vouchers' => $this->vouchers,
+        ])->setPaper('a4')->output();
     }
 }
