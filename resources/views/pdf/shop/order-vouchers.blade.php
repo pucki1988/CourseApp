@@ -9,17 +9,35 @@
             color: #1f2937;
             font-size: 12px;
             margin: 28px;
-        }
-       
-        .voucher {
-            border: 1px solid #ffc11e;
             
+        }
+        .vouchers-container {
+            border: 2px dotted #1f2937;
+            padding: 10px;
+        }
+        .voucher {
+            border-left: 1px solid #1f2937;
+            border-right: 1px solid #1f2937;
             padding: 20px;
             page-break-inside: avoid;
             text-align: center;
         }
+        .logo {
+            width: 53px;
+            
+        }
+        .voucher-logo {
+            text-align: center;
+            background: #ffc11e;
+            padding: 10px 0 0;
+            border-left: 1px solid #1f2937;
+            border-right: 1px solid #1f2937;
+        }
+
         .voucher-label {
             background: #ffc11e;
+            border-bottom: 2px solid #1f2937;
+            border-top: 1px solid #1f2937;
             padding: 8px 8px;
             font-size: 10px;
             font-weight: normal;
@@ -27,6 +45,8 @@
             margin-bottom: 0px;
             text-transform: uppercase;
             text-align: center;
+            border-left: 1px solid #1f2937;
+            border-right: 1px solid #1f2937;
         }
         .voucher-header {
             background: #ffc11e;
@@ -37,6 +57,8 @@
             margin-bottom: 0px;
             text-transform: uppercase;
             text-align: center;
+            border-left: 1px solid #1f2937;
+            border-right: 1px solid #1f2937;
         }
 
         .voucher-footer {
@@ -44,7 +66,9 @@
             padding: 4px;
             font-size: 10px;
             font-weight: normal;
-            
+            border-left: 1px solid #1f2937;
+            border-right: 1px solid #1f2937;
+            border-bottom: 1px solid #1f2937;
             margin-bottom: 20px;
             text-transform: uppercase;
             text-align: center;
@@ -88,10 +112,24 @@
 </head>
 <body>
     
+    @php
+        $logoPath = public_path('logosg.svg');
+        $logo = is_file($logoPath) ? 'data:image/svg+xml;base64,'.base64_encode(file_get_contents($logoPath)) : null;
+    @endphp
+
+    <div class="vouchers-container">
     @foreach($vouchers as $voucher)
+       
         <div class="voucher-label">Gutschein</div>
+        <div class="voucher-logo"> 
+        @if($logo)
+            <img src="{{ $logo }}" class="logo" alt="">
+        @endif
+        </div>
+        
         <div class="voucher-header">Sportkurse</div>
         <div class="voucher">
+            
             <div class="product">{{ $voucher['product_name'] }}</div>
             <div class="amount">{{ number_format(((int) $voucher['amount']) / 100, 2, ',', '.') }} {{ $voucher['currency'] }}</div>
             
@@ -106,7 +144,7 @@
         </div>
         <div class="voucher-footer">DJK-SG Schönbrunn am Lusen 1961 e.V. </div>
     @endforeach
-
+</div>
     
 </body>
 </html>
