@@ -27,6 +27,24 @@ class VoucherWalletService
         ], $meta), $expiresAt);
     }
 
+    /**
+     * Expires vouchers immediately; already redeemed vouchers are left untouched.
+     */
+    public function expireUnredeemedVouchers(array $voucherIds): void
+    {
+        if ($voucherIds === []) {
+            return;
+        }
+
+        Voucher::query()->whereIn('id', $voucherIds)->each(function (Voucher $voucher): void {
+            if ($voucher->users()->exists() || $voucher->isExpired()) {
+                return;
+            }
+
+            $voucher->update(['expires_at' => now()]);
+        });
+    }
+
     public function redeemVoucher(Account $account, string $code): Voucher
     {
         return DB::transaction(function () use ($account, $code): Voucher {

@@ -96,6 +96,19 @@
                 </span>
             </flux:navlist.item>
         @endcan
+        @can('courses.manage')
+            <flux:navlist.item
+                :href="route('course_management.vouchers.index')"
+                :current="request()->routeIs('course_management.vouchers.index')"
+                wire:navigate
+                class="h-14"
+            >
+                <span class="flex flex-col items-center justify-center md:items-start md:justify-start gap-1 md:flex-row md:gap-2">
+                <flux:icon.ticket class="h-5 w-5 md:hidden" />
+                <span class="md:inline">{{ __('Gutscheine') }}</span>
+                </span>
+            </flux:navlist.item>
+        @endcan
         @can('coaches.manage')
             <flux:navlist.item
                 :href="route('course_management.coaches.index')"

@@ -220,6 +220,10 @@ class MolliePaymentService implements PaymentService
                 'failed_at' => $newStatus === 'failed' ? now() : null,
                 'canceled_at' => $newStatus === 'canceled' ? now() : null,
             ]);
+
+            if (! in_array($newStatus, ['failed', 'canceled'], true)) {
+                $this->paymentProcessor->handleRefunded($payment);
+            }
         }
 
         if (count($processedProviderIds) === 0) {

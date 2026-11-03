@@ -10,12 +10,14 @@ use App\Models\Course\CourseBooking;
 use App\Models\Shop\Order;
 use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
+use App\Services\Wallet\VoucherWalletService;
 
 class PaymentProcessor
 {
     public function __construct(
         protected CourseBookingService $courseBookingService,
         protected CourseBookingSlotService $courseBookingSlotService,
+        protected VoucherWalletService $voucherWalletService,
     ) {}
 
     /**
@@ -66,6 +68,31 @@ class PaymentProcessor
             }
 
             event(new OrderPaid($source));
+        }
+    }
+
+    /**
+     * Refund (e.g. triggered directly at the provider): invalidate unredeemed vouchers of the order.
+     * Idempotent, as webhooks may be delivered multiple times.
+     */
+    public function handleRefunded(Payment $payment): void
+    {
+        $source = $payment->source;
+
+        if (! $source instanceof Order) {
+            return;
+        }
+
+        $source->loadMissing('items');
+
+        foreach ($source->items as $item) {
+            if ($item->product_type !== 'sports_voucher') {
+                continue;
+            }
+
+            $this->voucherWalletService->expireUnredeemedVouchers(
+                collect($item->meta['vouchers'] ?? [])->pluck('id')->filter()->all()
+            );
         }
     }
 
