@@ -6,7 +6,6 @@ use App\Models\Course\Course;
 use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseSlot;
 use App\Models\Loyalty\LoyaltyAccount;
-use App\Models\Loyalty\LoyaltyPointTransaction;
 use App\Models\Member\Member;
 use App\Models\User;
 use App\Services\Course\CourseBookingService;
@@ -303,7 +302,7 @@ test('coupon validation requires authentication', function () {
         ->assertUnauthorized();
 });
 
-test('coupon and loyalty points leave exact refundable cash shares for all slots', function () {
+test('a coupon prevents loyalty point redemption and leaves exact refundable cash shares', function () {
     config()->set('loyalty.point_value_eur', 0.01);
     $account = LoyaltyAccount::create(['type' => 'user']);
     $account->transactions()->create(['points' => 400, 'type' => 'earn', 'origin' => 'sport', 'balance_after' => 400]);
@@ -316,21 +315,22 @@ test('coupon and loyalty points leave exact refundable cash shares for all slots
         'slots' => array_column($slots, 'id'), 'coupon_code' => 'TEST', 'use_loyalty' => true,
     ]), $course);
 
-    expect($booking->total_price)->toBe('21.00')
-        ->and($booking->redeemed_points)->toBe(400)
-        ->and($booking->bookingSlots->pluck('coupon_refund_price')->all())->toBe(['7.00', '14.00']);
+    expect($booking->total_price)->toBe('25.00')
+        ->and($booking->redeemed_points)->toBe(0)
+        ->and($account->fresh()->balance())->toBe(400)
+        ->and($booking->bookingSlots->pluck('coupon_refund_price')->all())->toBe(['8.33', '16.67']);
 
     $refunds = Mockery::mock(BookingPaymentRefundService::class);
-    $refunds->shouldReceive('refund')->once()->withArgs(fn ($b, $amount) => $b->id === $booking->id && $amount === 7.0);
-    $refunds->shouldReceive('refund')->once()->withArgs(fn ($b, $amount) => $b->id === $booking->id && $amount === 14.0);
+    $refunds->shouldReceive('refund')->once()->withArgs(fn ($b, $amount) => $b->id === $booking->id && $amount === 8.33);
+    $refunds->shouldReceive('refund')->once()->withArgs(fn ($b, $amount) => $b->id === $booking->id && $amount === 16.67);
     $loyalty = Mockery::mock(LoyaltyPointService::class);
-    $loyalty->shouldReceive('earn')->once()->andReturn(new LoyaltyPointTransaction);
+    $loyalty->shouldNotReceive('earn');
     foreach ($booking->bookingSlots as $slot) {
         (new RefundBookingSlot($booking->id, $slot->id))->handle(
             $refunds, app(CourseBookingSlotService::class), app(CourseBookingService::class), $loyalty
         );
     }
-    expect($booking->fresh()->points_restored)->toBe(1);
+    expect($booking->fresh()->points_restored)->toBe(0);
 });
 
 test('a coupon cannot be used with a slot from another course', function () {

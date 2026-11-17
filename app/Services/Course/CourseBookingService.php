@@ -206,7 +206,7 @@ class CourseBookingService
             $pointValueEur = (float) config('loyalty.point_value_eur', 0.01);
             $use_loyalty = (boolean) $request->input('use_loyalty', false);
 
-            if ($use_loyalty && $user && $user->loyaltyAccount && $pointValueEur > 0) {
+            if ($use_loyalty && ! $coupon && $user && $user->loyaltyAccount && $pointValueEur > 0) {
                 $account = $user->loyaltyAccount;
                 $maxPointsByPrice = (int) floor($totalPrice / $pointValueEur);
                 

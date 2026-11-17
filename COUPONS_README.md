@@ -59,10 +59,12 @@ die Buchungsdaten `coupon_code`, `coupon_discount` und den rabattierten
 `total_price`. Die Buchungsliste enthält dieselben Coupon-Felder.
 
 Der Coupon wird nach dem Mitgliederrabatt einmal auf die gesamte Buchung
-angewandt, vor dem Einlösen von Treuepunkten. Bei Buy X Get Y zählt jeder
+angewandt. Coupon und Treuepunkte können nicht kombiniert werden: Sobald ein
+Coupon eingelöst wird, werden für die Buchung keine Treuepunkte eingesetzt.
+Bei Buy X Get Y zählt jeder
 ausgewählte Termin als eine Einheit; der Rabatt wird anhand des Durchschnittspreises
 aller ausgewählten Termine nach Mitgliederrabatt berechnet. Eine Ganzkursbuchung zählt als eine
-Einheit. Der Couponrabatt und ggf. eingesetzte Punkte werden für spätere
+Einheit. Der Couponrabatt beziehungsweise eingesetzte Punkte werden für spätere
 Teilstornierungen centgenau anteilig auf die Termine verteilt. Bereits
 zurückgegebene Treuepunkte werden nicht erneut erstattet.
 
