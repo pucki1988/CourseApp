@@ -24,7 +24,7 @@ class CourseBookingService
     public function store(Request $request, Course $course)
     {
         if ($course->booking_type === 'per_course') {
-            return $this->bookWholeCourse($course);
+            return $this->bookWholeCourse($course, $request);
         }
 
         return $this->bookPerSlot($request, $course);
@@ -64,8 +64,9 @@ class CourseBookingService
     /**
      * Ganze Kursbuchung
      */
-    public function bookWholeCourse(Course $course)
+    public function bookWholeCourse(Course $course, ?Request $request = null)
     {
+        return DB::transaction(function () use ($course, $request) {
         $bookingCount = $course->bookings()
             ->whereIn('status', ['paid', 'partially_refunded'])
             ->count();
@@ -85,12 +86,27 @@ class CourseBookingService
 
         
 
+        $coupon = null;
+        $price = $course->price - $discount;
+        if ($request && filled($request->input('coupon_code'))) {
+            $couponService = app(CourseCouponService::class);
+            $price = $couponService->priceForCourse($course, $user) / 100;
+            $coupon = $couponService->redeem(
+                trim($request->input('coupon_code')),
+                $user,
+                [(int) round($price * 100)]
+            );
+            $price -= $coupon['discount'] / 100;
+        }
+
         $booking = CourseBooking::create([
             'user_id'     => auth()->id(),
             'user_name' => $user->name,
             'course_id'   => $course->id,
             'course_title' => $course->title,
-            'total_price' => $course->price - $discount,
+            'total_price' => $price,
+            'coupon_code' => $coupon['code'] ?? null,
+            'coupon_discount' => $coupon ? $coupon['discount'] / 100 : null,
             'booking_type' => $course->booking_type
         ]);
 
@@ -107,6 +123,7 @@ class CourseBookingService
         }
 
         return $booking;
+        });
     }
 
 
@@ -117,7 +134,7 @@ class CourseBookingService
     {
 
         return DB::transaction(function () use ($request, $course): CourseBooking {
-            $selectedSlots = CourseSlot::whereIn('id', $request->slots)->where('status','active')
+            $selectedSlots = CourseSlot::where('course_id', $course->id)->whereIn('id', $request->slots)->where('status','active')
             ->lockForUpdate()
             ->get();
 
@@ -125,6 +142,11 @@ class CourseBookingService
                 throw new \Exception("Kein Slot ausgewählt");
             }
 
+            if ($selectedSlots->count() !== count(array_unique($request->slots))) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'slots' => 'Ein ausgewählter Termin ist nicht verfügbar oder gehört nicht zu diesem Kurs.',
+                ]);
+            }
 
 
             $createBookingSlots = [];
@@ -159,11 +181,26 @@ class CourseBookingService
                 }
 
                 $createBookingSlots[] = $slot;
-                $totalPrice += ($slot->price - $discount);  
+
+                $slotPrice = $slot->price - $discount;
+                $totalPrice += $slotPrice;
             }
 
 
             
+
+            $coupon = null;
+            $couponPrices = [];
+            if (filled($request->input('coupon_code'))) {
+                $couponService = app(CourseCouponService::class);
+                $prices = $couponService->pricesForSlots($course, $user, $createBookingSlots);
+                $coupon = $couponService->redeem(trim($request->input('coupon_code')), $user, $prices);
+                $discountShares = $couponService->allocate($coupon['discount'], $prices);
+                foreach ($prices as $index => $price) {
+                    $couponPrices[] = $price - $discountShares[$index];
+                }
+                $totalPrice = array_sum($couponPrices) / 100;
+            }
 
             $pointsToRedeem = 0;
             $pointValueEur = (float) config('loyalty.point_value_eur', 0.01);
@@ -185,7 +222,9 @@ class CourseBookingService
                 'course_title' => $course->title,
                 'total_price' => $totalPrice,
                 'booking_type' => $course->booking_type,
-                'redeemed_points' => $pointsToRedeem
+                'redeemed_points' => $pointsToRedeem,
+                'coupon_code' => $coupon['code'] ?? null,
+                'coupon_discount' => $coupon ? $coupon['discount'] / 100 : null,
             ]);
 
             if ($pointsToRedeem > 0 && $user && $user->loyaltyAccount) {
@@ -200,14 +239,18 @@ class CourseBookingService
                 );
             }
 
-            foreach ($createBookingSlots as $slot) {
+            $refundPrices = $coupon
+                ? $couponService->allocate((int) round($totalPrice * 100), $couponPrices)
+                : [];
+            foreach ($createBookingSlots as $index => $slot) {
 
                 if ($slot->status !== 'active') {
                     continue; // überspringe inaktive Slots
                 }
                 $booking->bookingSlots()->create([
                     'course_slot_id' => $slot->id,
-                    'price'          => ($slot->price - $discount),
+                    'price'          => $coupon ? $couponPrices[$index] / 100 : ($slot->price - $discount),
+                    'coupon_refund_price' => $coupon ? $refundPrices[$index] / 100 : null,
                 ]);
             }
             return $booking;

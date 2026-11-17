@@ -23,6 +23,8 @@ class CourseBookingResource extends JsonResource
             'user_id' => $this->user_id,
             'course_id' => $this->course_id,
             'total_price' => $this->total_price,
+            'coupon_code' => $this->coupon_code,
+            'coupon_discount' => $this->coupon_discount,
             'status' => $this->status,
 
             // Legacy fields are kept for old refunds.

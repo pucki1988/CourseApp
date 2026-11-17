@@ -103,6 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::post('/booking/{course}', [CourseBookingController::class, 'store']);
+    Route::post('/booking/{course}/coupon/validate', [CourseBookingController::class, 'validateCoupon']);
     Route::get('/bookings', [CourseBookingController::class, 'index']);
     Route::get('/bookings/{courseBooking}', [CourseBookingController::class, 'show']);
     Route::post('/booking/{courseBooking}/slots/{courseBookingSlot}/cancel', [CourseBookingController::class, 'cancelBookingSlot']);

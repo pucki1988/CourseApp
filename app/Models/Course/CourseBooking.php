@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CourseBooking extends Model
 {
-    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type','checkout_url','redeemed_points','points_restored'];
+    protected $fillable = ['user_id','course_id','total_price','status','payment_status','payment_transaction_id','booking_type','checkout_url','redeemed_points','points_restored','coupon_code','coupon_discount'];
 
     protected $casts = [
         'total_price' => 'decimal:2',
+        'coupon_discount' => 'decimal:2',
     ];
     public function user()
     {

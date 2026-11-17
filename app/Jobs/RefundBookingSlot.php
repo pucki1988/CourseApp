@@ -70,7 +70,9 @@ class RefundBookingSlot implements ShouldQueue
                 $discount = $booking->bookingSlots()->sum('price') - $booking->total_price;
             }
 
-            $refundAmount = (float) ($bookingSlot->price - $discount);
+            $refundAmount = $bookingSlot->coupon_refund_price !== null
+                ? (float) $bookingSlot->coupon_refund_price
+                : (float) ($bookingSlot->price - $discount);
             $bookingPaymentRefundService->refund($booking, $refundAmount);
 
             $bookingSlotService->refund($bookingSlot);

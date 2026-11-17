@@ -7,6 +7,8 @@ use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseBookingSlot;
 use App\Http\Controllers\Controller;
 use App\Services\Course\CourseBookingService;
+use App\Services\Course\CourseCouponService;
+use App\Models\Course\CourseSlot;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -40,6 +42,43 @@ class CourseBookingController extends Controller
                 'message' => $e->getMessage(), // 👈 HIER
             ], 422);
         }
+    }
+
+    public function validateCoupon(Request $request, Course $course, CourseCouponService $couponService)
+    {
+        $validated = $request->validate([
+            'coupon_code' => ['required', 'string', 'max:255'],
+            ...($course->booking_type === 'per_slot' ? [
+                'slots' => ['required', 'array', 'min:1'],
+                'slots.*' => ['required', 'integer', 'distinct'],
+            ] : []),
+        ]);
+
+        $user = $request->user();
+        if ($course->booking_type === 'per_course') {
+            $prices = [$couponService->priceForCourse($course, $user)];
+        } else {
+            $slots = CourseSlot::where('course_id', $course->id)
+                ->whereIn('id', $validated['slots'])
+                ->where('status', 'active')
+                ->get();
+
+            if ($slots->count() !== count($validated['slots'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'slots' => 'Ein ausgewählter Termin ist nicht verfügbar oder gehört nicht zu diesem Kurs.',
+                ]);
+            }
+
+            $prices = $couponService->pricesForSlots($course, $user, $slots);
+        }
+
+        $result = $couponService->preview($validated['coupon_code'], $user, $prices);
+
+        return response()->json([
+            'coupon_code' => $result['code'],
+            'coupon_discount' => number_format($result['discount'] / 100, 2, '.', ''),
+            'total_price' => number_format((array_sum($prices) - $result['discount']) / 100, 2, '.', ''),
+        ]);
     }
 
     public function index()

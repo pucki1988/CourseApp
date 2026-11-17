@@ -10,12 +10,14 @@ class CourseBookingSlot extends Model
         'course_booking_id',
         'course_slot_id',
         'price',
+        'coupon_refund_price',
         'status',
         'checked_in_at'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'coupon_refund_price' => 'decimal:2',
         'checked_in_at' => 'datetime'
     ];
 

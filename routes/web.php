@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
         Volt::route('/course-settings/sport-types', 'course_management.settings.sport-types')->name('course_management.settings.sport-types');
         Volt::route('/course-settings/equipment-items', 'course_management.settings.equipment-items')->name('course_management.settings.equipment-items');
         Volt::route('/vouchers', 'course_management.vouchers.index')->name('course_management.vouchers.index');
+        Volt::route('/coupons', 'course_management.coupons.index')->name('course_management.coupons.index');
     });
 
     Route::middleware(['coach.linked'])->group(function () {

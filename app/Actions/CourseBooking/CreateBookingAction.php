@@ -8,6 +8,7 @@ use App\Models\Course\Course;
 use Illuminate\Support\Facades\DB;
 use App\Services\Course\CourseBookingService;
 use App\Services\Payments\PaymentServiceResolver;
+use App\Services\Payments\PaymentProcessor;
 use App\Exceptions\WalletInsufficientFundsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,11 @@ class CreateBookingAction
         $validated = $request->validate([
             'pay_provider' => ['nullable', Rule::in(['mollie', 'wallet'])],
             'wallet_slug' => ['nullable', 'string', Rule::in(array_keys(Account::systemWalletDefinitions()))],
+            'coupon_code' => ['nullable', 'string', 'max:255'],
+            ...($course->booking_type === 'per_slot' ? [
+                'slots' => ['required', 'array', 'min:1'],
+                'slots.*' => ['integer', 'distinct'],
+            ] : []),
         ]);
 
         $useSportsWallet = ($validated['pay_provider'] ?? null) === 'wallet';
@@ -65,11 +71,11 @@ class CreateBookingAction
             $walletCents = 0;
             $account = $request->user()?->account;
 
-            if ($useSportsWallet && ! $account) {
+            if ($useSportsWallet && ! $account && $totalCents > 0) {
                 throw new LogicException('Für eine Wallet-Zahlung ist ein Account erforderlich.');
             }
 
-            if ($useSportsWallet) {
+            if ($useSportsWallet && $totalCents > 0) {
                 $wallet = $account->walletBySlug($walletSlug);
                 $walletCents = min($totalCents, max(0, (int) $wallet->balanceInt));
             }
@@ -98,7 +104,16 @@ class CreateBookingAction
             }
 
             $providerCents = $totalCents - $walletCents;
-            if ($providerCents > 0 || $totalCents === 0) {
+            if ($totalCents === 0 && $newBooking->coupon_code !== null) {
+                $payment = $newBooking->payments()->create([
+                    'amount' => '0.00',
+                    'currency' => 'EUR',
+                    'method' => 'coupon',
+                    'provider' => 'coupon',
+                    'status' => 'pending',
+                ]);
+                app(PaymentProcessor::class)->handlePaid($payment);
+            } elseif ($providerCents > 0 || $totalCents === 0) {
                 $providerPayment = $newBooking->payments()->create([
                     'amount' => number_format($providerCents / 100, 2, '.', ''),
                     'currency' => 'EUR',

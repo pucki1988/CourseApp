@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "13412bd0b701275853b0e8bf48561741",
+    "content-hash": "1ea41293fa88c2862e07ecc446afd3af",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -295,6 +295,97 @@
                 "source": "https://github.com/beyondcode/laravel-vouchers/tree/2.3.0"
             },
             "time": "2025-03-07T09:54:32+00:00"
+        },
+        {
+            "name": "binafy/laravel-discount",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/binafy/laravel-discount.git",
+                "reference": "2d1f910e1fd73f17cec5521713ae4c395f23ffec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/binafy/laravel-discount/zipball/2d1f910e1fd73f17cec5521713ae4c395f23ffec",
+                "reference": "2d1f910e1fd73f17cec5521713ae4c395f23ffec",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/framework": "^12.69.0|^13.30.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "binafy/laravel-cart": "^2.1",
+                "orchestra/testbench": "^10.0|^11.0",
+                "pestphp/pest-plugin-laravel": "^3.0.0|^4.0.0"
+            },
+            "suggest": {
+                "binafy/laravel-cart": "Required to apply discounts to carts and cart items (^2.0)."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LaravelDiscount": "Binafy\\LaravelDiscount\\Facades\\LaravelDiscount"
+                    },
+                    "providers": [
+                        "Binafy\\LaravelDiscount\\Providers\\LaravelDiscountServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Binafy\\LaravelDiscount\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Milwad Khosravi",
+                    "email": "milwad.dev@gmail.com",
+                    "homepage": "https://github.com/milwad-dev",
+                    "role": "author"
+                },
+                {
+                    "name": "Binafy",
+                    "homepage": "https://github.com/binafy",
+                    "role": "owner"
+                }
+            ],
+            "description": "The Laravel-Discount is a Laravel package designed to handle discounts in your application effortlessly",
+            "keywords": [
+                "binafy",
+                "cart",
+                "checkout",
+                "coupon",
+                "coupon-code",
+                "discount",
+                "discount-code",
+                "ecommerce",
+                "eloquent",
+                "framework",
+                "laravel",
+                "laravel discount",
+                "laravel-discount",
+                "laravel-package",
+                "milwad",
+                "offers",
+                "php",
+                "pricing",
+                "promo",
+                "promotion",
+                "sales",
+                "shopping-cart",
+                "voucher"
+            ],
+            "support": {
+                "issues": "https://github.com/binafy/laravel-discount/issues",
+                "source": "https://github.com/binafy/laravel-discount/tree/v1.3.0"
+            },
+            "time": "2026-11-11T11:41:26+00:00"
         },
         {
             "name": "brick/math",
