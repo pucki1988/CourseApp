@@ -98,7 +98,7 @@ class CourseCouponService
 
             $amount = min($total, max(0, $amount));
             if ($amount === 0) {
-                throw ValidationException::withMessages(['coupon_code' => 'Der Coupon gewährt für diese Buchung keinen Rabatt.']);
+                throw ValidationException::withMessages(['coupon_code' => 'Der Coupon gewährt für diese Buchung keinen Rabatt. Die Voraussetzungen für den Rabatt sind nicht erfüllt.']);
             }
 
             if ($redeem) {
