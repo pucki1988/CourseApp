@@ -37,10 +37,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
-        $centralAccount = Account::create([
-            'name' => $user->name,
-            'type' => 'person',
-        ]);
+        $centralAccount = Account::create();
         $user->account_id = $centralAccount->id;
         $user->save();
 

@@ -10,7 +10,9 @@ use App\Models\Course\CourseBooking;
 use App\Models\Shop\Order;
 use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
+use App\Services\Loyalty\BookingLoyaltyPointRestorationService;
 use App\Services\Wallet\VoucherWalletService;
+use Illuminate\Support\Facades\DB;
 
 class PaymentProcessor
 {
@@ -18,6 +20,7 @@ class PaymentProcessor
         protected CourseBookingService $courseBookingService,
         protected CourseBookingSlotService $courseBookingSlotService,
         protected VoucherWalletService $voucherWalletService,
+        protected BookingLoyaltyPointRestorationService $loyaltyPointRestorationService,
     ) {}
 
     /**
@@ -98,44 +101,49 @@ class PaymentProcessor
 
     public function handleFailed(Payment $payment, string $status = 'failed'): void
     {
-        if ($payment->status === $status) {
-            return; // idempotent
-        }
+        DB::transaction(function () use ($payment, $status) {
+            $payment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
+            $alreadyProcessed = $payment->status === $status;
 
-        $attributes = ['status' => $status];
+            if (! $alreadyProcessed) {
+                $attributes = ['status' => $status];
 
-        if ($status === 'failed') {
-            $attributes['failed_at'] = now();
-        }
+                if ($status === 'failed') {
+                    $attributes['failed_at'] = now();
+                }
 
-        if ($status === 'canceled') {
-            $attributes['canceled_at'] = now();
-        }
+                if ($status === 'canceled') {
+                    $attributes['canceled_at'] = now();
+                }
 
-        $payment->update($attributes);
+                $payment->update($attributes);
+            }
 
-        $source = $payment->source;
+            $source = $payment->source;
 
-        if ($source instanceof CourseBooking) {
-            $paidAmountCents = (int) round((float) $source->payments()
-                ->where('status', 'paid')
-                ->sum('amount') * 100);
-            $bookingAmountCents = (int) round((float) $source->total_price * 100);
+            if ($source instanceof CourseBooking) {
+                $paidAmountCents = (int) round((float) $source->payments()
+                    ->where('status', 'paid')
+                    ->sum('amount') * 100);
+                $bookingAmountCents = (int) round((float) $source->total_price * 100);
 
-            if ($paidAmountCents < $bookingAmountCents) {
-                #$source->update(['payment_status' => $status]);
+                if ($paidAmountCents < $bookingAmountCents) {
+                    if (in_array($status, ['failed', 'expired','canceled'], true)) {
+                        $this->loyaltyPointRestorationService->restore($source);
+                    }
 
-                if ($payment->provider === 'mollie') {
-                    RefundFailedBookingWalletPayments::dispatch($source->id)->afterCommit();
+                    if (! $alreadyProcessed && $payment->provider === 'mollie') {
+                        RefundFailedBookingWalletPayments::dispatch($source->id)->afterCommit();
+                    }
                 }
             }
-        }
 
-        if ($source instanceof Order) {
-            $source->update([
-                'status' => $status,
-                'canceled_at' => $status === 'canceled' ? now() : $source->canceled_at,
-            ]);
-        }
+            if (! $alreadyProcessed && $source instanceof Order) {
+                $source->update([
+                    'status' => $status,
+                    'canceled_at' => $status === 'canceled' ? now() : $source->canceled_at,
+                ]);
+            }
+        });
     }
 }

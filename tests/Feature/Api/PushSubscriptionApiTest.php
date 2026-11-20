@@ -26,6 +26,7 @@ test('public key endpoint returns service unavailable when web push is not confi
 });
 
 test('authenticated user can store a push subscription', function () {
+    Notification::fake();
     $user = User::factory()->create();
 
     Sanctum::actingAs($user);
@@ -51,6 +52,7 @@ test('authenticated user can store a push subscription', function () {
         'subscribable_id' => $user->id,
         'subscribable_type' => $user->getMorphClass(),
     ]);
+    Notification::assertSentTo($user, TestWebPushNotification::class);
 });
 
 test('authenticated user can delete a push subscription', function () {

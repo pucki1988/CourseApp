@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\Permission\Models\Role;
+
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
 
@@ -7,6 +9,8 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    Role::findOrCreate('user', 'web');
+
     $response = $this->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'test@example.com',

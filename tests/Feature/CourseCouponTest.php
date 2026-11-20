@@ -12,6 +12,7 @@ use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
 use App\Services\Course\CourseCouponService;
 use App\Services\Loyalty\LoyaltyPointService;
+use App\Services\Loyalty\BookingLoyaltyPointRestorationService;
 use App\Services\Payments\BookingPaymentRefundService;
 use Binafy\LaravelDiscount\Events\DiscountApplied;
 use Binafy\LaravelDiscount\Models\Discount;
@@ -327,7 +328,7 @@ test('a coupon prevents loyalty point redemption and leaves exact refundable cas
     $loyalty->shouldNotReceive('earn');
     foreach ($booking->bookingSlots as $slot) {
         (new RefundBookingSlot($booking->id, $slot->id))->handle(
-            $refunds, app(CourseBookingSlotService::class), app(CourseBookingService::class), $loyalty
+            $refunds, app(CourseBookingSlotService::class), app(CourseBookingService::class), new BookingLoyaltyPointRestorationService($loyalty)
         );
     }
     expect($booking->fresh()->points_restored)->toBe(0);
@@ -379,7 +380,7 @@ test('buy x get y settings created in management limit the discount per booking'
         ->set('name', 'Aktion')->set('code', 'aktion')->set('type', 'buy_x_get_y')
         ->set('buy', '2')->set('get', '1')->set('getDiscountPercentage', '50')
         ->set('maxFreeItems', '2')->call('createCoupon')->assertHasNoErrors()
-        ->assertSee('Maximal rabattierte Termine pro Buchung: 2');
+        ->assertSee('2 Rabattierte Termine pro Buchung');
 
     $discount = Discount::where('code', 'AKTION')->firstOrFail();
     expect($discount->conditions)->toBe([
