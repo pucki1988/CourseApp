@@ -12,6 +12,8 @@ use Binafy\LaravelDiscount\Exceptions\DiscountExpiredException;
 use Binafy\LaravelDiscount\Exceptions\DiscountNotActiveException;
 use Binafy\LaravelDiscount\Exceptions\DiscountUsageLimitReachedException;
 use Binafy\LaravelDiscount\Exceptions\DiscountNotFoundException;
+use Binafy\LaravelDiscount\Exceptions\DiscountNotStartedException;
+use Binafy\LaravelDiscount\Exceptions\InvalidDiscountConditionsException;
 use Binafy\LaravelDiscount\Facades\LaravelDiscount;
 use Binafy\LaravelDiscount\Models\Discount;
 use Binafy\LaravelDiscount\Models\DiscountUsage;
@@ -113,10 +115,16 @@ class CourseCouponService
         } catch (DiscountNotActiveException $e) {
             throw ValidationException::withMessages(['coupon_code' => "Der Coupon {$e->getDiscount()->code} ist nicht aktiv."]);
         } catch (DiscountUsageLimitReachedException $e) {
-            throw ValidationException::withMessages(['coupon_code' => "Der Coupon {$e->getDiscount()->code} hat sein Einlösungslimit erreicht."]);
+            throw ValidationException::withMessages(['coupon_code' => "Du hast den Coupon {$e->getDiscount()->code} bereits verwendet oder er hat sein Einlösungslimit erreicht."]);
         } catch (DiscountNotFoundException $e) {
             throw ValidationException::withMessages(['coupon_code' => "Der Coupon {$e->getDiscount()->code} wurde nicht gefunden."]);
-        } catch (DiscountException $e) {
+        } catch (DiscountNotStartedException $e) {
+            throw ValidationException::withMessages(['coupon_code' => "Der Couponzeitraum ist noch nicht aktiv."]);
+        }
+        catch (InvalidDiscountConditionsException $e) {
+            throw ValidationException::withMessages(['coupon_code' => "Eine oder mehrere Bedingungen für den Coupon sind nicht erfüllt."]);
+        }
+        catch (DiscountException $e) {
             throw ValidationException::withMessages(['coupon_code' => 'Der Coupon ist ungültig, abgelaufen oder sein Einlösungslimit ist erreicht.']);
         }
         return ['code' => $discount->code, 'discount' => $amount, 'usage_id' => $usageId];
