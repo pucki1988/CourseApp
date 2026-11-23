@@ -14,6 +14,7 @@ use App\Services\Course\CourseCouponService;
 use App\Services\Loyalty\LoyaltyPointService;
 use App\Services\Loyalty\BookingLoyaltyPointRestorationService;
 use App\Services\Payments\BookingPaymentRefundService;
+use App\Services\Payments\PaymentProcessor;
 use App\Services\Payments\PaymentServiceResolver;
 use Binafy\LaravelDiscount\Events\DiscountApplied;
 use Binafy\LaravelDiscount\Models\Discount;
@@ -156,6 +157,37 @@ test('redemptions roll back with a failed booking transaction and respect per-us
     expect(fn () => DB::transaction(fn () => $service->redeem('TEST', $user, [1000])))->toThrow(ValidationException::class);
     expect($discount->fresh()->used_count)->toBe(1);
 });
+
+test('failed Mollie payments release only their own coupon usage', function (string $status) {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    $course = couponCourse();
+    $slot = couponSlot($course, 10);
+    $discount = coupon(['usage_limit' => 1, 'usage_limit_per_user' => 1]);
+    $booking = app(CourseBookingService::class)->store(new Request([
+        'slots' => [$slot->id], 'coupon_code' => 'TEST',
+    ]), $course);
+    $payment = $booking->payments()->create([
+        'amount' => $booking->total_price,
+        'method' => 'ideal',
+        'provider' => 'mollie',
+        'status' => 'open',
+    ]);
+
+    expect($booking->coupon_usage_id)->not->toBeNull();
+
+    app(PaymentProcessor::class)->handleFailed($payment, $status);
+
+    expect($discount->fresh()->used_count)->toBe(0)
+        ->and($booking->fresh()->coupon_usage_id)->toBeNull();
+    $this->assertDatabaseCount('discount_usages', 0);
+
+    $newUsage = DB::transaction(fn () => app(CourseCouponService::class)->redeem('TEST', $user, [1000]));
+    app(PaymentProcessor::class)->handleFailed($payment, $status);
+
+    expect($discount->fresh()->used_count)->toBe(1);
+    $this->assertDatabaseHas('discount_usages', ['id' => $newUsage['usage_id'], 'user_id' => $user->id]);
+})->with(['failed', 'expired', 'canceled']);
 
 test('a fully discounted booking is paid without contacting an external payment provider', function () {
     Event::fake([CourseBookingCreate::class]);

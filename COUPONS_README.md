@@ -68,8 +68,9 @@ Einheit. Der Couponrabatt beziehungsweise eingesetzte Punkte werden für später
 Teilstornierungen centgenau anteilig auf die Termine verteilt. Bereits
 zurückgegebene Treuepunkte werden nicht erneut erstattet.
 
-Eine Einlösung zählt bei erfolgreicher Erstellung der Buchung, auch wenn eine
-Zahlung später abgebrochen oder die Buchung storniert wird. Schlägt die
-Buchungserstellung selbst fehl, wird auch die Einlösung zurückgerollt. Ergibt
-sich durch einen Coupon ein Zahlbetrag von null, wird die Buchung ohne externen
-Zahlungsanbieter als bezahlt verbucht.
+Eine Einlösung zählt bei erfolgreicher Erstellung der Buchung. Schlägt die
+Buchungserstellung selbst fehl, wird auch die Einlösung zurückgerollt. Wird eine
+Mollie-Zahlung als fehlgeschlagen, abgelaufen oder storniert gemeldet, wird die
+zugehörige Einlösung für den Benutzer und das globale Einlösungslimit
+freigegeben. Ergibt sich durch einen Coupon ein Zahlbetrag von null, wird die
+Buchung ohne externen Zahlungsanbieter als bezahlt verbucht.

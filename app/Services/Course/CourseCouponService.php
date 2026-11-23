@@ -3,6 +3,7 @@
 namespace App\Services\Course;
 
 use App\Models\Course\Course;
+use App\Models\Course\CourseBooking;
 use App\Models\Course\CourseSlot;
 use App\Models\User;
 use Binafy\LaravelDiscount\Enums\DiscountType;
@@ -13,6 +14,8 @@ use Binafy\LaravelDiscount\Exceptions\DiscountUsageLimitReachedException;
 use Binafy\LaravelDiscount\Exceptions\DiscountNotFoundException;
 use Binafy\LaravelDiscount\Facades\LaravelDiscount;
 use Binafy\LaravelDiscount\Models\Discount;
+use Binafy\LaravelDiscount\Models\DiscountUsage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CourseCouponService
@@ -39,7 +42,7 @@ class CourseCouponService
 
     /**
      * @param  list<int>  $prices
-     * @return array{code: string, discount: int}
+     * @return array{code: string, discount: int, usage_id: int|null}
      */
     public function preview(string $code, User $user, array $prices): array
     {
@@ -50,7 +53,7 @@ class CourseCouponService
 
     /**
      * @param  list<int>  $prices  Prices in cents after the member discount.
-     * @return array{code: string, discount: int}
+     * @return array{code: string, discount: int, usage_id: int|null}
      */
     public function redeem(string $code, User $user, array $prices): array
     {
@@ -75,11 +78,12 @@ class CourseCouponService
 
     /**
      * @param  list<int>  $prices
-     * @return array{code: string, discount: int}
+     * @return array{code: string, discount: int, usage_id: int|null}
      */
     private function evaluate(Discount $discount, User $user, array $prices, bool $redeem): array
     {
         $total = array_sum($prices);
+        $usageId = null;
 
         try {
             if ($redeem) {
@@ -102,7 +106,7 @@ class CourseCouponService
             }
 
             if ($redeem) {
-                LaravelDiscount::redeem($discount, $user, $amount / 100);
+                $usageId = LaravelDiscount::redeem($discount, $user, $amount / 100)->getKey();
             }
         } catch (DiscountExpiredException $e) {
             throw ValidationException::withMessages(['coupon_code' => "Der Coupon {$e->getDiscount()->code} ist abgelaufen."]);
@@ -115,7 +119,32 @@ class CourseCouponService
         } catch (DiscountException $e) {
             throw ValidationException::withMessages(['coupon_code' => 'Der Coupon ist ungültig, abgelaufen oder sein Einlösungslimit ist erreicht.']);
         }
-        return ['code' => $discount->code, 'discount' => $amount];
+        return ['code' => $discount->code, 'discount' => $amount, 'usage_id' => $usageId];
+    }
+
+    public function releaseForBooking(CourseBooking $booking): void
+    {
+        DB::transaction(function () use ($booking) {
+            $lockedBooking = CourseBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            $usageId = $lockedBooking->coupon_usage_id;
+
+            if ($usageId === null) {
+                return;
+            }
+
+            $usage = DiscountUsage::query()->lockForUpdate()->find($usageId);
+
+            if ($usage && (int) $usage->user_id !== (int) $lockedBooking->user_id) {
+                throw new \LogicException('The coupon usage does not belong to the booking user.');
+            }
+
+            if ($usage) {
+                Discount::query()->whereKey($usage->discount_id)->decrement('used_count');
+                $usage->delete();
+            }
+
+            $lockedBooking->update(['coupon_usage_id' => null]);
+        });
     }
 
     /**

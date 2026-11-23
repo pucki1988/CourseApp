@@ -10,6 +10,7 @@ use App\Models\Course\CourseBooking;
 use App\Models\Shop\Order;
 use App\Services\Course\CourseBookingService;
 use App\Services\Course\CourseBookingSlotService;
+use App\Services\Course\CourseCouponService;
 use App\Services\Loyalty\BookingLoyaltyPointRestorationService;
 use App\Services\Wallet\VoucherWalletService;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class PaymentProcessor
     public function __construct(
         protected CourseBookingService $courseBookingService,
         protected CourseBookingSlotService $courseBookingSlotService,
+        protected CourseCouponService $courseCouponService,
         protected VoucherWalletService $voucherWalletService,
         protected BookingLoyaltyPointRestorationService $loyaltyPointRestorationService,
     ) {}
@@ -129,6 +131,7 @@ class PaymentProcessor
 
                 if ($paidAmountCents < $bookingAmountCents) {
                     if (in_array($status, ['failed', 'expired','canceled'], true)) {
+                        $this->courseCouponService->releaseForBooking($source);
                         $this->loyaltyPointRestorationService->restore($source);
                     }
 

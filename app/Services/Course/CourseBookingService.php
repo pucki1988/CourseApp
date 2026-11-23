@@ -107,6 +107,7 @@ class CourseBookingService
             'total_price' => $price,
             'coupon_code' => $coupon['code'] ?? null,
             'coupon_discount' => $coupon ? $coupon['discount'] / 100 : null,
+            'coupon_usage_id' => $coupon['usage_id'] ?? null,
             'booking_type' => $course->booking_type
         ]);
 
@@ -225,6 +226,7 @@ class CourseBookingService
                 'redeemed_points' => $pointsToRedeem,
                 'coupon_code' => $coupon['code'] ?? null,
                 'coupon_discount' => $coupon ? $coupon['discount'] / 100 : null,
+                'coupon_usage_id' => $coupon['usage_id'] ?? null,
             ]);
 
             if ($pointsToRedeem > 0 && $user && $user->loyaltyAccount) {
