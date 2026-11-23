@@ -14,6 +14,7 @@ use App\Services\Course\CourseCouponService;
 use App\Services\Loyalty\LoyaltyPointService;
 use App\Services\Loyalty\BookingLoyaltyPointRestorationService;
 use App\Services\Payments\BookingPaymentRefundService;
+use App\Services\Payments\PaymentServiceResolver;
 use Binafy\LaravelDiscount\Events\DiscountApplied;
 use Binafy\LaravelDiscount\Models\Discount;
 use Illuminate\Http\Request;
@@ -171,6 +172,38 @@ test('a fully discounted booking is paid without contacting an external payment 
         ->assertJsonPath('booking.payments.0.status', 'paid');
     Event::assertDispatched(CourseBookingCreate::class);
 });
+
+test('a free booking is paid without contacting a payment provider', function (string $bookingType, ?string $provider) {
+    Event::fake([CourseBookingCreate::class]);
+    $this->mock(PaymentServiceResolver::class)->shouldNotReceive('resolve');
+    $this->actingAs(User::factory()->create());
+    $course = couponCourse($bookingType);
+    $course->update(['price' => 0, 'allowed_wallet_slugs' => ['sports-voucher']]);
+    $slot = couponSlot($course, 0);
+
+    $response = $this->postJson('/api/booking/'.$course->id, [
+        'slots' => [$slot->id],
+        'pay_provider' => $provider,
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('booking.total_price', '0.00')
+        ->assertJsonPath('booking.status', 'paid')
+        ->assertJsonPath('booking.checkout_url', null)
+        ->assertJsonCount(1, 'booking.payments')
+        ->assertJsonPath('booking.payments.0.amount', '0.00')
+        ->assertJsonPath('booking.payments.0.provider', 'free')
+        ->assertJsonPath('booking.payments.0.method', 'free')
+        ->assertJsonPath('booking.payments.0.status', 'paid');
+    $booking = CourseBooking::firstOrFail();
+    expect($booking->payments()->firstOrFail()->paid_at)->not->toBeNull()
+        ->and($booking->bookingSlots()->firstOrFail()->status)->toBe('booked');
+    Event::assertDispatchedTimes(CourseBookingCreate::class, 1);
+})->with([
+    'whole course, default provider' => ['per_course', null],
+    'per slot, mollie selected' => ['per_slot', 'mollie'],
+    'per slot, wallet selected' => ['per_slot', 'wallet'],
+]);
 
 test('the booking API rejects invalid coupons and invalid slot input', function () {
     $this->actingAs(User::factory()->create());

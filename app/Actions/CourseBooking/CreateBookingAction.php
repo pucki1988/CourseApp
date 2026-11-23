@@ -104,16 +104,17 @@ class CreateBookingAction
             }
 
             $providerCents = $totalCents - $walletCents;
-            if ($totalCents === 0 && $newBooking->coupon_code !== null) {
+            if ($totalCents === 0) {
+                $method = $newBooking->coupon_code !== null ? 'coupon' : 'free';
                 $payment = $newBooking->payments()->create([
                     'amount' => '0.00',
                     'currency' => 'EUR',
-                    'method' => 'coupon',
-                    'provider' => 'coupon',
+                    'method' => $method,
+                    'provider' => $method,
                     'status' => 'pending',
                 ]);
                 app(PaymentProcessor::class)->handlePaid($payment);
-            } elseif ($providerCents > 0 || $totalCents === 0) {
+            } elseif ($providerCents > 0) {
                 $providerPayment = $newBooking->payments()->create([
                     'amount' => number_format($providerCents / 100, 2, '.', ''),
                     'currency' => 'EUR',

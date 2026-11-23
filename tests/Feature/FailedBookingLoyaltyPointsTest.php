@@ -165,15 +165,15 @@ test('points previously restored by a refund are not restored again on a failed 
         ->and($account->transactions()->count())->toBe(2);
 });
 
-test('canceled payments retain their existing loyalty behavior', function () {
+test('canceled payments restore redeemed loyalty points', function () {
     Queue::fake();
     [$booking, $account, $payment] = failedPaymentBooking();
 
     app(PaymentProcessor::class)->handleFailed($payment, 'canceled');
 
     expect($payment->fresh()->status)->toBe('canceled')
-        ->and((bool) $booking->fresh()->points_restored)->toBeFalse()
-        ->and($account->balance())->toBe(-100);
+        ->and((bool) $booking->fresh()->points_restored)->toBeTrue()
+        ->and($account->balance())->toBe(0);
 });
 
 test('payments without redeemed points do not create a restoration', function () {
